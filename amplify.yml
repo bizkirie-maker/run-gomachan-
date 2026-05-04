@@ -4,10 +4,10 @@ frontend:
   phases:
     preBuild:
       commands:
-        - echo "Static site: no npm"
+        - echo preBuild-ok
     build:
       commands:
-        - echo "Static site: no build step"
+        - echo build-ok
   artifacts:
     baseDirectory: .
     files:
