@@ -78,6 +78,8 @@ const state = {
   index: 0,
   raf: 0,
   bunnyX: 4,
+  /** IME の変換中は keydown の誤判定を避ける */
+  imeSession: false,
 };
 
 function randomInt(min, max) {
@@ -176,6 +178,7 @@ function setSceneDifficultyClass() {
 function newPhrase() {
   state.target = buildPhrase(state.lenMode.min, state.lenMode.max);
   state.index = 0;
+  state.imeSession = false;
   state.phraseEndAt = performance.now() + state.diff.phraseSec * 1000;
   $("baitText").textContent = state.target;
   $("bait").style.setProperty("--bait-x", `${randomInt(44, 86)}%`);
@@ -243,6 +246,7 @@ function onMistakeOrTimeout() {
 
 function endGame() {
   state.playing = false;
+  state.imeSession = false;
   document.body.classList.remove("is-playing");
   cancelAnimationFrame(state.raf);
   $("ghostInput").blur();
@@ -310,11 +314,58 @@ function resetToSetup() {
   $("bait").hidden = true;
 }
 
+function isKanaChar(ch) {
+  if (!ch) return false;
+  const c = ch.codePointAt(0);
+  return (
+    (c >= 0x3040 && c <= 0x309f) ||
+    (c >= 0x30a0 && c <= 0x30ff) ||
+    (c >= 0xff66 && c <= 0xff9f)
+  );
+}
+
+function processTypedChar(ch) {
+  const expected = state.target[state.index];
+  if (!expected) return;
+
+  if (ch === expected) {
+    state.index += 1;
+    renderTypeline();
+    if (state.index >= state.target.length) {
+      onSuccessPhrase();
+    }
+  } else {
+    onMistakeOrTimeout();
+  }
+}
+
+function onCompositionStart() {
+  state.imeSession = true;
+}
+
+function onCompositionEnd(ev) {
+  state.imeSession = false;
+  if (!state.playing) return;
+  const data = ev.data;
+  if (!data) {
+    ev.target.value = "";
+    return;
+  }
+  ev.target.value = "";
+  for (const ch of data) {
+    processTypedChar(ch);
+    if (!state.playing) return;
+  }
+}
+
 function onKeydown(ev) {
   if (!state.playing) return;
   if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
+  // IME 変換中・セッション中はローマ字等の keydown を無視（誤答で次の文へ進むのを防ぐ）
+  if (ev.isComposing || state.imeSession) return;
 
   if (ev.key === "Backspace") {
+    if (state.imeSession || ev.isComposing) return;
     ev.preventDefault();
     state.index = Math.max(0, state.index - 1);
     renderTypeline();
@@ -324,18 +375,14 @@ function onKeydown(ev) {
   if (ev.key.length !== 1) return;
 
   const expected = state.target[state.index];
-  if (!expected) return;
-
-  if (ev.key === expected) {
-    state.index += 1;
-    renderTypeline();
-    if (state.index >= state.target.length) {
-      onSuccessPhrase();
-    }
-  } else {
+  // compositionstart より前のローマ字1キーが「ミス」になるのを防ぐ（ひらがな待ちは IME 確定まで無視）
+  if (expected && isKanaChar(expected) && /^[a-zA-Z]$/.test(ev.key)) {
     ev.preventDefault();
-    onMistakeOrTimeout();
+    return;
   }
+
+  ev.preventDefault();
+  processTypedChar(ev.key);
 }
 
 function init() {
@@ -349,9 +396,13 @@ function init() {
   $("closeRankBtn").addEventListener("click", closeRanking);
 
   $("ghostInput").addEventListener("keydown", onKeydown);
+  $("ghostInput").addEventListener("compositionstart", onCompositionStart);
+  $("ghostInput").addEventListener("compositionend", onCompositionEnd);
 
   $("ghostInput").addEventListener("input", (ev) => {
     if (!state.playing) return;
+    // IME 確定前に value を空にすると変換が壊れたり、1文字でおかしくなる
+    if (ev.isComposing) return;
     ev.target.value = "";
   });
 
