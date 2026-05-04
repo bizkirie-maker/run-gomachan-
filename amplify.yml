@@ -1,0 +1,13 @@
+# AWS Amplify Hosting — ビルドなしの静的サイト（index.html / game.js / styles.css）
+version: 1
+frontend:
+  phases:
+    build:
+      commands:
+        - echo "Static site: no npm build"
+  artifacts:
+    baseDirectory: /
+    files:
+      - "**/*"
+  cache:
+    paths: []

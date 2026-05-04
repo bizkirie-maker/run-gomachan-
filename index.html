@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <!-- 試用公開用：検索エンジンに載せない（ノーインデックス） -->
+  <meta name="robots" content="noindex, nofollow" />
+  <title>ごまちゃんのタイピング試作品（花畑）</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="wash-bg" aria-hidden="true"></div>
+
+  <header class="top-bar">
+    <h1><span class="title-icon" aria-hidden="true">🐰</span> ごまちゃんのエサタイピング <small>試作品</small></h1>
+    <p class="tagline">菜の花がふわっとゆれる花畑。文のついたエサをタイプして、ごまちゃんといっしょにポイントを集めよう。</p>
+  </header>
+
+  <main class="shell">
+    <section class="panel setup-panel" id="setupPanel" aria-labelledby="setup-heading">
+      <h2 id="setup-heading">はじめる前の設定</h2>
+      <div class="field-grid">
+        <div class="field">
+          <span class="label">難易度</span>
+          <select id="difficulty" aria-label="難易度">
+            <option value="beginner">初級 — 一文 5秒 / エサゆっくり</option>
+            <option value="intermediate">中級 — 一文 4秒 / エサふつう</option>
+            <option value="advanced">上級 — 一文 3秒 / エサはやめ</option>
+          </select>
+          <span class="hint">初級は<strong>1</strong>pt、中級<strong>2</strong>pt、上級<strong>3</strong>pt を一文ごと（エサごと）につけます。</span>
+        </div>
+        <div class="field">
+          <span class="label">文の長さ（野菜モード）</span>
+          <select id="lengthMode" aria-label="文の長さモード">
+            <option value="kabu">かぶモード — 2〜5 文字 （ボーナス ＋0）</option>
+            <option value="tanpopo">たんぽぽモード — 6〜10 文字 （ボーナス ＋1）</option>
+            <option value="ninjin">ニンジンモード — 11〜15 文字 （ボーナス ＋2）</option>
+          </select>
+          <span class="hint">両方のプラスが足されて一文の得点になります。</span>
+        </div>
+        <div class="field">
+          <span class="label">ランキング用の名前</span>
+          <input id="playerName" type="text" maxlength="12" placeholder="ひらがなで６文字でもOK" autocomplete="nickname" />
+        </div>
+      </div>
+      <button type="button" class="primary" id="startBtn">1分タイムアタックをはじめる</button>
+      <button type="button" class="ghost" id="openRankingBtn">このモードのトップ10を見る</button>
+    </section>
+
+    <section class="stage-wrap" id="stageWrap" aria-live="polite">
+      <div class="scene" id="scene">
+        <div class="field-bg" aria-hidden="true"></div>
+        <div class="bunny" id="bunny" aria-hidden="true">
+          <div class="bunny-ear left"></div>
+          <div class="bunny-ear right"></div>
+          <div class="bunny-face"></div>
+        </div>
+        <div class="bait" id="bait" hidden>
+          <span class="bait-text" id="baitText"></span>
+        </div>
+      </div>
+
+      <section class="hud-panel" aria-label="ゲーム状態">
+        <div class="hud-row">
+          <div><span class="hud-label">のこり時間</span> <strong id="gameTimer">60.0</strong> びょう</div>
+          <div><span class="hud-label">いまの文の制限</span> <strong id="phraseTimer">5.0</strong> びょう</div>
+        </div>
+        <div class="hud-row">
+          <div><span class="hud-label">スコア</span> <strong id="score">0</strong> pt</div>
+          <div><span class="hud-label">エサストック（ミスで1つなくなる）</span> <strong id="stockCount">5</strong> こ</div>
+        </div>
+        <div class="typeline" aria-label="打つひらがな">
+          <span class="typeline-label">打つ順</span>
+          <span id="targetLine"></span><span id="caret" class="caret">丨</span>
+        </div>
+        <input id="ghostInput" class="ghost-input" type="text" inputmode="text" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="タイプ入力はこちらへフォーカス" />
+      </section>
+    </section>
+
+    <section class="panel result-panel hidden" id="resultPanel">
+      <h2>おつかれさまでした！</h2>
+      <p class="score-big"><span id="finalScoreLabel">このプレイ：</span><strong id="finalScore">0</strong> pt</p>
+      <p id="rankMessage"></p>
+      <div class="buttons">
+        <button type="button" class="primary" id="againBtn">同じ設定でもう一回</button>
+        <button type="button" class="ghost" id="backBtn">設定にもどる</button>
+      </div>
+    </section>
+
+    <section class="panel rank-panel hidden" id="rankPanel">
+      <div class="rank-head">
+        <h2 id="rankHeading">トップ10</h2>
+        <button type="button" class="ghost small" id="closeRankBtn">とじる</button>
+      </div>
+      <p class="muted" id="rankContext"></p>
+      <ol class="rank-list" id="rankList"></ol>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <p>試作品です。読みやすさのために、タイプ欄にはカード背景を載せています（水彩調はステージ側）。音声・保存はブラウザ内のみです。</p>
+  </footer>
+
+  <script type="module" src="./game.js"></script>
+</body>
+</html>
