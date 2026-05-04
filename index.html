@@ -104,11 +104,11 @@
           <div><span class="hud-label">スコア</span> <strong id="score">0</strong> pt</div>
           <div><span class="hud-label">エサストック（ミスで1つなくなる）</span> <strong id="stockCount">0</strong> こ</div>
         </div>
-        <div class="typeline" aria-label="打つひらがな">
-          <span class="typeline-label">打つ文（ひらがなのまま・かんじにへんかんしない）</span>
+        <div class="typeline" aria-label="打つ文章">
+          <span class="typeline-label">打つ文（かんじもつかってね）</span>
           <span id="targetLine"></span><span id="caret" class="caret">丨</span>
         </div>
-        <p class="input-hint">かなキーでそのまま入力。へんかん（スペース）をおさないでください。</p>
+        <p class="input-hint">IME で読みを打ち、変換して選んだ表記がお題と同じになるようにしてください。</p>
         <input
           id="ghostInput"
           class="ghost-input"
@@ -119,7 +119,7 @@
           autocorrect="off"
           autocapitalize="off"
           spellcheck="false"
-          aria-label="ひらがなでタイプ。かんじへんかんはしないでください"
+          aria-label="日本語入力で、お題と同じ表記になるようにタイプ"
         />
       </section>
     </section>
