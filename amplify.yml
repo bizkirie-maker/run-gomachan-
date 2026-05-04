@@ -6,7 +6,7 @@ frontend:
       commands:
         - echo "Static site: no npm build"
   artifacts:
-    baseDirectory: /
+    baseDirectory: .
     files:
       - "**/*"
   cache:
