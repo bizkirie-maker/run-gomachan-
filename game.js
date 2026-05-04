@@ -133,6 +133,8 @@ const state = {
   score: 0,
   baitStock: 0,
   target: "",
+  /** お題を Unicode の文字（コードポイント）単位に分割した配列（寿司打と同様に先頭から順に一致） */
+  targetChars: [],
   index: 0,
   raf: 0,
   bunnyX: 4,
@@ -240,6 +242,7 @@ function applyBaitVegetableClass() {
 function newPhrase() {
   state.awaitingNextPhrase = false;
   state.target = pickRandomPhrase();
+  state.targetChars = [...state.target];
   state.index = 0;
   state.imeSession = false;
   state.phraseEndAt = performance.now() + state.diff.phraseSec * 1000;
@@ -255,9 +258,7 @@ function newPhrase() {
 }
 
 function renderTypeline() {
-  const t = state.target;
-  const i = state.index;
-  const rest = t.slice(i);
+  const rest = state.targetChars.slice(state.index).join("");
   /** 寿司打風：打ち終わった文字は表示せず、残りだけ見せる */
   $("targetLine").innerHTML = `<span class="rest">${escapeHtml(rest)}</span>`;
   const caret = $("caret");
@@ -406,15 +407,32 @@ function isKanaChar(ch) {
   );
 }
 
+/** お題が「日本語の文字」（かな・漢字など）か：ローマ字1キーではミスにしないための判定 */
+function isJapaneseScriptChar(ch) {
+  if (!ch) return false;
+  if (isKanaChar(ch)) return true;
+  const c = ch.codePointAt(0);
+  if (c >= 0x4e00 && c <= 0x9fff) return true;
+  if (c >= 0x3400 && c <= 0x4dbf) return true;
+  if (c >= 0xf900 && c <= 0xfaff) return true;
+  if (c === 0x3005) return true;
+  return false;
+}
+
 function processTypedChar(ch) {
   if (state.awaitingNextPhrase) return;
-  const expected = state.target[state.index];
+  const expected = state.targetChars[state.index];
   if (!expected) return;
+
+  /** IME の読み入力途中のローマ字がそのまま届いた場合は無視（ミス扱いにしない） */
+  if (expected && /^[a-zA-Z]$/.test(ch) && isJapaneseScriptChar(expected)) {
+    return;
+  }
 
   if (ch === expected) {
     state.index += 1;
     renderTypeline();
-    if (state.index >= state.target.length) {
+    if (state.index >= state.targetChars.length) {
       onSuccessPhrase();
     }
   } else {
@@ -462,9 +480,9 @@ function onKeydown(ev) {
 
   if (ev.key.length !== 1) return;
 
-  const expected = state.target[state.index];
-  // compositionstart より前のローマ字1キーが「ミス」になるのを防ぐ（ひらがな待ちは IME 確定まで無視）
-  if (expected && isKanaChar(expected) && /^[a-zA-Z]$/.test(ev.key)) {
+  const expected = state.targetChars[state.index];
+  /** 寿司打：漢字お題は IME で変換確定するまで待つ。ローマ字1キーではミスにしない */
+  if (expected && /^[a-zA-Z]$/.test(ev.key) && isJapaneseScriptChar(expected)) {
     ev.preventDefault();
     return;
   }
@@ -492,6 +510,10 @@ function init() {
     // IME 確定前に value を空にすると変換が壊れたり、1文字でおかしくなる
     if (ev.isComposing) return;
     ev.target.value = "";
+  });
+
+  $("ghostInput").addEventListener("paste", (ev) => {
+    if (state.playing) ev.preventDefault();
   });
 
   const refocus = () => {
