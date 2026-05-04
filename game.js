@@ -175,11 +175,20 @@ function setSceneDifficultyClass() {
   scene.classList.add(state.diff.sceneClass);
 }
 
+/** 野菜モードに合わせてエサの見た目（かぶ／たんぽぽ／ニンジン）を切り替え */
+function applyBaitVegetableClass() {
+  const el = $("bait");
+  if (!el) return;
+  el.classList.remove("bait--kabu", "bait--tanpopo", "bait--ninjin");
+  el.classList.add(`bait--${state.lenMode.id}`);
+}
+
 function newPhrase() {
   state.target = buildPhrase(state.lenMode.min, state.lenMode.max);
   state.index = 0;
   state.imeSession = false;
   state.phraseEndAt = performance.now() + state.diff.phraseSec * 1000;
+  applyBaitVegetableClass();
   $("baitText").textContent = state.target;
   $("bait").style.setProperty("--bait-x", `${randomInt(44, 86)}%`);
   $("bait").hidden = false;
