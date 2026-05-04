@@ -999,56 +999,6 @@ body.is-playing .bunny.bunny--side {
   outline-offset: 2px;
 }
 
-.phrase-break-panel {
-  position: fixed;
-  inset: 0;
-  z-index: 24;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1rem;
-  background: rgba(253, 249, 242, 0.94);
-  backdrop-filter: blur(8px);
-}
-
-.phrase-break-panel.hidden {
-  display: none !important;
-}
-
-.phrase-break-card {
-  max-width: 22rem;
-  width: 100%;
-  padding: 1.35rem 1.5rem 1.5rem;
-  text-align: center;
-  border-radius: var(--radius);
-  background: var(--card);
-  box-shadow: 0 16px 40px var(--shadow);
-  border: 1px solid rgba(255, 255, 255, 0.65);
-}
-
-.phrase-break-title {
-  margin: 0 0 0.5rem;
-  font-size: 1.15rem;
-  font-weight: 700;
-}
-
-.phrase-break-pts {
-  margin: 0 0 0.75rem;
-  font-size: 1.05rem;
-}
-
-.phrase-break-pts strong {
-  font-size: 1.35rem;
-  color: var(--accent-dim);
-}
-
-.phrase-break-hint {
-  margin: 0 0 1rem;
-  font-size: 0.88rem;
-  line-height: 1.55;
-  opacity: 0.78;
-}
-
 .result-panel.hidden,
 .rank-panel.hidden,
 .setup-hidden {

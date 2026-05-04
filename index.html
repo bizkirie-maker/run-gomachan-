@@ -104,11 +104,11 @@
           <div><span class="hud-label">スコア</span> <strong id="score">0</strong> pt</div>
           <div><span class="hud-label">エサストック（ミスで1つなくなる）</span> <strong id="stockCount">0</strong> こ</div>
         </div>
-        <div class="typeline" aria-label="打つ文章">
-          <span class="typeline-label">打つ文（かんじもつかってね）</span>
+        <div class="typeline" aria-label="つぎに打つ読み">
+          <span class="typeline-label">つぎに打つ読み（おわると自動でつぎの文）</span>
           <span id="targetLine"></span><span id="caret" class="caret">丨</span>
         </div>
-        <p class="input-hint">IME で読みを打ち、変換して選んだ表記がお題と同じになるようにしてください。</p>
+        <p class="input-hint">エサは漢字の文、ここには読みの残りだけ。ひらがなで読みどおり打てば、かんじへんかんは不要です。</p>
         <input
           id="ghostInput"
           class="ghost-input"
@@ -119,18 +119,9 @@
           autocorrect="off"
           autocapitalize="off"
           spellcheck="false"
-          aria-label="日本語入力で、お題と同じ表記になるようにタイプ"
+          aria-label="読みをひらがなで入力。文の終わりで自動的に次のお題へ"
         />
       </section>
-    </section>
-
-    <section class="phrase-break-panel hidden" id="phraseBreakPanel" aria-live="polite" aria-label="文をクリアしました">
-      <div class="phrase-break-card">
-        <p class="phrase-break-title">やったね！ エサをもらった！</p>
-        <p class="phrase-break-pts">この文 <strong id="phraseBreakPoints">0</strong> pt</p>
-        <p class="phrase-break-hint">のこりじかんはそのまますすみます。つぎのエサにいこう。</p>
-        <button type="button" class="primary" id="nextPhraseBtn">つぎのエサへ</button>
-      </div>
     </section>
 
     <section class="panel result-panel hidden" id="resultPanel">
