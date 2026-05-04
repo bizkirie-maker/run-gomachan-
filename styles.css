@@ -1,0 +1,951 @@
+:root {
+  --ink: #3d3a36;
+  --wash-yellow: #f7e8a8;
+  --wash-green: #c8e3b8;
+  --wash-sky: #d4e8f2;
+  --card: rgba(255, 252, 248, 0.92);
+  --shadow: rgba(62, 52, 40, 0.12);
+  --accent: #e08a6c;
+  --accent-dim: #c86b4e;
+  --radius: 18px;
+  --font: "M PLUS Rounded 1c", system-ui, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  min-height: 100%;
+  color: var(--ink);
+  font-family: var(--font);
+  background: #f3efe6;
+}
+
+body {
+  position: relative;
+  padding: 1.25rem clamp(0.75rem, 3vw, 2rem) 2.5rem;
+}
+
+/* プレイ中：タイトル・説明・フッターを隠してタイピングに集中 */
+body.is-playing {
+  padding: 0.5rem clamp(0.4rem, 2vw, 1rem) 0.85rem;
+}
+
+body.is-playing .top-bar,
+body.is-playing .foot {
+  display: none !important;
+}
+
+body.is-playing .shell {
+  max-width: none;
+}
+
+body.is-playing .scene {
+  height: min(50vw, min(290px, 42vh));
+  max-height: 360px;
+}
+
+.wash-bg {
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  background:
+    radial-gradient(120% 80% at 10% 0%, var(--wash-sky) 0%, transparent 55%),
+    radial-gradient(90% 70% at 90% 10%, #f5d4dc 0%, transparent 50%),
+    radial-gradient(100% 60% at 50% 100%, var(--wash-green) 0%, #e9f0d8 45%, var(--wash-yellow) 100%);
+  filter: saturate(1.05);
+}
+
+.wash-bg::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.07'/%3E%3C/svg%3E");
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+.top-bar {
+  max-width: 960px;
+  margin: 0 auto 1rem;
+}
+
+.top-bar h1 {
+  margin: 0 0 0.35rem;
+  font-size: clamp(1.25rem, 4vw, 1.75rem);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.top-bar h1 small {
+  font-size: 0.65em;
+  font-weight: 500;
+  opacity: 0.75;
+}
+
+.title-icon {
+  margin-right: 0.25rem;
+}
+
+.tagline {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  opacity: 0.88;
+  max-width: 52ch;
+}
+
+.shell {
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.panel {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 1.1rem 1.25rem 1.35rem;
+  box-shadow: 0 10px 40px var(--shadow);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(6px);
+}
+
+.panel h2 {
+  margin: 0 0 0.75rem;
+  font-size: 1.15rem;
+}
+
+.field-grid {
+  display: grid;
+  gap: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.label {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+select,
+input[type="text"] {
+  font: inherit;
+  padding: 0.55rem 0.65rem;
+  border-radius: 12px;
+  border: 1px solid rgba(61, 58, 54, 0.18);
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.hint {
+  font-size: 0.8rem;
+  line-height: 1.45;
+  opacity: 0.78;
+}
+
+.hint strong {
+  color: var(--accent-dim);
+  font-weight: 700;
+}
+
+.primary,
+.ghost {
+  font: inherit;
+  cursor: pointer;
+  border-radius: 999px;
+  padding: 0.65rem 1.15rem;
+  border: none;
+  margin-right: 0.5rem;
+  margin-top: 0.35rem;
+}
+
+.primary {
+  background: linear-gradient(180deg, #f0a080, var(--accent));
+  color: #fffaf7;
+  font-weight: 700;
+  box-shadow: 0 6px 18px rgba(224, 138, 108, 0.35);
+}
+
+.primary:hover {
+  filter: brightness(1.03);
+}
+
+.ghost {
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(61, 58, 54, 0.15);
+  font-weight: 600;
+}
+
+.ghost.small {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.stage-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.scene {
+  position: relative;
+  height: min(42vw, 260px);
+  max-height: 320px;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: linear-gradient(180deg, #dbeef8 0%, #e8f6d7 55%, #f3e8a8 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45), 0 12px 30px var(--shadow);
+}
+
+.field-bg {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(60% 40% at 15% 75%, rgba(255, 220, 90, 0.55) 0%, transparent 70%),
+    radial-gradient(50% 35% at 85% 70%, rgba(255, 230, 120, 0.45) 0%, transparent 65%),
+    radial-gradient(80% 50% at 50% 90%, rgba(190, 220, 150, 0.6) 0%, transparent 70%);
+  filter: blur(0.5px);
+}
+
+.field-bg::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 200 200'%3E%3Cfilter id='p'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='2'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23p)' opacity='0.14'/%3E%3C/svg%3E");
+  mix-blend-mode: soft-light;
+  opacity: 0.9;
+}
+
+.typeline .done {
+  color: #6d8f5f;
+}
+
+.typeline .rest {
+  font-weight: 700;
+}
+
+/* 菜の花（花畑）— ゆれるアニメーション */
+.nanohana-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.nanohana {
+  position: absolute;
+  left: var(--x);
+  bottom: -3%;
+  width: clamp(32px, 8vw, 46px);
+  height: clamp(72px, 19vw, 100px);
+  transform-origin: 50% 100%;
+  animation: nanohana-sway 4.2s ease-in-out infinite;
+  animation-delay: var(--d, 0s);
+}
+
+.nanohana--short {
+  height: clamp(58px, 15vw, 82px);
+}
+
+.nanohana::before {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  width: 5px;
+  height: 50px;
+  margin-left: -2.5px;
+  border-radius: 3px;
+  background: linear-gradient(180deg, #9bc96d 0%, #6d9448 100%);
+  box-shadow: 1px 0 2px rgba(0, 0, 0, 0.07);
+}
+
+.nanohana::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 44px;
+  transform: translateX(-50%);
+  width: clamp(26px, 7vw, 34px);
+  height: clamp(26px, 7vw, 34px);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #fffef2 0%, #ffe94a 40%, #e6c026 96%);
+  box-shadow:
+    inset 2px -3px 6px rgba(200, 120, 25, 0.22),
+    11px 4px 0 -6px rgba(255, 220, 60, 0.96),
+    -10px 6px 0 -7px rgba(255, 235, 100, 0.9),
+    4px -11px 0 -7px rgba(255, 210, 50, 0.88),
+    -4px -9px 0 -7px rgba(255, 228, 120, 0.82),
+    -13px -2px 0 -7px rgba(255, 218, 70, 0.86);
+}
+
+.nanohana--short::before {
+  height: 40px;
+}
+
+.nanohana--short::after {
+  bottom: 36px;
+  width: clamp(22px, 6vw, 28px);
+  height: clamp(22px, 6vw, 28px);
+  transform: translateX(-50%);
+}
+
+@keyframes nanohana-sway {
+  0%,
+  100% {
+    transform: scale(var(--s, 1)) rotate(-2.5deg);
+  }
+
+  50% {
+    transform: scale(var(--s, 1)) rotate(4.5deg);
+  }
+}
+
+/* ごまちゃん：横向きプロフィール（ウサギ体型に近づけた版） */
+.bunny.bunny--side {
+  position: absolute;
+  z-index: 2;
+  left: 4%;
+  bottom: 6%;
+  width: clamp(126px, 32vw, 176px);
+  height: clamp(92px, 24vw, 130px);
+  transition: transform 0.35s ease, left 0.25s ease-out;
+  transform: scaleX(-1);
+  transform-origin: 50% 58%;
+  animation: bunny-bob 1.6s ease-in-out infinite;
+  filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.1));
+}
+
+/* プレイ中は少しテンポを上げて、待機中より元気に動く */
+body.is-playing .bunny.bunny--side {
+  animation-duration: 1.05s;
+}
+
+/* 背中から腰へ繋がる主シルエット */
+.bunny.bunny--side::before {
+  content: "";
+  position: absolute;
+  left: 11%;
+  bottom: 30%;
+  width: 64%;
+  height: 48%;
+  background: linear-gradient(162deg, #b6b3b1 0%, #a8a5a3 58%, #9e9b99 100%);
+  border-radius: 62% 38% 50% 52% / 56% 44% 56% 44%;
+  transform: rotate(-2deg);
+  z-index: 0;
+  box-shadow: inset 4px 2px 6px rgba(255, 255, 255, 0.16), inset -4px -3px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* 肩〜胸側の柔らかい明部 */
+.bunny.bunny--side::after {
+  content: "";
+  position: absolute;
+  left: 21%;
+  bottom: 41%;
+  width: 30%;
+  height: 16%;
+  background: radial-gradient(ellipse at 40% 40%, rgba(255, 255, 255, 0.24) 0%, transparent 75%);
+  border-radius: 50%;
+  opacity: 0.9;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* ぽんっとした尻尾の玉 */
+.bunny-tail {
+  position: absolute;
+  right: 2%;
+  top: 30%;
+  width: 16%;
+  height: 16%;
+  background: radial-gradient(circle at 34% 34%, #f4f4f4, #bcb9b7 84%);
+  border-radius: 52% 48% 50% 47%;
+  box-shadow: inset -3px -2px 4px rgba(0, 0, 0, 0.08), 2px 2px 0 rgba(255, 255, 255, 0.35);
+  animation: bunny-tail-wiggle 0.7s ease-in-out infinite alternate;
+}
+
+/* 腰の大きな塊（ウサギらしい後躯） */
+.bunny-haunch {
+  position: absolute;
+  z-index: 1;
+  right: 9%;
+  bottom: 30%;
+  width: 34%;
+  height: 44%;
+  background: linear-gradient(164deg, #b5b2b0 0%, #a5a2a0 55%, #9b9896 100%);
+  border-radius: 56% 38% 50% 46%;
+  transform: rotate(4deg);
+  box-shadow: inset 3px -3px 7px rgba(0, 0, 0, 0.09), inset -2px 2px 4px rgba(255, 255, 255, 0.1);
+}
+
+/* 後脚（太もも） */
+.bunny-hind-thigh {
+  position: absolute;
+  right: 8%;
+  bottom: 13%;
+  width: 30%;
+  height: 55%;
+  background: linear-gradient(166deg, #b4b1af 0%, #a4a19f 56%, #989593 100%);
+  border-radius: 56% 38% 46% 40% / 60% 48% 44% 34%;
+  transform: rotate(8deg);
+  transform-origin: 52% 12%;
+  box-shadow: inset -4px 2px 8px rgba(255, 255, 255, 0.12), inset 2px -5px 9px rgba(0, 0, 0, 0.08);
+}
+
+.bunny-hind-thigh::after {
+  content: "";
+  position: absolute;
+  left: 10%;
+  top: 24%;
+  width: 44%;
+  height: 58%;
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.2) 0%, transparent 55%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* 後ろ足先 */
+.bunny-hind-paw {
+  position: absolute;
+  right: -2%;
+  bottom: -4%;
+  width: 25%;
+  height: 30%;
+  background: linear-gradient(165deg, #b2afad 0%, #a09d9b 55%, #93908e 100%);
+  border-radius: 42% 56% 36% 40% / 48% 44% 52% 40%;
+  transform: rotate(16deg);
+  transform-origin: 30% 24%;
+  box-shadow: inset 3px -2px 4px rgba(0, 0, 0, 0.12), inset -1px 2px 3px rgba(255, 255, 255, 0.1), 0 3px 0 rgba(0, 0, 0, 0.05);
+}
+
+.bunny-hind-paw::before {
+  content: "";
+  position: absolute;
+  inset: 14% 18% auto 40%;
+  height: 42%;
+  width: 30%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent);
+  border-radius: 50%;
+}
+
+/* 胴体（胸） */
+.bunny-body {
+  position: absolute;
+  z-index: 1;
+  left: 20%;
+  bottom: 36%;
+  width: 36%;
+  height: 50%;
+  background: linear-gradient(164deg, #b6b3b1 0%, #a8a5a3 58%, #9d9a98 100%);
+  border-radius: 62% 38% 48% 54% / 58% 42% 54% 46%;
+  transform: rotate(-4deg);
+  box-shadow: inset 3px 2px 6px rgba(255, 255, 255, 0.16), inset -3px -2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.bunny-body::before {
+  content: "";
+  position: absolute;
+  right: -2%;
+  top: 40%;
+  width: 12%;
+  height: 26%;
+  background: rgba(0, 0, 0, 0.05);
+  opacity: 0.35;
+  pointer-events: none;
+  border-radius: 50%;
+}
+
+/* 胸のハイライト */
+.bunny-belly-highlight {
+  position: absolute;
+  left: 24%;
+  bottom: 50%;
+  width: 30%;
+  height: 34%;
+  background: radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.18) 0%, transparent 80%);
+  border-radius: 50%;
+  pointer-events: none;
+  transform: rotate(-8deg);
+}
+
+/* 首 */
+.bunny-neck {
+  position: absolute;
+  z-index: 2;
+  left: 13%;
+  bottom: 57%;
+  width: 21%;
+  height: 31%;
+  background: linear-gradient(162deg, #b6b3b1, #9f9c9a);
+  border-radius: 54% 46% 50% 50%;
+  transform: rotate(-10deg);
+  box-shadow: inset 2px 2px 4px rgba(255, 255, 255, 0.2);
+}
+
+/* 前脚（上腕） */
+.bunny-fore-thigh {
+  position: absolute;
+  left: 24%;
+  bottom: 20%;
+  width: 17%;
+  height: 58%;
+  background: linear-gradient(170deg, #b3b0ae 0%, #a19e9c 60%, #93908e 100%);
+  border-radius: 50% 40% 46% 50% / 48% 56% 42% 40%;
+  transform: rotate(4deg);
+  transform-origin: 50% 8%;
+  box-shadow: inset 2px 1px 5px rgba(255, 255, 255, 0.15), inset -1px -4px 6px rgba(0, 0, 0, 0.08);
+}
+
+.bunny-fore-thigh::after {
+  content: "";
+  position: absolute;
+  right: 12%;
+  top: 18%;
+  width: 45%;
+  height: 55%;
+  background: linear-gradient(200deg, rgba(255, 255, 255, 0.2) 0%, transparent 60%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* 前脚（手〜手首） */
+.bunny-fore-paw {
+  position: absolute;
+  left: 19%;
+  bottom: 1%;
+  width: 15%;
+  height: 40%;
+  background: linear-gradient(170deg, #b3b0ae 0%, #9f9c9a 60%, #93908e 100%);
+  border-radius: 45% 50% 42% 48% / 48% 42% 45% 38%;
+  transform: rotate(2deg);
+  transform-origin: 50% 8%;
+  box-shadow: inset 1px -1px 3px rgba(0, 0, 0, 0.1), inset -1px 2px 2px rgba(255, 255, 255, 0.08);
+}
+
+/* 前足の足先（つま先）: 右向き */
+.bunny-fore-paw::before {
+  content: "";
+  position: absolute;
+  right: -30%;
+  bottom: 8%;
+  width: 58%;
+  height: 34%;
+  background: linear-gradient(170deg, #b1aeac 0%, #9a9795 100%);
+  border-radius: 36% 60% 54% 42% / 44% 58% 42% 46%;
+  transform: rotate(14deg);
+  box-shadow: inset 1px -1px 2px rgba(0, 0, 0, 0.12), inset -1px 1px 2px rgba(255, 255, 255, 0.1);
+}
+
+.bunny-fore-paw::after {
+  content: "";
+  position: absolute;
+  right: -42%;
+  bottom: 18%;
+  width: 22%;
+  height: 10%;
+  background: rgba(90, 86, 83, 0.36);
+  border-radius: 999px;
+  transform: rotate(12deg);
+}
+
+.bunny-fore-toe {
+  position: absolute;
+  left: 29%;
+  bottom: 4%;
+  width: 13%;
+  height: 10%;
+  background: linear-gradient(170deg, #aba8a6 0%, #908d8b 100%);
+  border-radius: 35% 65% 50% 45%;
+  transform: rotate(6deg);
+  box-shadow: inset 1px -1px 2px rgba(0, 0, 0, 0.12);
+  z-index: 2;
+}
+
+/* 頭 */
+.bunny-head {
+  position: absolute;
+  z-index: 3;
+  left: 3%;
+  bottom: 64%;
+  width: 46%;
+  height: 54%;
+  background: linear-gradient(160deg, #b7b4b2 0%, #a8a5a3 58%, #9d9a98 100%);
+  border-radius: 50% 42% 40% 52%;
+  box-shadow: inset 3px 2px 6px rgba(255, 255, 255, 0.16), inset -3px -2px 5px rgba(0, 0, 0, 0.06);
+}
+
+.bunny-head::before {
+  content: "";
+  position: absolute;
+  left: -4%;
+  top: 54%;
+  width: 28%;
+  height: 22%;
+  background: linear-gradient(160deg, #b4b1af 0%, #a29f9d 100%);
+  border-radius: 54% 46% 50% 50%;
+}
+
+/* 奥の耳（半透明で奥行き） */
+.bunny-ear.bunny-ear--rear {
+  position: absolute;
+  left: 10%;
+  top: 2%;
+  width: 22%;
+  height: 108%;
+  background: linear-gradient(102deg, #d0cfce 0%, #787675 100%);
+  border-radius: 50% 46% 64% 60%;
+  box-shadow: inset -6px -3px 8px rgba(0, 0, 0, 0.1);
+  transform: rotate(132deg);
+  transform-origin: 24% 10%;
+  opacity: 0.9;
+  z-index: 0;
+}
+
+/* 手前の耳（灰毛＋ほんのりピンクの内側） */
+.bunny-ear.bunny-ear--front {
+  position: absolute;
+  left: 6%;
+  top: 0;
+  width: 34%;
+  height: 122%;
+  background: linear-gradient(118deg, #f0efee 12%, #8a8886 96%);
+  border-radius: 44% 52% 66% 62%;
+  transform: rotate(148deg);
+  transform-origin: 20% 10%;
+  box-shadow: inset -10px -4px 14px rgba(0, 0, 0, 0.1), inset 6px 6px 10px rgba(255, 255, 255, 0.45);
+  z-index: 1;
+}
+
+.bunny-ear--front::after {
+  content: "";
+  position: absolute;
+  left: 20%;
+  top: 14%;
+  right: 18%;
+  bottom: 20%;
+  background: radial-gradient(ellipse at 45% 40%, rgba(255, 220, 230, 0.95) 0%, rgba(240, 180, 190, 0.45) 45%, transparent 72%);
+  border-radius: inherit;
+}
+
+.bunny-eye {
+  position: absolute;
+  left: 10%;
+  top: 43%;
+  width: 16%;
+  height: 14%;
+  background: radial-gradient(ellipse at 35% 35%, #1a1716 58%, #3b3634 100%);
+  border-radius: 55% 45% 60% 40%;
+  overflow: visible;
+  z-index: 2;
+  transform: rotate(-8deg);
+}
+
+.bunny-eye-highlight {
+  position: absolute;
+  left: 20%;
+  top: 22%;
+  width: 38%;
+  height: 38%;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 50%;
+}
+
+/* ひげ（細線のシャドウで表現） */
+.bunny-whiskers {
+  position: absolute;
+  left: -3%;
+  top: 53%;
+  width: 52%;
+  height: 26%;
+  pointer-events: none;
+  box-shadow:
+    62% -6px 0 0 rgba(52, 47, 45, 0.22),
+    78% -1px 0 0 rgba(52, 47, 45, 0.2),
+    70% 4px 0 0 rgba(52, 47, 45, 0.24),
+    85% 8px 0 0 rgba(52, 47, 45, 0.18);
+}
+
+.bunny-whiskers::before {
+  content: "";
+  position: absolute;
+  left: 100%;
+  top: 42%;
+  width: 118%;
+  height: 0.06rem;
+  max-height: 1px;
+  background: linear-gradient(to right, rgba(52, 47, 45, 0.18), transparent);
+  transform: rotate(7deg);
+  transform-origin: left center;
+}
+
+.bunny-whiskers::after {
+  content: "";
+  position: absolute;
+  left: 100%;
+  top: 55%;
+  width: 128%;
+  height: 0.06rem;
+  max-height: 1px;
+  background: linear-gradient(to right, rgba(52, 47, 45, 0.16), transparent);
+  transform: rotate(-11deg);
+  transform-origin: left center;
+}
+
+/* 鼻 */
+.bunny-nose {
+  position: absolute;
+  left: -6%;
+  top: 53%;
+  width: 17%;
+  height: 21%;
+  background: radial-gradient(ellipse at 40% 40%, #ebe4e6 12%, #6c5f63 92%);
+  border-radius: 50%;
+  box-shadow: inset 1px 2px 2px rgba(255, 255, 255, 0.4), 0 2px 3px rgba(0, 0, 0, 0.12);
+}
+
+.bunny-nose::after {
+  content: "";
+  position: absolute;
+  left: 48%;
+  top: 78%;
+  width: 1px;
+  height: 11px;
+  background: rgba(60, 55, 52, 0.45);
+  transform: rotate(8deg);
+  border-radius: 999px;
+}
+
+.bunny-nose-shine {
+  position: absolute;
+  left: -5%;
+  top: 53%;
+  width: 5%;
+  height: 9%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.72) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+@keyframes bunny-bob {
+  0%,
+  100% {
+    transform: translateY(0) scaleX(-1);
+  }
+
+  50% {
+    transform: translateY(-4px) scaleX(-1);
+  }
+}
+
+@keyframes bunny-tail-wiggle {
+  from {
+    transform: rotate(-2deg);
+  }
+
+  to {
+    transform: rotate(8deg);
+  }
+}
+
+.bait {
+  z-index: 4;
+
+  position: absolute;
+  bottom: 22%;
+  left: var(--bait-x, 62%);
+  padding: 0.35rem 0.85rem;
+  transform: translateX(-50%);
+  background: rgba(255, 250, 240, 0.95);
+  border-radius: 14px;
+  border: 1px dashed rgba(180, 130, 80, 0.45);
+  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.08);
+  animation: bait-drift var(--bait-duration, 5s) ease-in-out alternate infinite;
+}
+
+.bait-text {
+  font-weight: 700;
+  font-size: clamp(1rem, 3.8vw, 1.35rem);
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+
+@keyframes bait-drift {
+  from {
+    transform: translateX(-50%) translateX(-18px);
+  }
+  to {
+    transform: translateX(-50%) translateX(18px);
+  }
+}
+
+.scene.diff-advanced .bait {
+  --bait-duration: 2.2s;
+}
+
+.scene.diff-intermediate .bait {
+  --bait-duration: 3.2s;
+}
+
+.scene.diff-beginner .bait {
+  --bait-duration: 4.8s;
+}
+
+.hud-panel {
+  background: var(--card);
+  border-radius: var(--radius);
+  padding: 0.85rem 1rem 1rem;
+  box-shadow: 0 8px 28px var(--shadow);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+}
+
+.hud-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem 1.5rem;
+  margin-bottom: 0.45rem;
+  font-size: 0.95rem;
+}
+
+.hud-label {
+  font-size: 0.82rem;
+  opacity: 0.72;
+  margin-right: 0.2rem;
+}
+
+.typeline {
+  margin-top: 0.6rem;
+  padding: 0.65rem 0.75rem;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(61, 58, 54, 0.1);
+  font-size: clamp(1.05rem, 3.5vw, 1.45rem);
+  letter-spacing: 0.12em;
+  line-height: 1.5;
+  min-height: 3.2rem;
+}
+
+.typeline-label {
+  display: block;
+  font-size: 0.78rem;
+  opacity: 0.65;
+  margin-bottom: 0.25rem;
+  letter-spacing: 0.05em;
+}
+
+.caret {
+  display: inline-block;
+  color: var(--accent-dim);
+  animation: blink 1s step-end infinite;
+  margin-left: 1px;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.ghost-input {
+  width: 100%;
+  margin-top: 0.45rem;
+  font: inherit;
+  padding: 0.5rem 0.65rem;
+  border-radius: 12px;
+  border: 1px dashed rgba(224, 138, 108, 0.45);
+  background: rgba(255, 255, 255, 0.75);
+}
+
+.ghost-input:focus {
+  outline: 2px solid rgba(224, 138, 108, 0.35);
+  outline-offset: 2px;
+}
+
+.result-panel.hidden,
+.rank-panel.hidden,
+.setup-hidden {
+  display: none !important;
+}
+
+.rank-panel.rank-overlay {
+  position: fixed;
+  inset: auto 1rem 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(420px, calc(100vw - 2rem));
+  z-index: 20;
+  max-height: min(70vh, 420px);
+  overflow: auto;
+}
+
+.rank-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.rank-list {
+  margin: 0.5rem 0 0;
+  padding-left: 1.2rem;
+}
+
+.rank-list li {
+  margin: 0.25rem 0;
+}
+
+.muted {
+  margin: 0.25rem 0 0;
+  font-size: 0.88rem;
+  opacity: 0.75;
+}
+
+.score-big {
+  font-size: 1.2rem;
+}
+
+.score-big strong {
+  font-size: 1.6rem;
+  color: var(--accent-dim);
+}
+
+.buttons {
+  margin-top: 0.75rem;
+}
+
+.foot {
+  max-width: 960px;
+  margin: 1.5rem auto 0;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  opacity: 0.72;
+}
+
+@media (min-width: 720px) {
+  .stage-wrap {
+    flex-direction: row;
+    align-items: stretch;
+  }
+
+  .scene {
+    flex: 1.2;
+  }
+
+  .hud-panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+}
