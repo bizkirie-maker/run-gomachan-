@@ -14,55 +14,102 @@ const LENGTH_MODE = {
   ninjin: { id: "ninjin", label: "ニンジン", min: 11, max: 15, bonus: 2 },
 };
 
-const PARTICLES = ["の", "を", "は", "が", "に", "と", "も", "や", "へ", "で"];
-const CHUNKS = [
+/** 意味のある文（すべてひらがな・かんじなし）。かな入力で変換せずにそのまま打てる */
+const PHRASES_KABU = [
+  "あめ",
+  "はれ",
+  "そら",
+  "ねこ",
+  "いぬ",
   "かぜ",
   "はな",
-  "そら",
-  "うみ",
-  "あさ",
-  "よる",
-  "みどり",
-  "あお",
-  "あか",
-  "しろ",
-  "もり",
-  "かわ",
-  "やま",
-  "こども",
-  "がっこう",
-  "せんせい",
-  "ともだち",
-  "おべんとう",
-  "おさら",
-  "はし",
-  "えんぴつ",
-  "ノート",
-  "じてんしゃ",
-  "まち",
-  "むら",
-  "たんぽぽ",
-  "にんじん",
-  "かぶ",
-  "きいろ",
-  "あかい",
-  "あおい",
-  "あめ",
+  "みず",
   "くも",
-  "ほし",
   "つき",
-  "いぬ",
-  "ねこ",
-  "とり",
-  "さかな",
-  "かばん",
-  "くつ",
-  "ぼうし",
-  "めがね",
-  "えんそく",
-  "すいえい",
+  "やま",
+  "かわ",
+  "いま",
+  "きょう",
+  "あした",
+  "あめだ",
+  "はれた",
+  "そらは",
+  "みずを",
+  "ねこが",
+  "がんばれ",
+  "おはよう",
+  "おやすみ",
+  "またね",
+  "すきだよ",
+  "ありがとう",
+  "こんにちは",
+  "いそがしい",
+  "きもちいい",
+  "きをつけて",
+  "あしたは",
+  "てんきいい",
 ];
-const KANA_FILL = "あいうえおかきくけこさしすせそたちつてとなにぬねのはひふへほまみむめもやゆよらりるれろわをんっ";
+
+const PHRASES_TANPOPO = [
+  "はながさいた",
+  "そらはあおい",
+  "きょうははれる",
+  "あさごはんたべた",
+  "みんなであそぶ",
+  "がっこういくよ",
+  "おべんとうおいしい",
+  "ともだちだいすき",
+  "かわであそんだ",
+  "もりをあるいた",
+  "にんじんすきだ",
+  "たんぽぽみたい",
+  "かぶをすきだ",
+  "はるのかぜだ",
+  "あきはさんぽだ",
+  "ねこがねてた",
+  "いぬとあるいた",
+  "えんそくたのしい",
+  "すいえいしたよ",
+  "こうえんであそぶ",
+  "かぞくとでかけた",
+  "せんせいがやさしい",
+  "ともだちがきた",
+  "まちをあるいた",
+  "かばんもっていく",
+  "おべんとうつくった",
+  "なのはなきれいだ",
+  "みどりがすきだ",
+  "おさらをあらった",
+  "はしをつかうよ",
+];
+
+const PHRASES_NINJIN = [
+  "きょうはいいてんきだね",
+  "はるのはながきれいだね",
+  "おさんぽにいきたいなよ",
+  "ともだちといっしょだよ",
+  "がっこうでえんそくだよ",
+  "かぞくみんなげんきだよ",
+  "みどりのそらがきれいだ",
+  "あさからばたばたしてた",
+  "ひるごはんおいしかった",
+  "ゆうがたさんぽしたよね",
+  "ほしがきらきらしてたよ",
+  "つきがきれいにみえたよ",
+  "かわのおとがきこえたよ",
+  "もりのなかはしずかだね",
+  "とりがさえずってたよね",
+  "ねこがごろごろしてたよ",
+  "いぬがしっぽをふったよ",
+  "はるやすみたのしかった",
+  "なつやすみあつかったよ",
+  "そらがどこまでもあおい",
+  "えんそくでおべんとうだ",
+  "せんせいにありがとうと",
+  "ともだちとえがおでわらった",
+  "かぞくとおまつりいった",
+  "やさいをたくさんたべた",
+];
 
 const $ = (id) => document.getElementById(id);
 
@@ -88,23 +135,17 @@ function randomInt(min, max) {
   return min + Math.floor(Math.random() * (max - min + 1));
 }
 
-function buildPhrase(minLen, maxLen) {
-  const L = randomInt(minLen, maxLen);
-  let s = "";
-  while (s.length < L) {
-    const room = L - s.length;
-    const chunk = CHUNKS[randomInt(0, CHUNKS.length - 1)];
-    if (chunk.length <= room && Math.random() > 0.25) {
-      s += chunk;
-    } else if (room >= 1) {
-      s += KANA_FILL[randomInt(0, KANA_FILL.length - 1)];
-    }
-    if (s.length < L && s.length > 0 && Math.random() > 0.55) {
-      const p = PARTICLES[randomInt(0, PARTICLES.length - 1)];
-      if (s.length + p.length <= L) s += p;
-    }
+function pickRandomPhrase() {
+  const { min, max, id } = state.lenMode;
+  const pool =
+    id === "kabu" ? PHRASES_KABU : id === "tanpopo" ? PHRASES_TANPOPO : PHRASES_NINJIN;
+  const candidates = pool.filter((p) => p.length >= min && p.length <= max);
+  if (candidates.length > 0) {
+    return candidates[randomInt(0, candidates.length - 1)];
   }
-  return s.slice(0, L);
+  const fallback = pool.filter((p) => p.length >= min);
+  if (fallback.length > 0) return fallback[randomInt(0, fallback.length - 1)];
+  return "あしたははれる";
 }
 
 function rankStorageKey() {
@@ -186,7 +227,7 @@ function applyBaitVegetableClass() {
 }
 
 function newPhrase() {
-  state.target = buildPhrase(state.lenMode.min, state.lenMode.max);
+  state.target = pickRandomPhrase();
   state.index = 0;
   state.imeSession = false;
   state.phraseEndAt = performance.now() + state.diff.phraseSec * 1000;
@@ -207,6 +248,15 @@ function renderTypeline() {
   const done = t.slice(0, i);
   const rest = t.slice(i);
   $("targetLine").innerHTML = `<span class="done">${escapeHtml(done)}</span><span class="rest">${escapeHtml(rest)}</span>`;
+  const caret = $("caret");
+  if (caret) caret.classList.remove("caret--hide");
+}
+
+/** 文が終わったあと、さっき打った表示を消す */
+function clearTypelineDisplay() {
+  $("targetLine").innerHTML = "";
+  const caret = $("caret");
+  if (caret) caret.classList.add("caret--hide");
 }
 
 function escapeHtml(s) {
@@ -229,23 +279,22 @@ function updateBunnyMotion() {
   const sceneRect = scene.getBoundingClientRect();
   const baitRect = bait.getBoundingClientRect();
   const baitPercent = ((baitRect.left + baitRect.width / 2 - sceneRect.left) / sceneRect.width) * 100;
-  // エサ位置を左右反転して追従（進む方向を逆に）
-  const mirrored = 100 - baitPercent;
-  const target = Math.max(3, Math.min(72, mirrored - 16));
+  const target = Math.max(3, Math.min(72, baitPercent - 16));
   state.bunnyX += (target - state.bunnyX) * 0.06;
   bunny.style.left = `${state.bunnyX.toFixed(2)}%`;
 }
 
 function bumpBunny() {
   const b = $("bunny");
-  b.style.transform = `translate(${randomInt(-5, 8)}px, ${randomInt(-4, 2)}px) scaleX(1)`;
+  b.style.transform = `translate(${randomInt(-5, 8)}px, ${randomInt(-4, 2)}px) scaleX(-1)`;
   setTimeout(() => {
-    b.style.transform = "scaleX(1)";
+    b.style.transform = "scaleX(-1)";
   }, 180);
 }
 
 function openPhraseBreakScreen(phrasePts) {
   state.inPhraseBreak = true;
+  clearTypelineDisplay();
   $("phraseBreakPoints").textContent = String(phrasePts);
   $("bait").hidden = true;
   $("phraseBreakPanel").classList.remove("hidden");
@@ -270,6 +319,7 @@ function onSuccessPhrase() {
 
 function onMistakeOrTimeout() {
   state.baitStock = Math.max(0, state.baitStock - 1);
+  clearTypelineDisplay();
   newPhrase();
 }
 

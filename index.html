@@ -105,10 +105,22 @@
           <div><span class="hud-label">エサストック（ミスで1つなくなる）</span> <strong id="stockCount">0</strong> こ</div>
         </div>
         <div class="typeline" aria-label="打つひらがな">
-          <span class="typeline-label">打つ順</span>
+          <span class="typeline-label">打つ文（ひらがなのまま・かんじにへんかんしない）</span>
           <span id="targetLine"></span><span id="caret" class="caret">丨</span>
         </div>
-        <input id="ghostInput" class="ghost-input" type="text" inputmode="text" autocomplete="off" autocorrect="off" spellcheck="false" aria-label="タイプ入力はこちらへフォーカス" />
+        <p class="input-hint">かなキーでそのまま入力。へんかん（スペース）をおさないでください。</p>
+        <input
+          id="ghostInput"
+          class="ghost-input"
+          type="text"
+          lang="ja"
+          inputmode="text"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          spellcheck="false"
+          aria-label="ひらがなでタイプ。かんじへんかんはしないでください"
+        />
       </section>
     </section>
 
