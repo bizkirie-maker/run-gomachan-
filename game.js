@@ -80,6 +80,8 @@ const state = {
   bunnyX: 4,
   /** IME の変換中は keydown の誤判定を避ける */
   imeSession: false,
+  /** 一文クリア後の「つぎのエサ」待ち（この間は文タイムアウトしない） */
+  inPhraseBreak: false,
 };
 
 function randomInt(min, max) {
@@ -213,7 +215,7 @@ function escapeHtml(s) {
 
 function updateHud(gameRemain, phraseRemain) {
   $("gameTimer").textContent = gameRemain.toFixed(1);
-  $("phraseTimer").textContent = Math.max(0, phraseRemain).toFixed(1);
+  $("phraseTimer").textContent = state.inPhraseBreak ? "—" : Math.max(0, phraseRemain).toFixed(1);
   $("score").textContent = String(state.score);
   $("stockCount").textContent = String(state.baitStock);
 }
@@ -227,17 +229,35 @@ function updateBunnyMotion() {
   const sceneRect = scene.getBoundingClientRect();
   const baitRect = bait.getBoundingClientRect();
   const baitPercent = ((baitRect.left + baitRect.width / 2 - sceneRect.left) / sceneRect.width) * 100;
-  const target = Math.max(3, Math.min(72, baitPercent - 16));
+  // エサ位置を左右反転して追従（進む方向を逆に）
+  const mirrored = 100 - baitPercent;
+  const target = Math.max(3, Math.min(72, mirrored - 16));
   state.bunnyX += (target - state.bunnyX) * 0.06;
   bunny.style.left = `${state.bunnyX.toFixed(2)}%`;
 }
 
 function bumpBunny() {
   const b = $("bunny");
-  b.style.transform = `translate(${randomInt(-5, 8)}px, ${randomInt(-4, 2)}px) scaleX(-1)`;
+  b.style.transform = `translate(${randomInt(-5, 8)}px, ${randomInt(-4, 2)}px) scaleX(1)`;
   setTimeout(() => {
-    b.style.transform = "scaleX(-1)";
+    b.style.transform = "scaleX(1)";
   }, 180);
+}
+
+function openPhraseBreakScreen(phrasePts) {
+  state.inPhraseBreak = true;
+  $("phraseBreakPoints").textContent = String(phrasePts);
+  $("bait").hidden = true;
+  $("phraseBreakPanel").classList.remove("hidden");
+  $("ghostInput").blur();
+}
+
+function continueToNextPhrase() {
+  if (!state.playing || !state.inPhraseBreak) return;
+  state.inPhraseBreak = false;
+  $("phraseBreakPanel").classList.add("hidden");
+  newPhrase();
+  $("ghostInput").focus({ preventScroll: true });
 }
 
 function onSuccessPhrase() {
@@ -245,7 +265,7 @@ function onSuccessPhrase() {
   state.score += pts;
   state.baitStock += 1;
   bumpBunny();
-  newPhrase();
+  openPhraseBreakScreen(pts);
 }
 
 function onMistakeOrTimeout() {
@@ -256,10 +276,12 @@ function onMistakeOrTimeout() {
 function endGame() {
   state.playing = false;
   state.imeSession = false;
+  state.inPhraseBreak = false;
   document.body.classList.remove("is-playing");
   cancelAnimationFrame(state.raf);
   $("ghostInput").blur();
   $("bait").hidden = true;
+  $("phraseBreakPanel").classList.add("hidden");
   $("resultPanel").classList.remove("hidden");
   $("finalScore").textContent = String(state.score);
   const name = ($("playerName").value || "").trim() || "ななし";
@@ -287,7 +309,7 @@ function gameLoop(now) {
     endGame();
     return;
   }
-  if (phraseRemain <= 0) {
+  if (!state.inPhraseBreak && phraseRemain <= 0) {
     onMistakeOrTimeout();
   }
   state.raf = requestAnimationFrame(gameLoop);
@@ -300,7 +322,9 @@ function startGame() {
   state.score = 0;
   state.baitStock = 0;
   state.playing = true;
+  state.inPhraseBreak = false;
   state.bunnyX = 4;
+  $("phraseBreakPanel").classList.add("hidden");
   document.body.classList.add("is-playing");
   const now = performance.now();
   state.gameEndAt = now + 60_000;
@@ -315,11 +339,13 @@ function startGame() {
 
 function resetToSetup() {
   state.playing = false;
+  state.inPhraseBreak = false;
   document.body.classList.remove("is-playing");
   cancelAnimationFrame(state.raf);
   $("setupPanel").classList.remove("setup-hidden");
   $("stageWrap").classList.add("setup-hidden");
   $("resultPanel").classList.add("hidden");
+  $("phraseBreakPanel").classList.add("hidden");
   $("bait").hidden = true;
 }
 
@@ -334,6 +360,7 @@ function isKanaChar(ch) {
 }
 
 function processTypedChar(ch) {
+  if (state.inPhraseBreak) return;
   const expected = state.target[state.index];
   if (!expected) return;
 
@@ -354,7 +381,7 @@ function onCompositionStart() {
 
 function onCompositionEnd(ev) {
   state.imeSession = false;
-  if (!state.playing) return;
+  if (!state.playing || state.inPhraseBreak) return;
   const data = ev.data;
   if (!data) {
     ev.target.value = "";
@@ -368,7 +395,7 @@ function onCompositionEnd(ev) {
 }
 
 function onKeydown(ev) {
-  if (!state.playing) return;
+  if (!state.playing || state.inPhraseBreak) return;
   if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
   // IME 変換中・セッション中はローマ字等の keydown を無視（誤答で次の文へ進むのを防ぐ）
   if (ev.isComposing || state.imeSession) return;
@@ -401,6 +428,7 @@ function init() {
   $("startBtn").addEventListener("click", startGame);
   $("againBtn").addEventListener("click", startGame);
   $("backBtn").addEventListener("click", resetToSetup);
+  $("nextPhraseBtn").addEventListener("click", continueToNextPhrase);
   $("openRankingBtn").addEventListener("click", openRanking);
   $("closeRankBtn").addEventListener("click", closeRanking);
 
@@ -409,7 +437,7 @@ function init() {
   $("ghostInput").addEventListener("compositionend", onCompositionEnd);
 
   $("ghostInput").addEventListener("input", (ev) => {
-    if (!state.playing) return;
+    if (!state.playing || state.inPhraseBreak) return;
     // IME 確定前に value を空にすると変換が壊れたり、1文字でおかしくなる
     if (ev.isComposing) return;
     ev.target.value = "";
