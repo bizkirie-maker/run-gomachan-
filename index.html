@@ -104,11 +104,11 @@
           <div><span class="hud-label">スコア</span> <strong id="score">0</strong> pt</div>
           <div><span class="hud-label">エサストック（ミスで1つなくなる）</span> <strong id="stockCount">0</strong> こ</div>
         </div>
-        <div class="typeline" aria-label="つぎに打つ読み">
-          <span class="typeline-label">つぎに打つ読み（おわると自動でつぎの文）</span>
+        <div class="typeline" aria-label="打つ文章">
+          <span class="typeline-label">つぎに打つところ（打った分は出しません・まちがいですぐ次の文）</span>
           <span id="targetLine"></span><span id="caret" class="caret">丨</span>
         </div>
-        <p class="input-hint">エサは漢字の文、ここには読みの残りだけ。ひらがなで読みどおり打てば、かんじへんかんは不要です。</p>
+        <p class="input-hint">IME でお題と同じ表記にする。正しいと次の文が自動、まちがいも次の文へ。エンター不要。</p>
         <input
           id="ghostInput"
           class="ghost-input"
@@ -119,7 +119,7 @@
           autocorrect="off"
           autocapitalize="off"
           spellcheck="false"
-          aria-label="読みをひらがなで入力。文の終わりで自動的に次のお題へ"
+          aria-label="日本語入力で、お題と同じ表記になるようにタイプ"
         />
       </section>
     </section>

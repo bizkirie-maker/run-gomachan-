@@ -14,109 +14,109 @@ const LENGTH_MODE = {
   ninjin: { id: "ninjin", label: "ニンジン", min: 11, max: 15, bonus: 2 },
 };
 
-/** エサ＝漢字まじりの文 / 判定＝読み（ひらがな）。打った読みがお題と一致すれば正解（かんじへんかんは不要） */
-const PHRASE_PAIRS_KABU = [
-  { surface: "今日", reading: "きょう" },
-  { surface: "明日", reading: "あした" },
-  { surface: "天気", reading: "てんき" },
-  { surface: "学校", reading: "がっこう" },
-  { surface: "春です", reading: "はるです" },
-  { surface: "花咲く", reading: "はなさく" },
-  { surface: "猫好き", reading: "ねこすき" },
-  { surface: "犬好き", reading: "いぬすき" },
-  { surface: "水飲む", reading: "みずのむ" },
-  { surface: "風強い", reading: "かぜつよい" },
-  { surface: "雲多い", reading: "くもおおい" },
-  { surface: "山登る", reading: "やまのぼる" },
-  { surface: "川遊び", reading: "かわあそび" },
-  { surface: "空青い", reading: "そらあおい" },
-  { surface: "今から", reading: "いまから" },
-  { surface: "行こう", reading: "いこう" },
-  { surface: "帰るよ", reading: "かえるよ" },
-  { surface: "元気", reading: "げんき" },
-  { surface: "感謝", reading: "かんしゃ" },
-  { surface: "了解", reading: "りょうかい" },
-  { surface: "注意", reading: "ちゅうい" },
-  { surface: "急いで", reading: "いそいで" },
-  { surface: "大好き", reading: "だいすき" },
-  { surface: "仲良し", reading: "なかよし" },
-  { surface: "楽しい", reading: "たのしい" },
-  { surface: "早寝る", reading: "はやねる" },
-  { surface: "朝だよ", reading: "あさだよ" },
-  { surface: "夜だね", reading: "よるだね" },
-  { surface: "雨降る", reading: "あめふる" },
-  { surface: "雪だね", reading: "ゆきだね" },
-  { surface: "読書", reading: "どくしょ" },
-  { surface: "散歩", reading: "さんぽ" },
-  { surface: "友達", reading: "ともだち" },
-  { surface: "学校行く", reading: "がっこういく" },
-  { surface: "明日会う", reading: "あしたあう" },
-  { surface: "猫可愛い", reading: "ねこかわいい" },
-  { surface: "今日は晴れ", reading: "きょうははれ" },
-  { surface: "明日は休み", reading: "あしたはやすみ" },
-  { surface: "有難うね", reading: "ありがとうね" },
-  { surface: "待ってて", reading: "まってて" },
+/** 意味のある文（漢字を多用。プレイヤーは IME で同じ表記を入力） */
+const PHRASES_KABU = [
+  "今日",
+  "明日",
+  "天気",
+  "学校",
+  "春です",
+  "花咲く",
+  "猫好き",
+  "犬好き",
+  "水飲む",
+  "風強い",
+  "雲多い",
+  "山登る",
+  "川遊び",
+  "空青い",
+  "今から",
+  "行こう",
+  "帰るよ",
+  "元気",
+  "感謝",
+  "了解",
+  "注意",
+  "急いで",
+  "大好き",
+  "仲良し",
+  "楽しい",
+  "早寝る",
+  "朝だよ",
+  "夜だね",
+  "雨降る",
+  "雪だね",
+  "読書",
+  "散歩",
+  "友達",
+  "学校行く",
+  "明日会う",
+  "猫可愛い",
+  "今日は晴れ",
+  "明日は休み",
+  "有難うね",
+  "待ってて",
 ];
 
-const PHRASE_PAIRS_TANPOPO = [
-  { surface: "花が咲いたよ", reading: "はながさいたよ" },
-  { surface: "空はとても青いよ", reading: "そらはとてもあおいよ" },
-  { surface: "今日はきっと晴れる", reading: "きょうはきっとはれる" },
-  { surface: "朝ご飯たくさん食べた", reading: "あさごはんたくさんたべた" },
-  { surface: "みんなで公園遊ぶ", reading: "みんなでこうえんあそぶ" },
-  { surface: "学校へ行くの楽しい", reading: "がっこうへいくのたのしい" },
-  { surface: "お弁当とても美味しい", reading: "おべんとうとてもおいしい" },
-  { surface: "友達みんな大好き", reading: "ともだちみんなだいすき" },
-  { surface: "川ではしゃいで遊んだ", reading: "かわではしゃいであそんだ" },
-  { surface: "森の小道を歩いた", reading: "もりのこみちをあるいた" },
-  { surface: "人参も嫌いじゃない", reading: "にんじんもきらいじゃない" },
-  { surface: "蒲公英を見つけたよ", reading: "たんぽぽをみつけたよ" },
-  { surface: "かぶのサラダ食べた", reading: "かぶのさらだたべた" },
-  { surface: "春の風が気持ちいい", reading: "はるのかぜがきもちいい" },
-  { surface: "秋の夕方散歩した", reading: "あきのゆうがたさんぽした" },
-  { surface: "猫が日向で寝てた", reading: "ねこがひなたでねてた" },
-  { surface: "犬と公園を歩いた", reading: "いぬとこうえんをあるいた" },
-  { surface: "遠足は本当に楽しい", reading: "えんそくはほんとうにたのしい" },
-  { surface: "プールで水泳したよ", reading: "ぷーるですいえいしたよ" },
-  { surface: "公園の砂場で遊ぶ", reading: "こうえんのすなばであそぶ" },
-  { surface: "家族みんなで出かけた", reading: "かぞくみんなででかけた" },
-  { surface: "先生はいつも優しい", reading: "せんせいはいつもやさしい" },
-  { surface: "友達の家に遊び行く", reading: "ともだちのいえにあそびいく" },
-  { surface: "街の本屋さん歩いた", reading: "まちのほんやさんあるいた" },
-  { surface: "鞄を持って学校行く", reading: "かばんをもってがっこういく" },
-  { surface: "朝からお弁当の準備", reading: "あさからおべんとうのじゅんび" },
-  { surface: "菜の花畑が綺麗だ", reading: "なのはなばたけがきれいだ" },
-  { surface: "新緑の季節が好き", reading: "しんりょくのきせつがすき" },
-  { surface: "食後にお皿洗ったよ", reading: "しょくごにおさらあらったよ" },
-  { surface: "正しく箸を使うよ", reading: "ただしくはしをつかうよ" },
+const PHRASES_TANPOPO = [
+  "花が咲いたよ",
+  "空はとても青いよ",
+  "今日はきっと晴れる",
+  "朝ご飯たくさん食べた",
+  "みんなで公園遊ぶ",
+  "学校へ行くの楽しい",
+  "お弁当とても美味しい",
+  "友達みんな大好き",
+  "川ではしゃいで遊んだ",
+  "森の小道を歩いた",
+  "人参も嫌いじゃない",
+  "蒲公英を見つけたよ",
+  "かぶのサラダ食べた",
+  "春の風が気持ちいい",
+  "秋の夕方散歩した",
+  "猫が日向で寝てた",
+  "犬と公園を歩いた",
+  "遠足は本当に楽しい",
+  "プールで水泳したよ",
+  "公園の砂場で遊ぶ",
+  "家族みんなで出かけた",
+  "先生はいつも優しい",
+  "友達の家に遊び行く",
+  "街の本屋さん歩いた",
+  "鞄を持って学校行く",
+  "朝からお弁当の準備",
+  "菜の花畑が綺麗だ",
+  "新緑の季節が好き",
+  "食後にお皿洗ったよ",
+  "正しく箸を使うよ",
 ];
 
-const PHRASE_PAIRS_NINJIN = [
-  { surface: "今日はとても良い天気だね", reading: "きょうはとてもよいてんきだね" },
-  { surface: "春の公園の花が綺麗だね", reading: "はるのこうえんのはながきれいだね" },
-  { surface: "午後の散歩に行きたいな", reading: "ごごのさんぽにいきたいな" },
-  { surface: "放課後友達と一緒に帰る", reading: "ほうかごともだちといっしょにかえる" },
-  { surface: "学校の遠足は本当に楽しかった", reading: "がっこうのえんそくはほんとうにたのしかった" },
-  { surface: "家族みんな元気に過ごしてる", reading: "かぞくみんなげんきにすごしてる" },
-  { surface: "野原の空がとても綺麗だ", reading: "のはらのそらがとてもきれいだ" },
-  { surface: "朝から忙しくバタバタしてた", reading: "あさからいそがしくばたばたしてた" },
-  { surface: "昼休みの給食が美味しかった", reading: "ひるやすみのきゅうしょくがおいしかった" },
-  { surface: "夕焼け見ながら散歩したよ", reading: "ゆうやけみながらさんぽしたよ" },
-  { surface: "夜空の星がキラキラ光ってた", reading: "よぞらのほしがきらきらひかってた" },
-  { surface: "山の上から月が見えたよ", reading: "やまのうえからつきがみえたよ" },
-  { surface: "窓の外で川の音が聞こえた", reading: "まどのそとでかわのおとがきこえた" },
-  { surface: "深い森の中は静かで寒い", reading: "ふかいもりのなかはしずかでさむい" },
-  { surface: "小鳥が木の上で囀ってた", reading: "ことりがきのうえでさえずってた" },
-  { surface: "うちの庭で猫が遊んでたよ", reading: "うちのにわでねこがあそんでたよ" },
-  { surface: "公園で犬が尻尾を振ってた", reading: "こうえんでいぬがしっぽをふってた" },
-  { surface: "春休みは毎日が楽しかった", reading: "はるやすみはまいにちがたのしかった" },
-  { surface: "夏休みの海はとても暑かった", reading: "なつやすみのうみはとてもあつかった" },
-  { surface: "雲一つない空が青く続く", reading: "くもひとつないそらがあおくつづく" },
-  { surface: "遠足の日のお弁当が最高", reading: "えんそくのひのおべんとうがさいこう" },
-  { surface: "先生にちゃんと御礼を言った", reading: "せんせいにちゃんとおれいをいった" },
-  { surface: "友達と笑顔で写真を撮った", reading: "ともだちとえがおでしゃしんをとった" },
-  { surface: "地元の夏祭りに行ったよ", reading: "じもとのなつまつりにいったよ" },
-  { surface: "畑の野菜をたくさん食べた", reading: "はたけのやさいをたくさんたべた" },
+const PHRASES_NINJIN = [
+  "今日はとても良い天気だね",
+  "春の公園の花が綺麗だね",
+  "午後の散歩に行きたいな",
+  "放課後友達と一緒に帰る",
+  "学校の遠足は本当に楽しかった",
+  "家族みんな元気に過ごしてる",
+  "野原の空がとても綺麗だ",
+  "朝から忙しくバタバタしてた",
+  "昼休みの給食が美味しかった",
+  "夕焼け見ながら散歩したよ",
+  "夜空の星がキラキラ光ってた",
+  "山の上から月が見えたよ",
+  "窓の外で川の音が聞こえた",
+  "深い森の中は静かで寒い",
+  "小鳥が木の上で囀ってた",
+  "うちの庭で猫が遊んでたよ",
+  "公園で犬が尻尾を振ってた",
+  "春休みは毎日が楽しかった",
+  "夏休みの海はとても暑かった",
+  "雲一つない空が青く続く",
+  "遠足の日のお弁当が最高",
+  "先生にちゃんと御礼を言った",
+  "友達と笑顔で写真を撮った",
+  "地元の夏祭りに行ったよ",
+  "畑の野菜をたくさん食べた",
 ];
 
 const $ = (id) => document.getElementById(id);
@@ -129,10 +129,7 @@ const state = {
   lenMode: LENGTH_MODE.kabu,
   score: 0,
   baitStock: 0,
-  /** 判定に使う読み（ひらがな） */
   target: "",
-  /** エサに出す表記（漢字まじり） */
-  surfaceText: "",
   index: 0,
   raf: 0,
   bunnyX: 4,
@@ -144,21 +141,17 @@ function randomInt(min, max) {
   return min + Math.floor(Math.random() * (max - min + 1));
 }
 
-function pickRandomPhrasePair() {
+function pickRandomPhrase() {
   const { min, max, id } = state.lenMode;
   const pool =
-    id === "kabu"
-      ? PHRASE_PAIRS_KABU
-      : id === "tanpopo"
-        ? PHRASE_PAIRS_TANPOPO
-        : PHRASE_PAIRS_NINJIN;
-  const candidates = pool.filter((p) => p.surface.length >= min && p.surface.length <= max);
+    id === "kabu" ? PHRASES_KABU : id === "tanpopo" ? PHRASES_TANPOPO : PHRASES_NINJIN;
+  const candidates = pool.filter((p) => p.length >= min && p.length <= max);
   if (candidates.length > 0) {
     return candidates[randomInt(0, candidates.length - 1)];
   }
-  const fallback = pool.filter((p) => p.surface.length >= min);
+  const fallback = pool.filter((p) => p.length >= min);
   if (fallback.length > 0) return fallback[randomInt(0, fallback.length - 1)];
-  return PHRASE_PAIRS_KABU[0];
+  return "あしたははれる";
 }
 
 function rankStorageKey() {
@@ -240,14 +233,12 @@ function applyBaitVegetableClass() {
 }
 
 function newPhrase() {
-  const pair = pickRandomPhrasePair();
-  state.surfaceText = pair.surface;
-  state.target = pair.reading;
+  state.target = pickRandomPhrase();
   state.index = 0;
   state.imeSession = false;
   state.phraseEndAt = performance.now() + state.diff.phraseSec * 1000;
   applyBaitVegetableClass();
-  $("baitText").textContent = state.surfaceText;
+  $("baitText").textContent = state.target;
   $("bait").style.setProperty("--bait-x", `${randomInt(44, 86)}%`);
   $("bait").hidden = false;
   $("bait").style.animation = "none";
@@ -258,14 +249,12 @@ function newPhrase() {
 }
 
 function renderTypeline() {
-  const rest = state.target.slice(state.index);
-  const caret = $("caret");
-  if (!rest) {
-    $("targetLine").innerHTML = "";
-    if (caret) caret.classList.add("caret--hide");
-    return;
-  }
+  const t = state.target;
+  const i = state.index;
+  const rest = t.slice(i);
+  /** 寿司打風：打ち終わった文字は表示せず、残りだけ見せる */
   $("targetLine").innerHTML = `<span class="rest">${escapeHtml(rest)}</span>`;
+  const caret = $("caret");
   if (caret) caret.classList.remove("caret--hide");
 }
 
@@ -314,8 +303,11 @@ function onSuccessPhrase() {
   state.score += pts;
   state.baitStock += 1;
   bumpBunny();
-  newPhrase();
-  $("ghostInput").focus({ preventScroll: true });
+  window.setTimeout(() => {
+    if (!state.playing) return;
+    newPhrase();
+    $("ghostInput").focus({ preventScroll: true });
+  }, 90);
 }
 
 function onMistakeOrTimeout() {
@@ -444,16 +436,16 @@ function onKeydown(ev) {
   // IME 変換中・セッション中はローマ字等の keydown を無視（誤答で次の文へ進むのを防ぐ）
   if (ev.isComposing || state.imeSession) return;
 
-  if (ev.key === "Backspace") {
-    if (state.imeSession || ev.isComposing) return;
+  /** 寿司打風：エンターで確定・改行させず、次の文は自動で出る */
+  if (ev.key === "Enter") {
     ev.preventDefault();
-    state.index = Math.max(0, state.index - 1);
-    renderTypeline();
     return;
   }
 
-  if (ev.key === "Enter") {
-    if (!ev.isComposing && !state.imeSession) ev.preventDefault();
+  /** 寿司打風：打ち直しは不可。IME の変換中のバックスペースはそのまま通す */
+  if (ev.key === "Backspace") {
+    if (ev.isComposing || state.imeSession) return;
+    ev.preventDefault();
     return;
   }
 
