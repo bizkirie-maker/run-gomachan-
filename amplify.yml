@@ -2,12 +2,13 @@
 version: 1
 frontend:
   phases:
+    preBuild:
+      commands:
+        - echo "Static site: no npm"
     build:
       commands:
-        - echo "Static site: no npm build"
+        - echo "Static site: no build step"
   artifacts:
     baseDirectory: .
     files:
       - "**/*"
-  cache:
-    paths: []
