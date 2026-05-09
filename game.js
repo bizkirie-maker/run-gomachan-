@@ -287,7 +287,7 @@ function buildRomajiVariants(base, maxVariants = 160) {
 const $ = (id) => document.getElementById(id);
 
 /** `:root` の `--goma-char-scale` と必ず同じ値（CSS とずれると一時的に倍率が崩れる） */
-const GOMA_CHAR_SCALE = 3;
+const GOMA_CHAR_SCALE = 1.5;
 
 /** 一文を正しく打ち終えてから次の文へ切り替えるまでの待ち（ミリ秒） */
 const PHRASE_SUCCESS_GAP_MS = 620;

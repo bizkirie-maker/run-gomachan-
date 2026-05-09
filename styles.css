@@ -1,6 +1,6 @@
 :root {
-  /** ごまちゃん・エサの見た目の倍率（約3倍） */
-  --goma-char-scale: 3;
+  /** ごまちゃん・エサの見た目の倍率（基準に対する倍率） */
+  --goma-char-scale: 1.5;
   --ink: #3d3a36;
   --wash-yellow: #f7e8a8;
   --wash-green: #c8e3b8;
