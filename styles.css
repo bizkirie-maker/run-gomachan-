@@ -638,7 +638,7 @@ body.is-playing .bunny.bunny--side {
   background: linear-gradient(102deg, #d0cfce 0%, #787675 100%);
   border-radius: 50% 46% 64% 60%;
   box-shadow: inset -6px -3px 8px rgba(0, 0, 0, 0.1);
-  transform: rotate(-298deg);
+  transform: rotate(-118deg);
   transform-origin: 24% 10%;
   opacity: 0.9;
   z-index: 0;
@@ -653,7 +653,7 @@ body.is-playing .bunny.bunny--side {
   height: 122%;
   background: linear-gradient(118deg, #f0efee 12%, #8a8886 96%);
   border-radius: 44% 52% 66% 62%;
-  transform: rotate(-282deg);
+  transform: rotate(-102deg);
   transform-origin: 20% 10%;
   box-shadow: inset -10px -4px 14px rgba(0, 0, 0, 0.1), inset 6px 6px 10px rgba(255, 255, 255, 0.45);
   z-index: 1;
