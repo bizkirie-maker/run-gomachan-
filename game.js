@@ -286,6 +286,9 @@ function buildRomajiVariants(base, maxVariants = 160) {
 
 const $ = (id) => document.getElementById(id);
 
+/** `:root` の `--goma-char-scale` と必ず同じ値（CSS とずれると一時的に倍率が崩れる） */
+const GOMA_CHAR_SCALE = 3;
+
 /** 一文を正しく打ち終えてから次の文へ切り替えるまでの待ち（ミリ秒） */
 const PHRASE_SUCCESS_GAP_MS = 620;
 
@@ -419,7 +422,9 @@ function newPhrase() {
   state.index = 0;
   state.phraseEndAt = performance.now() + state.diff.phraseSec * 1000;
   applyBaitVegetableClass();
-  $("baitText").textContent = state.target;
+  const baitKanji = $("baitText");
+  if (baitKanji)
+    baitKanji.innerHTML = phraseRubyHtml(state.currentPhrase.text, state.currentPhrase.yomi);
   const scene = $("scene");
   const bait = $("bait");
   if (scene) scene.style.setProperty("--bait-cross-sec", `${state.diff.phraseSec}s`);
@@ -451,6 +456,11 @@ function escapeHtml(s) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
+/** お題に読み（ひらがな）のふりがなを付ける（HTML の ruby） */
+function phraseRubyHtml(text, yomi) {
+  return `<ruby class="phrase-ruby">${escapeHtml(text)}<rt class="phrase-ruby-yomi">${escapeHtml(yomi)}</rt></ruby>`;
+}
+
 function updateHud(gameRemain, phraseRemain) {
   $("gameTimer").textContent = gameRemain.toFixed(1);
   $("phraseTimer").textContent = state.awaitingNextPhrase ? "—" : Math.max(0, phraseRemain).toFixed(1);
@@ -474,9 +484,10 @@ function updateBunnyMotion() {
 
 function bumpBunny() {
   const b = $("bunny");
-  b.style.transform = `translate(${randomInt(-5, 8)}px, ${randomInt(-4, 2)}px) scaleX(-1)`;
-  setTimeout(() => {
-    b.style.transform = "scaleX(-1)";
+  if (!b) return;
+  b.style.transform = `translate(${randomInt(-5, 8)}px, ${randomInt(-4, 2)}px) scaleX(-1) scale(${GOMA_CHAR_SCALE})`;
+  window.setTimeout(() => {
+    b.style.transform = "";
   }, 180);
 }
 
