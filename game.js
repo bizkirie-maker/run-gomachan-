@@ -16,117 +16,272 @@ const LENGTH_MODE = {
 };
 
 /**
- * text = 画面・入力する表記 / yomi = ぶんどり用の読み（ひらがな）。長さは yomi の文字数＝発音のイメージ（例: 遠足→えんそく＝4）
- * IME はいつもどおり text にそろえる
+ * text = 画面（単語・複合語中心／小学生向け常用漢字）／yomi = 読みひらがな
+ * 野菜モードの長さは yomi の文字（コードポイント）数。
  */
 const PHRASES = [
   { text: "犬", yomi: "いぬ" },
   { text: "猫", yomi: "ねこ" },
   { text: "空", yomi: "そら" },
   { text: "海", yomi: "うみ" },
-  { text: "花", yomi: "はな" },
+  { text: "川", yomi: "かわ" },
+  { text: "山", yomi: "やま" },
   { text: "林", yomi: "はやし" },
-  { text: "魚", yomi: "さかな" },
+  { text: "森", yomi: "もり" },
+  { text: "池", yomi: "いけ" },
+  { text: "石", yomi: "いし" },
+  { text: "花", yomi: "はな" },
+  { text: "草", yomi: "くさ" },
+  { text: "木陰", yomi: "こかげ" },
+  { text: "落葉", yomi: "おちば" },
+  { text: "団栗", yomi: "どんぐり" },
+  { text: "星", yomi: "ほし" },
+  { text: "月", yomi: "つき" },
+  { text: "太陽", yomi: "たいよう" },
+  { text: "雲", yomi: "くも" },
+  { text: "雨", yomi: "あめ" },
+  { text: "雪", yomi: "ゆき" },
+  { text: "氷", yomi: "こおり" },
+  { text: "風", yomi: "かぜ" },
+  { text: "花火", yomi: "はなび" },
+  { text: "水", yomi: "みず" },
+  { text: "土", yomi: "つち" },
   { text: "鳥", yomi: "とり" },
-  { text: "今日", yomi: "きょう" },
-  { text: "明日", yomi: "あした" },
-  { text: "学校", yomi: "がっこう" },
+  { text: "魚", yomi: "さかな" },
+  { text: "虫", yomi: "むし" },
+  { text: "蝶", yomi: "ちょう" },
+  { text: "蜂", yomi: "はち" },
+  { text: "右手", yomi: "みぎて" },
+  { text: "左手", yomi: "ひだりて" },
+  { text: "足", yomi: "あし" },
+  { text: "目玉", yomi: "めだま" },
+  { text: "耳", yomi: "みみ" },
+  { text: "口", yomi: "くち" },
+  { text: "歯磨き", yomi: "はみがき" },
+  { text: "頭", yomi: "あたま" },
+  { text: "笠", yomi: "かさ" },
+  { text: "傘", yomi: "かさ" },
+  { text: "鼻", yomi: "はな" },
+  { text: "卵", yomi: "たまご" },
+  { text: "米", yomi: "こめ" },
+  { text: "麦", yomi: "むぎ" },
+  { text: "豆", yomi: "まめ" },
+  { text: "茶", yomi: "ちゃ" },
+  { text: "紙", yomi: "かみ" },
+  { text: "本", yomi: "ほん" },
+  { text: "文字", yomi: "もじ" },
+  { text: "鉛筆", yomi: "えんぴつ" },
+  { text: "消しゴム", yomi: "けしごむ" },
+  { text: "教科書", yomi: "きょうかしょ" },
+  { text: "宿題", yomi: "しゅくだい" },
+  { text: "時間", yomi: "じかん" },
+  { text: "教室", yomi: "きょうしつ" },
+  { text: "廊下", yomi: "ろうか" },
+  { text: "校門", yomi: "こうもん" },
+  { text: "図書館", yomi: "としょかん" },
+  { text: "体育館", yomi: "たいいくかん" },
+  { text: "音楽室", yomi: "おんがくしつ" },
+  { text: "理科室", yomi: "りかしつ" },
+  { text: "社会科", yomi: "しゃかいか" },
+  { text: "校長", yomi: "こうちょう" },
+  { text: "先生", yomi: "せんせい" },
+  { text: "友達", yomi: "ともだち" },
+  { text: "学年", yomi: "がくねん" },
+  { text: "組", yomi: "くみ" },
+  { text: "番号", yomi: "ばんごう" },
+  { text: "村", yomi: "むら" },
+  { text: "町", yomi: "まち" },
+  { text: "市", yomi: "いち" },
+  { text: "水田", yomi: "すいでん" },
+  { text: "野原", yomi: "のはら" },
+  { text: "門", yomi: "もん" },
+  { text: "橋", yomi: "はし" },
+  { text: "道", yomi: "みち" },
+  { text: "角", yomi: "かど" },
+  { text: "丸", yomi: "まる" },
   { text: "天気", yomi: "てんき" },
-  { text: "遠足", yomi: "えんそく" },
-  { text: "おはよう", yomi: "おはよう" },
-  { text: "がんばれ", yomi: "がんばれ" },
-  { text: "ありがとう", yomi: "ありがとう" },
-  { text: "またね", yomi: "またね" },
-  { text: "だいすき", yomi: "だいすき" },
-  { text: "やったね", yomi: "やったね" },
-  { text: "すごいね", yomi: "すごいね" },
-  { text: "はやねよう", yomi: "はやねよう" },
-  { text: "あそぼうよ", yomi: "あそぼうよ" },
-  { text: "いってくる", yomi: "いってくる" },
-  { text: "もどったよ", yomi: "もどったよ" },
-  { text: "あついよ", yomi: "あついよ" },
-  { text: "さむいね", yomi: "さむいね" },
-  { text: "あめだね", yomi: "あめだね" },
-  { text: "ゆきだね", yomi: "ゆきだね" },
-  { text: "かぜつよい", yomi: "かぜつよい" },
-  { text: "そらみよう", yomi: "そらみよう" },
-  { text: "うみへいく", yomi: "うみへいく" },
-  { text: "ねこすきだ", yomi: "ねこすきだ" },
-  { text: "いぬすきだ", yomi: "いぬすきだ" },
-  { text: "かおだよ", yomi: "かおだよ" },
-  { text: "てあみだよ", yomi: "てあみだよ" },
-  { text: "えんそくだ", yomi: "えんそくだ" },
-  { text: "およぐよ", yomi: "およぐよ" },
-  { text: "はしるよ", yomi: "はしるよ" },
-  { text: "ねようね", yomi: "ねようね" },
-  { text: "ともだちと", yomi: "ともだちと" },
-  { text: "せんせいだ", yomi: "せんせいだ" },
-  { text: "かぞくだよ", yomi: "かぞくだよ" },
-  { text: "あさごはん", yomi: "あさごはん" },
-  { text: "ばんごはん", yomi: "ばんごはん" },
-  { text: "やすみだ", yomi: "やすみだ" },
-  { text: "あしたは", yomi: "あしたは" },
-  { text: "べんきょう", yomi: "べんきょう" },
-  { text: "よむのすき", yomi: "よむのすき" },
-  { text: "はながきれいだよ", yomi: "はながきれいだよ" },
-  { text: "きょうはあついね", yomi: "きょうはあついね" },
-  { text: "がっこうがたのしい", yomi: "がっこうがたのしい" },
-  { text: "おべんとうおいしい", yomi: "おべんとうおいしい" },
-  { text: "みんなであそんだよ", yomi: "みんなであそんだよ" },
-  { text: "せんせいがやさしい", yomi: "せんせいがやさしい" },
-  { text: "ともだちだいすきだ", yomi: "ともだちだいすきだ" },
-  { text: "ねこがねてたよ", yomi: "ねこがねてたよ" },
-  { text: "いぬがきたよ", yomi: "いぬがきたよ" },
-  { text: "きょうははれたよ", yomi: "きょうははれたよ" },
-  { text: "あさおきたよ", yomi: "あさおきたよ" },
-  { text: "こうえんであそんだ", yomi: "こうえんであそんだ" },
-  { text: "じてんしゃのったよ", yomi: "じてんしゃのったよ" },
-  { text: "りんごたべたよ", yomi: "りんごたべたよ" },
-  { text: "みずをのんだよ", yomi: "みずをのんだよ" },
-  { text: "えんそくたのしかった", yomi: "えんそくたのしかった" },
-  { text: "かばんもってきた", yomi: "かばんもってきた" },
-  { text: "ちょうれいしたよ", yomi: "ちょうれいしたよ" },
-  { text: "そうじをしたよ", yomi: "そうじをしたよ" },
-  { text: "よむのがすきだよ", yomi: "よむのがすきだよ" },
-  { text: "かぞくみんなげんき", yomi: "かぞくみんなげんき" },
-  { text: "おじいちゃんきたよ", yomi: "おじいちゃんきたよ" },
-  { text: "おばあちゃんだよ", yomi: "おばあちゃんだよ" },
-  { text: "おとうさんだいすき", yomi: "おとうさんだいすき" },
-  { text: "おかあさんだいすき", yomi: "おかあさんだいすき" },
-  { text: "あおいそらだね", yomi: "あおいそらだね" },
-  { text: "くもがういてるよ", yomi: "くもがういてるよ" },
-  { text: "つきがみえたよ", yomi: "つきがみえたよ" },
-  { text: "ほしがきらきらだ", yomi: "ほしがきらきらだ" },
-  { text: "かえるのうたうたった", yomi: "かえるのうたうたった" },
-  { text: "きょうはとてもいい天気だね", yomi: "きょうはとてもいいてんきだね" },
-  { text: "はるのはながきれいだね", yomi: "はるのはながきれいだね" },
-  { text: "がっこうでともだちとあそんだ", yomi: "がっこうでともだちとあそんだ" },
-  { text: "せんせいがやさしくしてくれた", yomi: "せんせいがやさしくしてくれた" },
-  { text: "えんそくのひはたのしかった", yomi: "えんそくのひはたのしかった" },
-  { text: "おべんとうおいしかったよ", yomi: "おべんとうおいしかったよ" },
-  { text: "きゅうしょくのカレーすきだ", yomi: "きゅうしょくのかれーすきだ" },
-  { text: "うみではしゃいであそんだよ", yomi: "うみではしゃいであそんだよ" },
-  { text: "やまのてんぼうだいにいった", yomi: "やまのてんぼうだいにいった" },
-  { text: "そらがあおくてきれいだった", yomi: "そらがあおくてきれいだった" },
-  { text: "よるほしがきらきらしていた", yomi: "よるほしがきらきらしていた" },
-  { text: "うちのねこがあそんでいたよ", yomi: "うちのねこがあそんでいたよ" },
-  { text: "こうえんでいぬをみたよ", yomi: "こうえんでいぬをみたよ" },
-  { text: "なつのやすみはあつかったよ", yomi: "なつのやすみはあつかったよ" },
-  { text: "はるやすみはあそびまくった", yomi: "はるやすみはあそびまくった" },
-  { text: "ともだちといっしょにうたった", yomi: "ともだちといっしょにうたった" },
-  { text: "おうちでかぞくとげんきだよ", yomi: "おうちでかぞくとげんきだよ" },
-  { text: "あさおきてからがっこういった", yomi: "あさおきてからがっこういった" },
-  { text: "ばんごはんはカレーだったよ", yomi: "ばんごはんはかれーだったよ" },
-  { text: "すいえいのじゅぎょうすきだ", yomi: "すいえいのじゅぎょうすきだ" },
-  { text: "じてんしゃでこうえんいったよ", yomi: "じてんしゃでこうえんいったよ" },
-  { text: "おおきなきをみあげてみたよ", yomi: "おおきなきをみあげてみたよ" },
-  { text: "みずうみのちかくをあるいた", yomi: "みずうみのちかくをあるいた" },
-  { text: "おさかながみずのなかをおよいだ", yomi: "おさかながみずのなかをおよいだ" },
-  { text: "やさいをたべてげんきになろう", yomi: "やさいをたべてげんきになろう" },
+  { text: "晴れ", yomi: "はれ" },
+  { text: "曇り", yomi: "くもり" },
+  { text: "虹", yomi: "にじ" },
+  { text: "学校", yomi: "がっこう" },
+  { text: "小学校", yomi: "しょうがっこう" },
+  { text: "中学校", yomi: "ちゅうがっこう" },
+  { text: "公園", yomi: "こうえん" },
+  { text: "駅", yomi: "えき" },
+  { text: "電車", yomi: "でんしゃ" },
+  { text: "地下鉄", yomi: "ちかてつ" },
+  { text: "地図", yomi: "ちず" },
+  { text: "理科実験", yomi: "りかじっけん" },
+  { text: "実験器具", yomi: "じっけんきぐ" },
+  { text: "理科実験室", yomi: "りかじっけんしつ" },
+  { text: "算数問題集", yomi: "さんすうもんだいしゅう" },
+  { text: "国語辞典", yomi: "こくごじてん" },
+  { text: "作文用紙", yomi: "さくぶんようし" },
+  { text: "自由研究", yomi: "じゆうけんきゅう" },
+  { text: "読書感想文", yomi: "どくしょかんそうぶん" },
+  { text: "音読練習", yomi: "おんどくれんしゅう" },
+  { text: "運動会練習", yomi: "うんどうかいれんしゅう" },
+  { text: "避難訓練", yomi: "ひなんくんれん" },
+  { text: "交通安全", yomi: "こうつうあんぜん" },
+  { text: "給食当番", yomi: "きゅうしょくとうばん" },
+  { text: "放送委員", yomi: "ほうそういいん" },
+  { text: "学級閉鎖", yomi: "がっきゅうへいさ" },
+  { text: "自動販売機", yomi: "じどうはんばいき" },
+  { text: "電話番号", yomi: "でんわばんごう" },
+  { text: "家族旅行", yomi: "かぞくりょこう" },
+  { text: "卒業文集", yomi: "そつぎょうぶんしゅう" },
+  { text: "茶道教室", yomi: "ちゃどうきょうしつ" },
+  { text: "紙飛行機", yomi: "かみひこうき" },
+  { text: "卵焼き", yomi: "たまごやき" },
+  { text: "麦パン", yomi: "むぎぱん" },
+  { text: "国立博物館", yomi: "こくりつはくぶつかん" },
+  { text: "大阪城公園", yomi: "おおさかじょうこうえん" },
+  { text: "京都清水寺", yomi: "きょうときよみずでら" },
+  { text: "富士登山口", yomi: "ふじとざんぐち" },
+  { text: "理科実験準備室", yomi: "りかじっけんじゅんびしつ" },
+  { text: "図書館貸出期限", yomi: "としょかんかしだしきげん" },
+  { text: "小学校生活記録", yomi: "しょうがっこうせいかつきろく" },
+  { text: "小学校卒業式", yomi: "しょうがっこうそつぎょうしき" },
+  { text: "社会科見学旅行", yomi: "しゃかいかけんがくりょこう" },
+  { text: "体育大会開会式", yomi: "たいいくたいかいかいかいしき" },
+  { text: "夏休み自由研究", yomi: "なつやすみじゆうけんきゅう" },
+  { text: "冬休み読書感想文", yomi: "ふゆやすみどくしょかんそうぶん" },
+  { text: "新学期始業式", yomi: "しんがっきしぎょうしき" },
+  { text: "国立公園入口", yomi: "こくりつこうえんいりぐち" },
 ];
 
 function yomiCharCount(yomi) {
   return [...yomi].length;
+}
+
+/** 同じ yomi の別表記を集める（読み一致で別漢字も正解） */
+/** カタカナ1文字 → ひらがな（比較用） */
+function katakanaToHiraganaChar(ch) {
+  const c = ch.codePointAt(0);
+  if (c >= 0x30a1 && c <= 0x30f6) return String.fromCodePoint(c - 0x60);
+  return ch;
+}
+
+function normalizeKanaCompareChar(ch) {
+  return katakanaToHiraganaChar(ch);
+}
+
+const KANA_TO_ROMAJI = {
+  あ: "a", い: "i", う: "u", え: "e", お: "o",
+  か: "ka", き: "ki", く: "ku", け: "ke", こ: "ko",
+  さ: "sa", し: "shi", す: "su", せ: "se", そ: "so",
+  た: "ta", ち: "chi", つ: "tsu", て: "te", と: "to",
+  な: "na", に: "ni", ぬ: "nu", ね: "ne", の: "no",
+  は: "ha", ひ: "hi", ふ: "fu", へ: "he", ほ: "ho",
+  ま: "ma", み: "mi", む: "mu", め: "me", も: "mo",
+  や: "ya", ゆ: "yu", よ: "yo",
+  ら: "ra", り: "ri", る: "ru", れ: "re", ろ: "ro",
+  わ: "wa", を: "o", ん: "n",
+  が: "ga", ぎ: "gi", ぐ: "gu", げ: "ge", ご: "go",
+  ざ: "za", じ: "ji", ず: "zu", ぜ: "ze", ぞ: "zo",
+  だ: "da", ぢ: "ji", づ: "zu", で: "de", ど: "do",
+  ば: "ba", び: "bi", ぶ: "bu", べ: "be", ぼ: "bo",
+  ぱ: "pa", ぴ: "pi", ぷ: "pu", ぺ: "pe", ぽ: "po",
+  ぁ: "a", ぃ: "i", ぅ: "u", ぇ: "e", ぉ: "o",
+};
+
+const DIGRAPH_TO_ROMAJI = {
+  きゃ: "kya", きゅ: "kyu", きょ: "kyo",
+  しゃ: "sha", しゅ: "shu", しょ: "sho",
+  ちゃ: "cha", ちゅ: "chu", ちょ: "cho",
+  にゃ: "nya", にゅ: "nyu", にょ: "nyo",
+  ひゃ: "hya", ひゅ: "hyu", ひょ: "hyo",
+  みゃ: "mya", みゅ: "myu", みょ: "myo",
+  りゃ: "rya", りゅ: "ryu", りょ: "ryo",
+  ぎゃ: "gya", ぎゅ: "gyu", ぎょ: "gyo",
+  じゃ: "ja", じゅ: "ju", じょ: "jo",
+  びゃ: "bya", びゅ: "byu", びょ: "byo",
+  ぴゃ: "pya", ぴゅ: "pyu", ぴょ: "pyo",
+};
+
+function yomiToRomaji(yomi) {
+  const kana = [...yomi].map((ch) => normalizeKanaCompareChar(ch)).join("");
+  let out = "";
+  let i = 0;
+  while (i < kana.length) {
+    const ch = kana[i];
+    if (ch === "っ") {
+      const pair = kana.slice(i + 1, i + 3);
+      const nextRoma = DIGRAPH_TO_ROMAJI[pair] || KANA_TO_ROMAJI[kana[i + 1]] || "";
+      if (nextRoma) out += nextRoma[0];
+      i += 1;
+      continue;
+    }
+    if (ch === "ー") {
+      const m = out.match(/[aeiou]$/);
+      if (m) out += m[0];
+      i += 1;
+      continue;
+    }
+    const pair = kana.slice(i, i + 2);
+    if (DIGRAPH_TO_ROMAJI[pair]) {
+      out += DIGRAPH_TO_ROMAJI[pair];
+      i += 2;
+      continue;
+    }
+    out += KANA_TO_ROMAJI[ch] || ch;
+    i += 1;
+  }
+  return out;
+}
+
+const ROMAJI_VARIANT_RULES = [
+  ["shi", "si"],
+  ["chi", "ti"],
+  ["tsu", "tu"],
+  ["fu", "hu"],
+  ["ji", "zi"],
+  ["sha", "sya"],
+  ["shu", "syu"],
+  ["sho", "syo"],
+  ["cha", "tya"],
+  ["chu", "tyu"],
+  ["cho", "tyo"],
+  ["ja", "jya"],
+  ["ju", "jyu"],
+  ["jo", "jyo"],
+];
+
+function replaceOneOccurrenceAll(str, from, to) {
+  const out = [];
+  let idx = str.indexOf(from);
+  while (idx !== -1) {
+    out.push(str.slice(0, idx) + to + str.slice(idx + from.length));
+    idx = str.indexOf(from, idx + 1);
+  }
+  return out;
+}
+
+function buildRomajiVariants(base, maxVariants = 160) {
+  const expansions = ROMAJI_VARIANT_RULES.flatMap(([from, to]) => [
+    [from, to],
+    [to, from],
+  ]);
+  const seen = new Set([base]);
+  const queue = [base];
+  while (queue.length > 0 && seen.size < maxVariants) {
+    const cur = queue.shift();
+    for (const [from, to] of expansions) {
+      const nextList = replaceOneOccurrenceAll(cur, from, to);
+      for (const next of nextList) {
+        if (seen.has(next)) continue;
+        seen.add(next);
+        queue.push(next);
+        if (seen.size >= maxVariants) break;
+      }
+      if (seen.size >= maxVariants) break;
+    }
+  }
+  return [...seen].sort((a, b) => {
+    if (a === base) return -1;
+    if (b === base) return 1;
+    return a.length - b.length || a.localeCompare(b);
+  });
 }
 
 const $ = (id) => document.getElementById(id);
@@ -143,13 +298,16 @@ const state = {
   score: 0,
   baitStock: 0,
   target: "",
-  /** お題を Unicode の文字（コードポイント）単位に分割した配列（寿司打と同様に先頭から順に一致） */
+  /** 現在の一文 { text, yomi } */
+  currentPhrase: null,
+  /** ヘボン寄せのベースローマ字 */
   targetChars: [],
+  /** 複数ローマ字許容のための候補（入力のたびに prefix で絞り込む） */
+  romajiCandidates: [],
+  typedRomaji: "",
   index: 0,
   raf: 0,
   bunnyX: 4,
-  /** IME の変換中は keydown の誤判定を避ける */
-  imeSession: false,
   /** 一文クリア直後〜次の文が始まるまで（この間は文タイムアウトしない・入力も無視） */
   awaitingNextPhrase: false,
 };
@@ -165,11 +323,11 @@ function pickRandomPhrase() {
     return n >= min && n <= max;
   });
   if (candidates.length > 0) {
-    return candidates[randomInt(0, candidates.length - 1)].text;
+    return candidates[randomInt(0, candidates.length - 1)];
   }
   const fallback = PHRASES.filter((p) => yomiCharCount(p.yomi) >= min);
-  if (fallback.length > 0) return fallback[randomInt(0, fallback.length - 1)].text;
-  return PHRASES[0].text;
+  if (fallback.length > 0) return fallback[randomInt(0, fallback.length - 1)];
+  return PHRASES[0];
 }
 
 function rankStorageKey() {
@@ -252,25 +410,31 @@ function applyBaitVegetableClass() {
 
 function newPhrase() {
   state.awaitingNextPhrase = false;
-  state.target = pickRandomPhrase();
-  state.targetChars = [...state.target];
+  state.currentPhrase = pickRandomPhrase();
+  state.target = state.currentPhrase.text;
+  const baseRomaji = yomiToRomaji(state.currentPhrase.yomi);
+  state.targetChars = [...baseRomaji];
+  state.romajiCandidates = buildRomajiVariants(baseRomaji);
+  state.typedRomaji = "";
   state.index = 0;
-  state.imeSession = false;
   state.phraseEndAt = performance.now() + state.diff.phraseSec * 1000;
   applyBaitVegetableClass();
   $("baitText").textContent = state.target;
-  $("bait").style.setProperty("--bait-x", `${randomInt(44, 86)}%`);
-  $("bait").hidden = false;
-  $("bait").style.animation = "none";
-  void $("bait").offsetHeight;
-  $("bait").style.animation = "";
+  const scene = $("scene");
+  const bait = $("bait");
+  if (scene) scene.style.setProperty("--bait-cross-sec", `${state.diff.phraseSec}s`);
+  bait.hidden = false;
+  bait.classList.remove("bait--crossing");
+  void bait.offsetHeight;
+  bait.classList.add("bait--crossing");
   renderTypeline();
   $("ghostInput").value = "";
 }
 
 function renderTypeline() {
-  const rest = state.targetChars.slice(state.index).join("");
-  /** 寿司打風：打ち終わった文字は表示せず、残りだけ見せる */
+  const guide = state.romajiCandidates.find((s) => s.startsWith(state.typedRomaji)) || state.targetChars.join("");
+  const rest = guide.slice(state.typedRomaji.length);
+  /** 寿司打風：打ち終わった文字は表示せず、ローマ字の残りだけ見せる */
   $("targetLine").innerHTML = `<span class="rest">${escapeHtml(rest)}</span>`;
   const caret = $("caret");
   if (caret) caret.classList.remove("caret--hide");
@@ -322,7 +486,7 @@ function onSuccessPhrase() {
   state.baitStock += 1;
   bumpBunny();
   state.awaitingNextPhrase = true;
-  $("ghostInput").blur();
+  /** blur しない：フォーカスが外れると次の文まで IME が効かず Enter／クリックが必要になるため */
   window.setTimeout(() => {
     if (!state.playing) return;
     newPhrase();
@@ -333,12 +497,14 @@ function onSuccessPhrase() {
 function onMistakeOrTimeout() {
   state.baitStock = Math.max(0, state.baitStock - 1);
   clearTypelineDisplay();
+  const bait = $("bait");
+  if (bait) bait.classList.remove("bait--crossing");
   newPhrase();
 }
 
 function endGame() {
   state.playing = false;
-  state.imeSession = false;
+  detachPlayKeyCapture();
   state.awaitingNextPhrase = false;
   document.body.classList.remove("is-playing");
   cancelAnimationFrame(state.raf);
@@ -391,14 +557,16 @@ function startGame() {
   $("resultPanel").classList.add("hidden");
   $("setupPanel").classList.add("setup-hidden");
   $("stageWrap").classList.remove("setup-hidden");
+  attachPlayKeyCapture();
   newPhrase();
-  $("ghostInput").focus();
+  $("ghostInput").focus({ preventScroll: true });
   cancelAnimationFrame(state.raf);
   state.raf = requestAnimationFrame(gameLoop);
 }
 
 function resetToSetup() {
   state.playing = false;
+  detachPlayKeyCapture();
   state.awaitingNextPhrase = false;
   document.body.classList.remove("is-playing");
   cancelAnimationFrame(state.raf);
@@ -408,98 +576,57 @@ function resetToSetup() {
   $("bait").hidden = true;
 }
 
-function isKanaChar(ch) {
-  if (!ch) return false;
-  const c = ch.codePointAt(0);
-  return (
-    (c >= 0x3040 && c <= 0x309f) ||
-    (c >= 0x30a0 && c <= 0x30ff) ||
-    (c >= 0xff66 && c <= 0xff9f)
-  );
-}
-
-/** お題が「日本語の文字」（かな・漢字など）か：ローマ字1キーではミスにしないための判定 */
-function isJapaneseScriptChar(ch) {
-  if (!ch) return false;
-  if (isKanaChar(ch)) return true;
-  const c = ch.codePointAt(0);
-  if (c >= 0x4e00 && c <= 0x9fff) return true;
-  if (c >= 0x3400 && c <= 0x4dbf) return true;
-  if (c >= 0xf900 && c <= 0xfaff) return true;
-  if (c === 0x3005) return true;
-  return false;
-}
-
 function processTypedChar(ch) {
   if (state.awaitingNextPhrase) return;
-  const expected = state.targetChars[state.index];
-  if (!expected) return;
 
-  /** IME の読み入力途中のローマ字がそのまま届いた場合は無視（ミス扱いにしない） */
-  if (expected && /^[a-zA-Z]$/.test(ch) && isJapaneseScriptChar(expected)) {
-    return;
-  }
-
-  if (ch === expected) {
-    state.index += 1;
-    renderTypeline();
-    if (state.index >= state.targetChars.length) {
-      onSuccessPhrase();
-    }
-  } else {
+  const nextPrefix = `${state.typedRomaji}${ch}`;
+  const narrowed = state.romajiCandidates.filter((romaji) => romaji.startsWith(nextPrefix));
+  if (narrowed.length === 0) {
     onMistakeOrTimeout();
-  }
-}
-
-function onCompositionStart() {
-  state.imeSession = true;
-}
-
-function onCompositionEnd(ev) {
-  state.imeSession = false;
-  if (!state.playing || state.awaitingNextPhrase) return;
-  const data = ev.data;
-  if (!data) {
-    ev.target.value = "";
     return;
   }
-  ev.target.value = "";
-  for (const ch of data) {
-    processTypedChar(ch);
-    if (!state.playing) return;
-  }
+  state.romajiCandidates = narrowed;
+  state.typedRomaji = nextPrefix;
+  state.index = state.typedRomaji.length;
+  renderTypeline();
+
+  const done = narrowed.length === 1 && narrowed[0] === state.typedRomaji;
+  if (done) onSuccessPhrase();
 }
 
-function onKeydown(ev) {
+function onPlayKeydown(ev) {
   if (!state.playing || state.awaitingNextPhrase) return;
   if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
-  // IME 変換中・セッション中はローマ字等の keydown を無視（誤答で次の文へ進むのを防ぐ）
-  if (ev.isComposing || state.imeSession) return;
+  if (ev.isComposing) return;
 
-  /** 寿司打風：エンターで確定・改行させず、次の文は自動で出る */
+  /** 寿司打：ひらがな・漢字の変換確定ではなく、ローマ字のみ */
   if (ev.key === "Enter") {
     ev.preventDefault();
     return;
   }
-
-  /** 寿司打風：打ち直しは不可。IME の変換中のバックスペースはそのまま通す */
   if (ev.key === "Backspace") {
-    if (ev.isComposing || state.imeSession) return;
+    ev.preventDefault();
+    return;
+  }
+  if (ev.key === " " || ev.key === "　") {
     ev.preventDefault();
     return;
   }
 
-  if (ev.key.length !== 1) return;
-
-  const expected = state.targetChars[state.index];
-  /** 寿司打：漢字お題は IME で変換確定するまで待つ。ローマ字1キーではミスにしない */
-  if (expected && /^[a-zA-Z]$/.test(ev.key) && isJapaneseScriptChar(expected)) {
-    ev.preventDefault();
-    return;
-  }
+  if (!/^[a-zA-Z]$/.test(ev.key)) return;
 
   ev.preventDefault();
-  processTypedChar(ev.key);
+  ev.stopPropagation();
+  processTypedChar(ev.key.toLowerCase());
+}
+
+function attachPlayKeyCapture() {
+  detachPlayKeyCapture();
+  window.addEventListener("keydown", onPlayKeydown, true);
+}
+
+function detachPlayKeyCapture() {
+  window.removeEventListener("keydown", onPlayKeydown, true);
 }
 
 function init() {
@@ -512,14 +639,8 @@ function init() {
   $("openRankingBtn").addEventListener("click", openRanking);
   $("closeRankBtn").addEventListener("click", closeRanking);
 
-  $("ghostInput").addEventListener("keydown", onKeydown);
-  $("ghostInput").addEventListener("compositionstart", onCompositionStart);
-  $("ghostInput").addEventListener("compositionend", onCompositionEnd);
-
   $("ghostInput").addEventListener("input", (ev) => {
     if (!state.playing || state.awaitingNextPhrase) return;
-    // IME 確定前に value を空にすると変換が壊れたり、1文字でおかしくなる
-    if (ev.isComposing) return;
     ev.target.value = "";
   });
 

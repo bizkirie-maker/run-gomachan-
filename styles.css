@@ -33,7 +33,10 @@ body {
 
 /* プレイ中：タイトル・説明・フッターを隠してタイピングに集中 */
 body.is-playing {
-  padding: 0.5rem clamp(0.4rem, 2vw, 1rem) 0.85rem;
+  padding: 0;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
 }
 
 body.is-playing .top-bar,
@@ -43,11 +46,36 @@ body.is-playing .foot {
 
 body.is-playing .shell {
   max-width: none;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+body.is-playing .stage-wrap {
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  gap: 0;
 }
 
 body.is-playing .scene {
-  height: min(50vw, min(290px, 42vh));
-  max-height: 360px;
+  flex: 1;
+  min-height: min(72dvh, 820px);
+  height: auto;
+  max-height: none;
+  border-radius: 0;
+}
+
+body.is-playing .hud-panel {
+  flex-shrink: 0;
+  border-radius: 0;
+  padding: 0.55rem clamp(0.5rem, 2vw, 1rem) 0.65rem;
+}
+
+body.is-playing .input-hint {
+  margin: 0.25rem 0 0;
+  font-size: 0.74rem;
 }
 
 .wash-bg {
@@ -607,7 +635,7 @@ body.is-playing .bunny.bunny--side {
   background: linear-gradient(102deg, #d0cfce 0%, #787675 100%);
   border-radius: 50% 46% 64% 60%;
   box-shadow: inset -6px -3px 8px rgba(0, 0, 0, 0.1);
-  transform: rotate(132deg);
+  transform: rotate(-348deg);
   transform-origin: 24% 10%;
   opacity: 0.9;
   z-index: 0;
@@ -622,7 +650,7 @@ body.is-playing .bunny.bunny--side {
   height: 122%;
   background: linear-gradient(118deg, #f0efee 12%, #8a8886 96%);
   border-radius: 44% 52% 66% 62%;
-  transform: rotate(148deg);
+  transform: rotate(-332deg);
   transform-origin: 20% 10%;
   box-shadow: inset -10px -4px 14px rgba(0, 0, 0, 0.1), inset 6px 6px 10px rgba(255, 255, 255, 0.45);
   z-index: 1;
@@ -761,33 +789,56 @@ body.is-playing .bunny.bunny--side {
 
 .bait {
   z-index: 4;
-
   position: absolute;
-  bottom: 22%;
-  left: var(--bait-x, 62%);
+  bottom: clamp(14%, 18vh, 26%);
+  left: 105%;
   display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  padding: 0.35rem 0.85rem;
+  justify-content: center;
+  align-items: flex-end;
   transform: translateX(-50%);
-  background: rgba(255, 250, 240, 0.95);
-  border-radius: 14px;
-  border: 1px dashed rgba(180, 130, 80, 0.45);
-  box-shadow: 0 10px 18px rgba(0, 0, 0, 0.08);
-  animation: bait-drift var(--bait-duration, 5s) ease-in-out alternate infinite;
+  pointer-events: none;
 }
 
-.bait--kabu {
+.bait-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0.85rem 0.55rem;
+  background: rgba(255, 250, 240, 0.96);
+  border-radius: 14px;
+  border: 1px dashed rgba(180, 130, 80, 0.45);
+  box-shadow: 0 10px 22px rgba(0, 0, 0, 0.1);
+  max-width: min(92vw, 520px);
+}
+
+.bait--crossing {
+  animation: bait-cross var(--bait-cross-sec, 5s) linear forwards;
+}
+
+@keyframes bait-cross {
+  from {
+    left: 105%;
+    transform: translateX(-50%);
+  }
+
+  to {
+    left: -10%;
+    transform: translateX(-50%);
+  }
+}
+
+.bait--kabu .bait-card {
   background: rgba(252, 248, 255, 0.96);
   border-color: rgba(160, 120, 180, 0.42);
 }
 
-.bait--tanpopo {
+.bait--tanpopo .bait-card {
   background: rgba(255, 252, 235, 0.96);
   border-color: rgba(200, 170, 60, 0.45);
 }
 
-.bait--ninjin {
+.bait--ninjin .bait-card {
   background: rgba(255, 248, 240, 0.96);
   border-color: rgba(210, 130, 70, 0.45);
 }
@@ -890,32 +941,30 @@ body.is-playing .bunny.bunny--side {
   clip-path: polygon(10% 100%, 0 0, 35% 55%, 50% 15%, 65% 55%, 100% 0, 90% 100%);
 }
 
-.bait-text {
+.bait-kanji {
+  margin: 0;
   font-weight: 700;
-  font-size: clamp(1rem, 3.8vw, 1.35rem);
-  letter-spacing: 0.08em;
-  white-space: nowrap;
+  font-size: clamp(1rem, 4vw, 1.45rem);
+  letter-spacing: 0.06em;
+  text-align: center;
+  line-height: 1.35;
+  word-break: break-word;
 }
 
-@keyframes bait-drift {
-  from {
-    transform: translateX(-50%) translateX(-18px);
-  }
-  to {
-    transform: translateX(-50%) translateX(18px);
-  }
+.bait-romaji {
+  margin: 0;
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  font-weight: 600;
+  font-size: clamp(0.82rem, 3.2vw, 1.12rem);
+  letter-spacing: 0.1em;
+  line-height: 1.45;
+  min-height: 1.45em;
+  color: rgba(61, 58, 54, 0.92);
+  text-align: center;
 }
 
-.scene.diff-advanced .bait {
-  --bait-duration: 2.2s;
-}
-
-.scene.diff-intermediate .bait {
-  --bait-duration: 3.2s;
-}
-
-.scene.diff-beginner .bait {
-  --bait-duration: 4.8s;
+.bait-romaji .rest {
+  color: var(--accent-dim);
 }
 
 .hud-panel {
@@ -985,18 +1034,18 @@ body.is-playing .bunny.bunny--side {
 }
 
 .ghost-input {
-  width: 100%;
-  margin-top: 0.45rem;
-  font: inherit;
-  padding: 0.5rem 0.65rem;
-  border-radius: 12px;
-  border: 1px dashed rgba(224, 138, 108, 0.45);
-  background: rgba(255, 255, 255, 0.75);
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .ghost-input:focus {
-  outline: 2px solid rgba(224, 138, 108, 0.35);
-  outline-offset: 2px;
+  outline: none;
 }
 
 .result-panel.hidden,
@@ -1074,5 +1123,24 @@ body.is-playing .bunny.bunny--side {
     display: flex;
     flex-direction: column;
     justify-content: center;
+  }
+
+  body.is-playing .stage-wrap {
+    flex-direction: column;
+  }
+
+  body.is-playing .scene {
+    flex: 1;
+    width: 100%;
+  }
+
+  body.is-playing .hud-panel {
+    flex: 0 0 auto;
+    width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.25rem 1rem;
   }
 }

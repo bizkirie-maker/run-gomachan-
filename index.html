@@ -9,7 +9,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@500;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./styles.css" />
+  <!-- ?v= でキャッシュ更新（デプロイ後も古いCSSが残らないように） -->
+  <link rel="stylesheet" href="./styles.css?v=20260510" />
 </head>
 <body>
   <div class="wash-bg" aria-hidden="true"></div>
@@ -26,9 +27,9 @@
         <div class="field">
           <span class="label">難易度</span>
           <select id="difficulty" aria-label="難易度">
-            <option value="beginner">初級 — 一文 5秒 / エサゆっくり</option>
-            <option value="intermediate">中級 — 一文 4秒 / エサふつう</option>
-            <option value="advanced">上級 — 一文 3秒 / エサはやめ</option>
+            <option value="beginner">初級 — エサが横に通る 5秒</option>
+            <option value="intermediate">中級 — エサが横に通る 4秒</option>
+            <option value="advanced">上級 — エサが横に通る 3秒</option>
           </select>
           <span class="hint">初級は<strong>1</strong>pt、中級<strong>2</strong>pt、上級<strong>3</strong>pt を一文ごと（エサごと）につけます。</span>
         </div>
@@ -90,36 +91,37 @@
           </span>
         </div>
         <div class="bait bait--kabu" id="bait" hidden>
-          <span class="bait-veg" id="baitVeg" aria-hidden="true"></span>
-          <span class="bait-text" id="baitText"></span>
+          <div class="bait-card">
+            <span class="bait-veg" id="baitVeg" aria-hidden="true"></span>
+            <p class="bait-kanji" id="baitText" lang="ja"></p>
+            <div class="bait-romaji" aria-label="打つローマ字の残り（寿司打スタイル）">
+              <span id="targetLine"></span><span id="caret" class="caret">丨</span>
+            </div>
+          </div>
         </div>
       </div>
 
       <section class="hud-panel" aria-label="ゲーム状態">
         <div class="hud-row">
           <div><span class="hud-label">のこり時間</span> <strong id="gameTimer">60.0</strong> びょう</div>
-          <div><span class="hud-label">いまの文の制限</span> <strong id="phraseTimer">5.0</strong> びょう</div>
+          <div><span class="hud-label">エサが出る時間</span> <strong id="phraseTimer">5.0</strong> びょう</div>
         </div>
         <div class="hud-row">
           <div><span class="hud-label">スコア</span> <strong id="score">0</strong> pt</div>
           <div><span class="hud-label">エサストック（ミスで1つなくなる）</span> <strong id="stockCount">0</strong> こ</div>
         </div>
-        <div class="typeline" aria-label="打つ文章">
-          <span class="typeline-label">つぎに打つところ（先頭から最後の一字まで順番に。寿司打のイメージ）</span>
-          <span id="targetLine"></span><span id="caret" class="caret">丨</span>
-        </div>
-        <p class="input-hint">IME で読みを打ち、スペースなどで一字ずつ変換してお題と一致させます。ローマ字の途中キーだけでは次に進みません。ペーストはできません。一文の最後まで正しいと少し待ってから次の文。</p>
+        <p class="input-hint">正解は<strong>ローマ字だけ</strong>（ひらがな・漢字の変換は使いません）。IME は英字（半角）にして a〜z を打ってください。お題の下のローマ字を、エサが通りすぎる前に打ち終えましょう。</p>
         <input
           id="ghostInput"
           class="ghost-input"
           type="text"
-          lang="ja"
-          inputmode="text"
+          lang="en"
+          inputmode="latin"
           autocomplete="off"
           autocorrect="off"
           autocapitalize="off"
           spellcheck="false"
-          aria-label="日本語入力で、お題と同じ表記になるようにタイプ"
+          aria-label="アクセシビリティ用（直接は使わず全画面でキー入力）"
         />
       </section>
     </section>
@@ -145,9 +147,9 @@
   </main>
 
   <footer class="foot">
-    <p>試作品です。お題の文は小学生向けのやさしい表現にしています。タイプ欄は読みやすいようカード背景付き。音声・保存はこのブラウザ内のみです。</p>
+    <p>試作品です。お題は小学生向けの表現を中心にしています。プレイ中はエサの下にローマ字のガイドが出ます。音声・保存はこのブラウザ内のみです。</p>
   </footer>
 
-  <script type="module" src="./game.js"></script>
+  <script type="module" src="./game.js?v=20260510"></script>
 </body>
 </html>
