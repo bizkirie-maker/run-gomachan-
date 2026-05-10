@@ -561,6 +561,7 @@ function gameLoop(now) {
   const gameRemain = Math.max(0, (state.gameEndAt - now) / 1000);
   const phraseRemain = (state.phraseEndAt - now) / 1000;
   updateHud(gameRemain, phraseRemain);
+  syncBunnyRunningClass();
   updateBunnyMotion();
 
   if (gameRemain <= 0) {
@@ -582,6 +583,8 @@ function startGame() {
   state.playing = true;
   state.bunnyX = BUNNY_HOME_X;
   document.body.classList.add("is-playing");
+  const bunnyEl = $("bunny");
+  if (bunnyEl) bunnyEl.classList.remove("bunny--running");
   const now = performance.now();
   state.gameEndAt = now + 60_000;
   $("resultPanel").classList.add("hidden");
