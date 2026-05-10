@@ -289,6 +289,9 @@ const $ = (id) => document.getElementById(id);
 /** `:root` の `--goma-char-scale` と必ず同じ値（CSS とずれると一時的に倍率が崩れる） */
 const GOMA_CHAR_SCALE = 1.5;
 
+/** ごまちゃんの「待機」横位置（％）。まだ正しく打っていないとき・ミス後はここへ戻す */
+const BUNNY_HOME_X = 4;
+
 /** 一文を正しく打ち終えてから次の文へ切り替えるまでの待ち（ミリ秒） */
 const PHRASE_SUCCESS_GAP_MS = 620;
 
@@ -310,7 +313,7 @@ const state = {
   typedRomaji: "",
   index: 0,
   raf: 0,
-  bunnyX: 4,
+  bunnyX: BUNNY_HOME_X,
   /** 一文クリア直後〜次の文が始まるまで（この間は文タイムアウトしない・入力も無視） */
   awaitingNextPhrase: false,
 };
@@ -473,6 +476,14 @@ function updateBunnyMotion() {
   const bunny = $("bunny");
   const bait = $("bait");
   if (!scene || !bunny || !bait || bait.hidden) return;
+  if (state.awaitingNextPhrase) return;
+
+  /** 一文で一度も正しく打っていない間はエサに追従しない（左で待つ） */
+  if (!state.typedRomaji || state.typedRomaji.length === 0) {
+    state.bunnyX += (BUNNY_HOME_X - state.bunnyX) * 0.08;
+    bunny.style.left = `${state.bunnyX.toFixed(2)}%`;
+    return;
+  }
 
   const sceneRect = scene.getBoundingClientRect();
   const baitRect = bait.getBoundingClientRect();
@@ -480,6 +491,13 @@ function updateBunnyMotion() {
   const target = Math.max(3, Math.min(72, baitPercent - 16));
   state.bunnyX += (target - state.bunnyX) * 0.06;
   bunny.style.left = `${state.bunnyX.toFixed(2)}%`;
+}
+
+/** ミス・タイムアウト時：打てずについてこれなかったので左へ */
+function resetBunnyBehind() {
+  state.bunnyX = BUNNY_HOME_X;
+  const bunny = $("bunny");
+  if (bunny) bunny.style.left = `${BUNNY_HOME_X}%`;
 }
 
 function bumpBunny() {
@@ -508,6 +526,7 @@ function onSuccessPhrase() {
 function onMistakeOrTimeout() {
   state.baitStock = Math.max(0, state.baitStock - 1);
   clearTypelineDisplay();
+  resetBunnyBehind();
   const bait = $("bait");
   if (bait) bait.classList.remove("bait--crossing");
   newPhrase();
@@ -561,7 +580,7 @@ function startGame() {
   state.score = 0;
   state.baitStock = 0;
   state.playing = true;
-  state.bunnyX = 4;
+  state.bunnyX = BUNNY_HOME_X;
   document.body.classList.add("is-playing");
   const now = performance.now();
   state.gameEndAt = now + 60_000;
