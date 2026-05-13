@@ -301,6 +301,9 @@ const BUNNY_HOME_X = 4;
 /** 一文を正しく打ち終えてから次の文へ切り替えるまでの待ち（ミリ秒） */
 const PHRASE_SUCCESS_GAP_MS = 620;
 
+/** 正しく打ったローマ字がこの回数に達するたび、全体の残り時間に秒を追加（+1→+2→+3→+1…） */
+const CORRECT_KEYS_FOR_TIME_BONUS = 15;
+
 const state = {
   playing: false,
   gameEndAt: 0,
@@ -469,14 +472,35 @@ function escapeHtml(s) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-/** お題に読み（ひらがな）のふりがなを付ける（HTML の ruby） */
+/** 寿司打風：15打鍵ごとに gameEndAt を延長（+1,+2,+3秒を順に繰り返し） */
+function maybeGrantTimeBonus() {
+  if (!state.playing) return;
+  if (state.correctKeyCount === 0 || state.correctKeyCount % CORRECT_KEYS_FOR_TIME_BONUS !== 0) return;
+  const block = Math.floor(state.correctKeyCount / CORRECT_KEYS_FOR_TIME_BONUS);
+  const bonusSec = ((block - 1) % 3) + 1;
+  state.gameEndAt += bonusSec * 1000;
+  const wrap = $("centerTimers");
+  const totalBox = wrap && wrap.querySelector(".center-timer--total");
+  if (totalBox) {
+    totalBox.classList.remove("center-timer--bonus-flash");
+    void totalBox.offsetWidth;
+    totalBox.classList.add("center-timer--bonus-flash");
+  }
+}
+
 function phraseRubyHtml(text, yomi) {
   return `<ruby class="phrase-ruby">${escapeHtml(text)}<rt class="phrase-ruby-yomi">${escapeHtml(yomi)}</rt></ruby>`;
 }
 
 function updateHud(gameRemain, phraseRemain) {
-  $("gameTimer").textContent = gameRemain.toFixed(1);
-  $("phraseTimer").textContent = state.awaitingNextPhrase ? "—" : Math.max(0, phraseRemain).toFixed(1);
+  const gStr = gameRemain.toFixed(1);
+  const pStr = state.awaitingNextPhrase ? "—" : Math.max(0, phraseRemain).toFixed(1);
+  $("gameTimer").textContent = gStr;
+  $("phraseTimer").textContent = pStr;
+  const cg = $("centerGameTimer");
+  const cp = $("centerPhraseTimer");
+  if (cg) cg.textContent = gStr;
+  if (cp) cp.textContent = pStr;
   $("score").textContent = String(state.score);
   $("stockCount").textContent = String(state.baitStock);
 }
@@ -685,6 +709,7 @@ function processTypedChar(ch) {
   state.typedRomaji = nextPrefix;
   state.index = state.typedRomaji.length;
   state.correctKeyCount += 1;
+  maybeGrantTimeBonus();
   renderTypeline();
 
   const done = narrowed.length === 1 && narrowed[0] === state.typedRomaji;

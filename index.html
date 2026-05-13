@@ -72,7 +72,7 @@
             <option value="relaxed" selected>やさしい — 打ち間違いはその場でやり直し（ストックは減りません。時間切れは減ります）</option>
             <option value="strict">しっかり — ミス・タイムアウトでストックが1つ減ります（寿司打に近い）</option>
           </select>
-          <span class="hint"><strong>やさしい</strong>は練習向き（タイムアウトもストックは減らず次のお題へ）。<strong>しっかり</strong>は間違い・時間切れでペナルティあり。トップ10はこの3項目の組み合わせごとに別々です。</span>
+          <span class="hint"><strong>やさしい</strong>は<strong>打ち間違いだけ</strong>やり直し（ストックは減りません）。<strong>時間切れ</strong>はどちらのモードでもストックが減ります。<strong>しっかり</strong>は打ち間違いでもストックが減ります。トップ10はこの3項目の組み合わせごとに別々です。</span>
         </div>
         <div class="field">
           <span class="label">ランキング用の名前</span>
@@ -86,6 +86,20 @@
     <section class="stage-wrap" id="stageWrap" aria-live="polite">
       <div class="scene" id="scene">
         <div class="field-bg" aria-hidden="true"></div>
+        <div class="center-timers" id="centerTimers" aria-label="制限時間">
+          <div class="center-timer center-timer--total">
+            <span class="ct-label">この60秒</span>
+            <div class="ct-row">
+              <span class="ct-value" id="centerGameTimer">60.0</span><span class="ct-unit">秒</span>
+            </div>
+          </div>
+          <div class="center-timer center-timer--phrase">
+            <span class="ct-label">このお題</span>
+            <div class="ct-row">
+              <span class="ct-value" id="centerPhraseTimer">5.0</span><span class="ct-unit">秒</span>
+            </div>
+          </div>
+        </div>
         <div class="nanohana-layer" aria-hidden="true">
           <div class="nanohana" style="--x: 3%; --d: 0s; --s: 0.82"></div>
           <div class="nanohana" style="--x: 9%; --d: -0.4s; --s: 0.95"></div>
@@ -166,7 +180,7 @@
           <div><span class="hud-label">スコア</span> <strong id="score">0</strong> pt</div>
           <div><span class="hud-label" id="stockLabel">エサストック</span> <strong id="stockCount">0</strong> こ</div>
         </div>
-        <p class="input-hint">正解は<strong>ローマ字だけ</strong>（ひらがな・漢字の変換は使いません）。IME は英字（半角）にして a〜z を打ってください。お題の下のローマ字を、エサが通りすぎる前に打ち終えましょう。正しく打ち始めるとごまちゃんがエサの方へ近づきます。<strong>時間切れ</strong>はどちらのモードでもストックが減ります。<strong>しっかり</strong>は打ち間違いでもストックが減ります。<strong>やさしい</strong>は打ち間違いだけやり直しです。</p>
+        <p class="input-hint">正解は<strong>ローマ字だけ</strong>（ひらがな・漢字の変換は使いません）。IME は英字（半角）にして a〜z を打ってください。お題の下のローマ字を、エサが通りすぎる前に打ち終えましょう。正しく打ち始めるとごまちゃんがエサの方へ近づきます。<strong>時間切れ</strong>はどちらのモードでもストックが減ります。<strong>しっかり</strong>は打ち間違いでもストックが減ります。<strong>やさしい</strong>は打ち間違いだけやり直しです。<strong>正しく打ったローマ字が15文字に達するたび</strong>、この60秒に<strong>＋1秒→＋2秒→＋3秒</strong>の順でボーナスが入ります（また＋1秒から繰り返し）。</p>
         <input
           id="ghostInput"
           class="ghost-input"
