@@ -298,227 +298,70 @@ const GOMA_CHAR_SCALE = 1.5;
 /** ごまちゃんの「待機」横位置（％）。まだ正しく打っていないとき・ミス後はここへ戻す */
 const BUNNY_HOME_X = 4;
 
-/** 一文を正しく打ち終えてから次の文へ切り替えるまでの待ち（ミリ秒） */
-const PHRASE_SUCCESS_GAP_MS = 620;
+/** 文正解後はすぐ次のお題へ（待ちなし） */
 
 /** 正しく打ったローマ字がこの回数に達するたび、全体の残り時間に秒を追加（+1→+2→+3→+1…） */
 const CORRECT_KEYS_FOR_TIME_BONUS = 15;
 
-const CAREER_STORAGE_KEY = "gomaCareerV1";
+const LS_CAREER_ROMAJI = "gomaCareerRomaji";
+const LS_CAREER_POINTS = "gomaCareerPoints";
 
-/** 累計ポイントで解放（1ptで最初、その後は10pt相当ごと）— ポップ寄り・うさぎっぽい称号名 */
+/** ウサギっぽい称号（1ptで最初、その後10ptごとに次の段階） */
 const RABBIT_TITLES = [
-  "はじめのぴょん跳び",
-  "にんじん見習いうさ",
-  "もふもふ一丁うさ",
-  "しっぽビュン勢",
-  "白菜ローラー兎",
-  "花畑スプリング兎",
-  "きらめき長耳ノヴァ",
-  "ムーンうさ耳クロス",
-  "キャロットハイパー",
-  "三段跳びマーチ",
-  "春風ロールうさ",
-  "菜の花ダッシュ兎",
-  "ぴょこぴょこ大旋風",
-  "しゃきしゃき耳センサー",
-  "野うさぎエリート",
-  "跳躍ミラクル兎",
-  "ハイパーもふ連打",
-  "白菜クラウン兎",
-  "光速しっぽ勢",
-  "花畑レジェンド",
-  "月面うさぴょん",
-  "星屑ロングイヤー",
-  "伝説のにんじん王",
-  "無双ぴょんぴょん",
-  "極・ごまちゃん道",
-  "真・花畑タイピング兎",
-  "うさぎ銀河クロス",
-  "超跳躍ポップ兎",
+  "初めの一飛び",
+  "うさぎゃるっ♪",
+  "にんじん★レイド",
+  "ピョン宙ドライブ",
+  "花ばなフルパワー",
+  "耳フワーティアラ",
+  "ましゅまろ跳び箱",
+  "キャロット・メテオ",
+  "跳ねうしろ脚ゾーン",
+  "しっぽグルーヴ",
+  "白もふハイカー",
+  "しあわせ三段跳び",
+  "ごま団子マスター",
+  "月下のうさッター",
+  "もくもく牧場レジェンド",
+  "宇宙うさぎ級",
+  "伝説のモフり手",
+  "にじの向こうピョン",
+  "はねっ返りキング",
+  "もふ神ご対面",
+  "とび箱ブレイカー",
+  "キャベツ畑の英雄",
+  "風を切る耳線",
+  "地球まるごと跳躍",
+  "ごまちゃんの守護者",
+  "モフり∞インフィニ",
+  "星屑キャノン",
+  "うさ耳ハリケーン",
+  "伝説の三跳び",
+  "光速もふターボ",
 ];
 
-/** 装備解放の累計ポイントしきい値（7段固定のあと +300pt ずつ） */
-const COSMETIC_THRESHOLDS = [50, 100, 200, 280, 350, 500, 600];
+/** 装備解放の累計ポイント（このあと +300 刻み） */
+const EQUIP_THRESHOLDS = [50, 100, 200, 280, 350, 500, 600];
 
-function cosmeticNeedForTier(tier) {
-  if (tier < 1) return Infinity;
-  if (tier <= COSMETIC_THRESHOLDS.length) return COSMETIC_THRESHOLDS[tier - 1];
-  return 600 + (tier - COSMETIC_THRESHOLDS.length) * 300;
-}
-
-/** 装備メタ（phraseAdd = お題の制限秒に足すぶん） */
-function cosmeticDef(tier) {
-  if (tier < 1) return null;
-  const need = cosmeticNeedForTier(tier);
-  const base = [
-    { label: "若葉リボン", tag: "若", mult: 2, phraseAdd: 0 },
-    { label: "にんじんブローチ", tag: "摂", mult: 2, phraseAdd: 0 },
-    { label: "跳び脚チャーム", tag: "跳", mult: 2, phraseAdd: 0.25 },
-    { label: "白菜クロス耳", tag: "白", mult: 2, phraseAdd: 0.25 },
-    { label: "花畑スカーフ", tag: "花", mult: 2, phraseAdd: 0.4 },
-    { label: "神速ウサ具足", tag: "速", mult: 2, phraseAdd: 0.55 },
-    { label: "兎王ティアラ", tag: "王", mult: 2, phraseAdd: 0.65 },
-  ];
-  if (tier <= base.length) return { need, ...base[tier - 1] };
-  const n = tier - base.length;
-  return { need, label: `星うさ覚醒・${n}本目`, tag: "極", mult: 2, phraseAdd: 0.7 };
-}
-
-function defaultCareer() {
-  return { totalPts: 0, totalKeys: 0, equippedTier: 0 };
-}
-
-function maxUnlockedCosmeticTier(totalPts) {
-  let m = 0;
-  for (let t = 1; t < 48; t += 1) {
-    if (totalPts >= cosmeticNeedForTier(t)) m = t;
-    else break;
-  }
-  return m;
-}
-
-function loadCareer() {
-  try {
-    const raw = localStorage.getItem(CAREER_STORAGE_KEY);
-    const d = raw ? JSON.parse(raw) : {};
-    const c = defaultCareer();
-    if (typeof d.totalPts === "number" && d.totalPts >= 0) c.totalPts = d.totalPts;
-    if (typeof d.totalKeys === "number" && d.totalKeys >= 0) c.totalKeys = d.totalKeys;
-    if (typeof d.equippedTier === "number" && d.equippedTier >= 0) c.equippedTier = Math.floor(d.equippedTier);
-    const maxEq = maxUnlockedCosmeticTier(c.totalPts);
-    if (c.equippedTier > maxEq) c.equippedTier = maxEq;
-    return c;
-  } catch {
-    return defaultCareer();
-  }
-}
-
-function saveCareer(c) {
-  localStorage.setItem(CAREER_STORAGE_KEY, JSON.stringify(c));
-}
-
-/** 累計ポイントからいま付いている称号インデックス（0始まり、無しは -1） */
-function titleIndexForCareerPts(totalPts) {
-  if (totalPts < 1) return -1;
-  return Math.min(RABBIT_TITLES.length - 1, Math.floor((totalPts - 1) / 10));
-}
-
-function titleNameForCareer(totalPts) {
-  const i = titleIndexForCareerPts(totalPts);
-  if (i < 0) return "（まだ称号なし）";
-  return RABBIT_TITLES[i];
-}
-
-/** つぎの称号が付く累計ポイント（上限なし表示用） */
-function nextTitleThresholdPts(totalPts) {
-  const i = titleIndexForCareerPts(totalPts);
-  if (i < 0) return 1;
-  if (i >= RABBIT_TITLES.length - 1) return null;
-  return 1 + (i + 1) * 10;
-}
-
-function keysUntilNextTimeBonus() {
-  const c = state.correctKeyCount;
-  if (c === 0) return CORRECT_KEYS_FOR_TIME_BONUS;
-  const r = c % CORRECT_KEYS_FOR_TIME_BONUS;
-  return r === 0 ? CORRECT_KEYS_FOR_TIME_BONUS : CORRECT_KEYS_FOR_TIME_BONUS - r;
-}
-
-function refreshCareerUi() {
-  const c = loadCareer();
-  const ptsEl = $("careerTotalPts");
-  const keysEl = $("careerTotalKeys");
-  const titleEl = $("careerTitleName");
-  const nextEl = $("careerTitleNext");
-  const sel = $("equipSelect");
-  if (ptsEl) ptsEl.textContent = String(c.totalPts);
-  if (keysEl) keysEl.textContent = String(c.totalKeys);
-  if (titleEl) titleEl.textContent = titleNameForCareer(c.totalPts);
-  if (nextEl) {
-    const n = nextTitleThresholdPts(c.totalPts);
-    if (n === null) nextEl.textContent = "これ以上の称号はありません（でも遊びはつづけられます）。";
-    else nextEl.textContent = `つぎの称号まで あと ${Math.max(0, n - c.totalPts)} pt（目標 ${n} pt）`;
-  }
-  if (sel) {
-    const maxT = maxUnlockedCosmeticTier(c.totalPts);
-    sel.innerHTML = "";
-    const o0 = document.createElement("option");
-    o0.value = "0";
-    o0.textContent = "装備なし";
-    sel.appendChild(o0);
-    for (let t = 1; t <= maxT; t += 1) {
-      const def = cosmeticDef(t);
-      if (!def) continue;
-      const op = document.createElement("option");
-      op.value = String(t);
-      op.textContent = `${def.label}（解放 ${def.need}pt）`;
-      sel.appendChild(op);
-    }
-    const eq = Math.min(maxT, c.equippedTier);
-    sel.value = String(eq);
-    if (eq !== c.equippedTier) {
-      c.equippedTier = eq;
-      saveCareer(c);
-    }
-  }
-}
-
-function applyBunnyCosmeticVisual() {
-  const bunny = $("bunny");
-  const tag = $("bunnyEquipTag");
-  if (!bunny) return;
-  for (let i = 1; i < 48; i += 1) bunny.classList.remove(`bunny--equip-${i}`);
-  const c = loadCareer();
-  const t = c.equippedTier;
-  if (t > 0) {
-    bunny.classList.add(`bunny--equip-${Math.min(t, 47)}`);
-    const def = cosmeticDef(t);
-    if (tag) tag.textContent = def ? def.tag : "";
-  } else if (tag) {
-    tag.textContent = "";
-  }
-}
-
-function showTimeBonusOverlay(sec) {
-  const el = $("timeBonusOverlay");
-  const tx = $("timeBonusOverlayText");
-  if (!el || !tx) return;
-  tx.textContent = `+${sec}秒 プラス！`;
-  el.removeAttribute("hidden");
-  el.setAttribute("aria-hidden", "false");
-  el.classList.remove("time-bonus-overlay--show");
-  void el.offsetWidth;
-  requestAnimationFrame(() => {
-    el.classList.add("time-bonus-overlay--show");
-  });
-  window.clearTimeout(state.bonusOverlayTimer);
-  state.bonusOverlayTimer = window.setTimeout(() => {
-    el.classList.remove("time-bonus-overlay--show");
-    window.setTimeout(() => {
-      el.setAttribute("hidden", "");
-      el.setAttribute("aria-hidden", "true");
-    }, 260);
-  }, 1500);
-}
-
-function refreshEquipHudLine() {
-  const line = $("equipHudLine");
-  if (!line) return;
-  const d = cosmeticDef(loadCareer().equippedTier);
-  if (!state.playing || !d) {
-    line.hidden = true;
-    line.textContent = "";
-    return;
-  }
-  line.hidden = false;
-  line.textContent = `装備：${d.label}（肩書「${d.tag}」／エサ点×${d.mult}／お題＋${d.phraseAdd}秒）`;
-}
-
-function getEffectivePhraseSec() {
-  const add = cosmeticDef(loadCareer().equippedTier)?.phraseAdd ?? 0;
-  return state.diff.phraseSec + add;
-}
+/** 装備段階ごとの二文字風の呼び名（ごまちゃんの漢字表示） */
+const EQUIP_EPITHETS = [
+  "",
+  "跳兎",
+  "星耳",
+  "光速",
+  "飛玉",
+  "花跳",
+  "神耳",
+  "大跳",
+  "天耳",
+  "覇兎",
+  "仙跳",
+  "極兎",
+  "聖跳",
+  "幻耳",
+  "龍跳",
+  "宙兎",
+];
 
 const state = {
   playing: false,
@@ -544,9 +387,156 @@ const state = {
   awaitingNextPhrase: false,
   /** 1プレイ中に「正しく打って進んだ」ローマ字の文字数（結果画面用） */
   correctKeyCount: 0,
-  /** 秒プラス演出のタイマー解除用 */
-  bonusOverlayTimer: 0,
 };
+
+function loadCareerRomaji() {
+  const n = Number.parseInt(localStorage.getItem(LS_CAREER_ROMAJI) || "0", 10);
+  return Number.isFinite(n) && n >= 0 ? n : 0;
+}
+
+function loadCareerPoints() {
+  const n = Number.parseInt(localStorage.getItem(LS_CAREER_POINTS) || "0", 10);
+  return Number.isFinite(n) && n >= 0 ? n : 0;
+}
+
+function saveCareerRomaji(n) {
+  localStorage.setItem(LS_CAREER_ROMAJI, String(Math.max(0, n)));
+}
+
+function saveCareerPoints(n) {
+  localStorage.setItem(LS_CAREER_POINTS, String(Math.max(0, n)));
+}
+
+/** 累計ポイントから解放される装備の段数（0＝なし） */
+function computeMaxEquipTier(careerPts) {
+  let tier = 0;
+  for (let i = 0; i < EQUIP_THRESHOLDS.length; i += 1) {
+    if (careerPts >= EQUIP_THRESHOLDS[i]) tier = i + 1;
+  }
+  let gate = 600;
+  while (careerPts >= gate + 300) {
+    gate += 300;
+    tier += 1;
+  }
+  return tier;
+}
+
+/** 称号の段階数（0＝未獲得） */
+function unlockedTitleCount(careerPts) {
+  if (careerPts < 1) return 0;
+  const raw = 1 + Math.floor((careerPts - 1) / 10);
+  return Math.min(raw, RABBIT_TITLES.length);
+}
+
+function currentTitleName(careerPts) {
+  const n = unlockedTitleCount(careerPts);
+  if (n === 0) return "（まだなし）";
+  return RABBIT_TITLES[n - 1];
+}
+
+function nextTitlePointsRemaining(careerPts) {
+  const n = unlockedTitleCount(careerPts);
+  if (n >= RABBIT_TITLES.length) return 0;
+  const nextAt = 1 + 10 * n;
+  return Math.max(0, nextAt - careerPts);
+}
+
+function equipEpithetForTier(tier) {
+  if (tier <= 0) return "";
+  if (tier > 0 && tier < EQUIP_EPITHETS.length) return EQUIP_EPITHETS[tier];
+  return `極兎${tier}`;
+}
+
+function effectivePhraseSec() {
+  let s = state.diff.phraseSec;
+  const t = computeMaxEquipTier(loadCareerPoints());
+  if (t >= 2) s += 0.5;
+  if (t >= 4) s += 0.5;
+  if (t >= 6) s += 0.5;
+  return Math.max(2, s);
+}
+
+function refreshBunnyEquipVisual() {
+  const bunny = $("bunny");
+  const badge = $("bunnyTitleBadge");
+  if (!bunny) return;
+  for (let i = 0; i <= 16; i += 1) bunny.classList.remove(`equip-tier-${i}`);
+  const t = computeMaxEquipTier(loadCareerPoints());
+  if (t > 0) {
+    bunny.classList.add(`equip-tier-${Math.min(t, 16)}`);
+    if (badge) {
+      badge.textContent = equipEpithetForTier(t);
+      badge.hidden = false;
+    }
+  } else if (badge) {
+    badge.textContent = "";
+    badge.hidden = true;
+  }
+}
+
+function refreshCareerHud() {
+  const r = loadCareerRomaji();
+  const p = loadCareerPoints();
+  const elR = $("careerRomaji");
+  const elP = $("careerPoints");
+  const elT = $("careerTitle");
+  const elN = $("careerNextTitle");
+  const elE = $("careerEquip");
+  if (elR) elR.textContent = String(r);
+  if (elP) elP.textContent = String(p);
+  if (elT) elT.textContent = currentTitleName(p);
+  if (elN) {
+    const left = nextTitlePointsRemaining(p);
+    if (unlockedTitleCount(p) >= RABBIT_TITLES.length) elN.textContent = "称号はいちばんの段までたっせい！";
+    else elN.textContent = `つぎの称号まであと ${left} pt`;
+  }
+  if (elE) {
+    const t = computeMaxEquipTier(p);
+    if (t <= 0) elE.textContent = "装備：まだ解放されていません（累計50pt で にんじんリボン など）";
+    else elE.textContent = `装備：${equipEpithetForTier(t)}（段階 ${t}）— エサの得点${t >= 1 ? " 2倍" : ""} ＋ お題の秒がのびます`;
+  }
+}
+
+function showTimeBonusFlash(sec) {
+  let el = $("timeBonusOverlay");
+  if (!el) return;
+  const inner = el.querySelector(".time-bonus-overlay__text");
+  if (inner) inner.textContent = `＋${sec}秒！`;
+  el.classList.add("time-bonus-overlay--show");
+  window.clearTimeout(showTimeBonusFlash._t);
+  showTimeBonusFlash._t = window.setTimeout(() => {
+    el.classList.remove("time-bonus-overlay--show");
+  }, 1100);
+}
+
+function showTitleToast(name) {
+  const el = $("toastPanel");
+  if (!el) return;
+  el.textContent = `新しい称号：「${name}」`;
+  el.classList.add("toast-panel--show");
+  window.clearTimeout(showTitleToast._t);
+  showTitleToast._t = window.setTimeout(() => el.classList.remove("toast-panel--show"), 2200);
+}
+
+function keysUntilNextTimeBonus() {
+  const c = state.correctKeyCount;
+  if (c === 0) return CORRECT_KEYS_FOR_TIME_BONUS;
+  const r = c % CORRECT_KEYS_FOR_TIME_BONUS;
+  return r === 0 ? CORRECT_KEYS_FOR_TIME_BONUS : CORRECT_KEYS_FOR_TIME_BONUS - r;
+}
+
+function nextTimeBonusSecondsPreview() {
+  const b = Math.floor(state.correctKeyCount / CORRECT_KEYS_FOR_TIME_BONUS);
+  return (b % 3) + 1;
+}
+
+function updateBonusKeyHint() {
+  const el = $("bonusKeyHint");
+  if (!el || !state.playing) return;
+  const need = keysUntilNextTimeBonus();
+  const sec = nextTimeBonusSecondsPreview();
+  el.textContent = `あと ${need} もじで 全体 ＋${sec}秒`;
+}
 
 function randomInt(min, max) {
   return min + Math.floor(Math.random() * (max - min + 1));
@@ -628,10 +618,10 @@ function closeRanking() {
 }
 
 function phrasePoints() {
-  let p = state.diff.points + state.lenMode.bonus;
-  const d = cosmeticDef(loadCareer().equippedTier);
-  if (d && d.mult) p *= d.mult;
-  return Math.round(p);
+  const base = state.diff.points + state.lenMode.bonus;
+  let mul = 1;
+  if (computeMaxEquipTier(loadCareerPoints()) >= 1) mul *= 2;
+  return Math.floor(base * mul);
 }
 
 function setSceneDifficultyClass() {
@@ -657,15 +647,15 @@ function newPhrase() {
   state.romajiCandidates = buildRomajiVariants(baseRomaji);
   state.typedRomaji = "";
   state.index = 0;
-  const phraseSec = getEffectivePhraseSec();
-  state.phraseEndAt = performance.now() + phraseSec * 1000;
+  const sec = effectivePhraseSec();
+  state.phraseEndAt = performance.now() + sec * 1000;
   applyBaitVegetableClass();
   const baitKanji = $("baitText");
   if (baitKanji)
     baitKanji.innerHTML = phraseRubyHtml(state.currentPhrase.text, state.currentPhrase.yomi);
   const scene = $("scene");
   const bait = $("bait");
-  if (scene) scene.style.setProperty("--bait-cross-sec", `${phraseSec}s`);
+  if (scene) scene.style.setProperty("--bait-cross-sec", `${sec}s`);
   bait.hidden = false;
   bait.classList.remove("bait--crossing");
   void bait.offsetHeight;
@@ -701,7 +691,7 @@ function maybeGrantTimeBonus() {
   const block = Math.floor(state.correctKeyCount / CORRECT_KEYS_FOR_TIME_BONUS);
   const bonusSec = ((block - 1) % 3) + 1;
   state.gameEndAt += bonusSec * 1000;
-  showTimeBonusOverlay(bonusSec);
+  showTimeBonusFlash(bonusSec);
   const wrap = $("centerTimers");
   const totalBox = wrap && wrap.querySelector(".center-timer--total");
   if (totalBox) {
@@ -726,11 +716,7 @@ function updateHud(gameRemain, phraseRemain) {
   if (cp) cp.textContent = pStr;
   $("score").textContent = String(state.score);
   $("stockCount").textContent = String(state.baitStock);
-  const bn = $("bonusNextLine");
-  if (bn && state.playing) {
-    const k = keysUntilNextTimeBonus();
-    bn.textContent = `次の「秒プラス」まで あと ${k} もじ（正しいローマ字）`;
-  }
+  updateBonusKeyHint();
 }
 
 /** 打ち始めたあとエサに追従するときだけ歩行アニメ（座り→跳びの切り替え） */
@@ -788,16 +774,24 @@ function bumpBunny() {
 
 function onSuccessPhrase() {
   const pts = phrasePoints();
+  const oldP = loadCareerPoints();
+  const oldTitles = unlockedTitleCount(oldP);
   state.score += pts;
+  saveCareerPoints(oldP + pts);
+  const newP = oldP + pts;
+  const newTitles = unlockedTitleCount(newP);
+  if (newTitles > oldTitles) showTitleToast(currentTitleName(newP));
+
   state.baitStock += 1;
   bumpBunny();
-  state.awaitingNextPhrase = true;
-  /** blur しない：フォーカスが外れると次の文まで IME が効かず Enter／クリックが必要になるため */
-  window.setTimeout(() => {
+  refreshCareerHud();
+  queueMicrotask(() => {
     if (!state.playing) return;
     newPhrase();
+    refreshBunnyEquipVisual();
+    updateBonusKeyHint();
     $("ghostInput").focus({ preventScroll: true });
-  }, PHRASE_SUCCESS_GAP_MS);
+  });
 }
 
 /** 現在のお題のローマ字入力だけ最初からやり直し（やさしいモードの打ち間違い用） */
@@ -835,13 +829,6 @@ function onMistakeOrTimeout() {
 
 function endGame() {
   state.playing = false;
-  window.clearTimeout(state.bonusOverlayTimer);
-  const ov = $("timeBonusOverlay");
-  if (ov) {
-    ov.classList.remove("time-bonus-overlay--show");
-    ov.setAttribute("hidden", "");
-    ov.setAttribute("aria-hidden", "true");
-  }
   detachPlayKeyCapture();
   state.awaitingNextPhrase = false;
   document.body.classList.remove("is-playing");
@@ -852,16 +839,12 @@ function endGame() {
   $("finalScore").textContent = String(state.score);
   const fk = $("finalKeyCount");
   if (fk) fk.textContent = String(state.correctKeyCount);
-  const career = loadCareer();
-  career.totalPts += state.score;
-  career.totalKeys += state.correctKeyCount;
-  saveCareer(career);
-  const rc = $("resultCareerLine");
-  if (rc) {
-    rc.textContent = `累計：${career.totalPts} pt ／ 累計ローマ字 ${career.totalKeys} もじ ／ 称号「${titleNameForCareer(career.totalPts)}」`;
+  const cs = $("careerSummary");
+  if (cs) {
+    const r = loadCareerRomaji();
+    const p = loadCareerPoints();
+    cs.textContent = `これまでのローマ字（累計）：${r} もじ　／　これまでのポイント（累計）：${p} pt　／　いまの称号：${currentTitleName(p)}`;
   }
-  refreshCareerUi();
-  applyBunnyCosmeticVisual();
   const name = ($("playerName").value || "").trim() || "ななし";
   const before = loadRank();
   const minTop = before.length < 10 ? 0 : before[before.length - 1].score;
@@ -910,7 +893,11 @@ function startGame() {
   setSceneDifficultyClass();
   updateStockHudLabel();
   state.score = 0;
-  state.baitStock = 0;
+  let stock = 0;
+  const eq = computeMaxEquipTier(loadCareerPoints());
+  if (eq >= 3) stock += 1;
+  if (eq >= 5) stock += 1;
+  state.baitStock = stock;
   state.correctKeyCount = 0;
   state.playing = true;
   state.bunnyX = BUNNY_HOME_X;
@@ -918,28 +905,22 @@ function startGame() {
   const bunnyEl = $("bunny");
   if (bunnyEl) bunnyEl.classList.remove("bunny--running");
   const now = performance.now();
-  state.gameEndAt = now + 60_000;
+  const startBonusMs = eq >= 8 ? 5000 : eq >= 7 ? 4000 : eq >= 5 ? 2000 : 0;
+  state.gameEndAt = now + 60_000 + startBonusMs;
   $("resultPanel").classList.add("hidden");
   $("setupPanel").classList.add("setup-hidden");
   $("stageWrap").classList.remove("setup-hidden");
   attachPlayKeyCapture();
   newPhrase();
+  refreshBunnyEquipVisual();
+  updateBonusKeyHint();
   $("ghostInput").focus({ preventScroll: true });
   cancelAnimationFrame(state.raf);
   state.raf = requestAnimationFrame(gameLoop);
-  applyBunnyCosmeticVisual();
-  refreshEquipHudLine();
 }
 
 function resetToSetup() {
   state.playing = false;
-  window.clearTimeout(state.bonusOverlayTimer);
-  const ov = $("timeBonusOverlay");
-  if (ov) {
-    ov.classList.remove("time-bonus-overlay--show");
-    ov.setAttribute("hidden", "");
-    ov.setAttribute("aria-hidden", "true");
-  }
   detachPlayKeyCapture();
   state.awaitingNextPhrase = false;
   document.body.classList.remove("is-playing");
@@ -948,9 +929,7 @@ function resetToSetup() {
   $("stageWrap").classList.add("setup-hidden");
   $("resultPanel").classList.add("hidden");
   $("bait").hidden = true;
-  const bn = $("bonusNextLine");
-  if (bn) bn.textContent = "";
-  refreshEquipHudLine();
+  refreshCareerHud();
 }
 
 function processTypedChar(ch) {
@@ -966,7 +945,9 @@ function processTypedChar(ch) {
   state.typedRomaji = nextPrefix;
   state.index = state.typedRomaji.length;
   state.correctKeyCount += 1;
+  saveCareerRomaji(loadCareerRomaji() + 1);
   maybeGrantTimeBonus();
+  updateBonusKeyHint();
   renderTypeline();
 
   const done = narrowed.length === 1 && narrowed[0] === state.typedRomaji;
@@ -1038,20 +1019,9 @@ function init() {
     }
   });
 
-  const eqSel = $("equipSelect");
-  if (eqSel) {
-    eqSel.addEventListener("change", () => {
-      const c = loadCareer();
-      c.equippedTier = parseInt(eqSel.value, 10) || 0;
-      saveCareer(c);
-      applyBunnyCosmeticVisual();
-      refreshCareerUi();
-    });
-  }
-
   setSceneDifficultyClass();
-  refreshCareerUi();
-  applyBunnyCosmeticVisual();
+  refreshCareerHud();
+  refreshBunnyEquipVisual();
 }
 
 init();
