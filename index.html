@@ -79,6 +79,21 @@
           <input id="playerName" type="text" maxlength="12" placeholder="ひらがなで６文字でもOK" autocomplete="nickname" />
         </div>
       </div>
+      <div class="career-card" aria-labelledby="career-heading">
+        <h3 id="career-heading" class="career-card__h">キャリア（このブラウザにだけ保存）</h3>
+        <p class="career-card__line">
+          累計ポイント <strong id="careerTotalPts">0</strong> pt ／ 累計ローマ字 <strong id="careerTotalKeys">0</strong> もじ
+        </p>
+        <p class="career-card__line">
+          称号（うさぎっぽいポップ風）：<strong id="careerTitleName">—</strong>
+        </p>
+        <p class="muted career-card__next" id="careerTitleNext"></p>
+        <div class="field">
+          <span class="label">うさぎ装備（累計で解放）</span>
+          <select id="equipSelect" aria-label="うさぎ装備"></select>
+          <span class="hint" id="equipHint">装備中は<strong>エサの得点が2倍</strong>。高い装備ほど<strong>お題の制限秒が少し伸びます</strong>。ごまちゃんの肩書きの漢字も変わります。</span>
+        </div>
+      </div>
       <button type="button" class="primary" id="startBtn">1分タイムアタックをはじめる</button>
       <button type="button" class="ghost" id="openRankingBtn">このモードのトップ10を見る</button>
     </section>
@@ -117,6 +132,7 @@
         </div>
         <!-- ごまちゃん：CSSイラストを座り／跳びで交互表示（エサ追従時） -->
         <div class="bunny bunny--side" id="bunny" aria-hidden="true">
+          <span class="bunny-equip-tag" id="bunnyEquipTag" lang="ja" aria-hidden="true"></span>
           <div class="bunny-pose bunny-pose--sit">
             <span class="bunny-tail"></span>
             <span class="bunny-haunch"></span>
@@ -180,6 +196,8 @@
           <div><span class="hud-label">スコア</span> <strong id="score">0</strong> pt</div>
           <div><span class="hud-label" id="stockLabel">エサストック</span> <strong id="stockCount">0</strong> こ</div>
         </div>
+        <p class="bonus-next" id="bonusNextLine" aria-live="polite">次の秒プラスまで …</p>
+        <p class="equip-hud muted" id="equipHudLine" hidden></p>
         <p class="input-hint">正解は<strong>ローマ字だけ</strong>（ひらがな・漢字の変換は使いません）。IME は英字（半角）にして a〜z を打ってください。お題の下のローマ字を、エサが通りすぎる前に打ち終えましょう。正しく打ち始めるとごまちゃんがエサの方へ近づきます。<strong>時間切れ</strong>はどちらのモードでもストックが減ります。<strong>しっかり</strong>は打ち間違いでもストックが減ります。<strong>やさしい</strong>は打ち間違いだけやり直しです。<strong>正しく打ったローマ字が15文字に達するたび</strong>、この60秒に<strong>＋1秒→＋2秒→＋3秒</strong>の順でボーナスが入ります（また＋1秒から繰り返し）。</p>
         <input
           id="ghostInput"
@@ -200,6 +218,7 @@
       <h2>おつかれさまでした！</h2>
       <p class="score-big"><span id="finalScoreLabel">このプレイ：</span><strong id="finalScore">0</strong> pt</p>
       <p class="result-keys">60秒で打った文字（ローマ字）：<strong id="finalKeyCount">0</strong> もじ</p>
+      <p class="result-career muted" id="resultCareerLine"></p>
       <p id="rankMessage"></p>
       <div class="buttons">
         <button type="button" class="primary" id="againBtn">同じ設定でもう一回</button>
@@ -216,6 +235,10 @@
       <ol class="rank-list" id="rankList"></ol>
     </section>
   </main>
+
+  <div id="timeBonusOverlay" class="time-bonus-overlay" hidden aria-hidden="true" aria-live="assertive">
+    <p class="time-bonus-overlay__text" id="timeBonusOverlayText"></p>
+  </div>
 
   <footer class="foot">
     <p>試作品です。お題は小学生向けの表現を中心にしています。プレイ中はエサの下にローマ字のガイドが出ます。音声・保存はこのブラウザ内のみです。</p>
