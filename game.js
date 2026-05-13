@@ -323,6 +323,8 @@ const state = {
   mistakeMode: MISTAKE_MODE.relaxed,
   /** 一文クリア直後〜次の文が始まるまで（この間は文タイムアウトしない・入力も無視） */
   awaitingNextPhrase: false,
+  /** 1プレイ中に「正しく打って進んだ」ローマ字の文字数（結果画面用） */
+  correctKeyCount: 0,
 };
 
 function randomInt(min, max) {
@@ -589,6 +591,8 @@ function endGame() {
   $("bait").hidden = true;
   $("resultPanel").classList.remove("hidden");
   $("finalScore").textContent = String(state.score);
+  const fk = $("finalKeyCount");
+  if (fk) fk.textContent = String(state.correctKeyCount);
   const name = ($("playerName").value || "").trim() || "ななし";
   const before = loadRank();
   const minTop = before.length < 10 ? 0 : before[before.length - 1].score;
@@ -638,6 +642,7 @@ function startGame() {
   updateStockHudLabel();
   state.score = 0;
   state.baitStock = 0;
+  state.correctKeyCount = 0;
   state.playing = true;
   state.bunnyX = BUNNY_HOME_X;
   document.body.classList.add("is-playing");
@@ -679,6 +684,7 @@ function processTypedChar(ch) {
   state.romajiCandidates = narrowed;
   state.typedRomaji = nextPrefix;
   state.index = state.typedRomaji.length;
+  state.correctKeyCount += 1;
   renderTypeline();
 
   const done = narrowed.length === 1 && narrowed[0] === state.typedRomaji;
