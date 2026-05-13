@@ -1,0 +1,8 @@
+# AWS Amplify Hosting — ブラウザ／CDN が古い HTML・JS を長く抱えないようにする
+# リポジトリ直下に置くとデプロイ時に CloudFront へ反映されます（反映後は再デプロイが必要）。
+# https://docs.aws.amazon.com/amplify/latest/userguide/custom-headers.html
+customHeaders:
+  - pattern: "**/*"
+    headers:
+      - key: Cache-Control
+        value: public, max-age=0, must-revalidate

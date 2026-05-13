@@ -15,6 +15,12 @@ const LENGTH_MODE = {
   ninjin: { id: "ninjin", label: "ニンジン", min: 11, max: 15, bonus: 2 },
 };
 
+/** タイプミス・タイムアウト時にストックを減らすか（ランキングもモード別） */
+const MISTAKE_MODE = {
+  relaxed: { id: "relaxed", label: "やさしい", penalty: false },
+  strict: { id: "strict", label: "しっかり", penalty: true },
+};
+
 /**
  * text = 画面（単語・複合語中心／小学生向け常用漢字）／yomi = 読みひらがな
  * 野菜モードの長さは yomi の文字（コードポイント）数。
@@ -314,6 +320,7 @@ const state = {
   index: 0,
   raf: 0,
   bunnyX: BUNNY_HOME_X,
+  mistakeMode: MISTAKE_MODE.relaxed,
   /** 一文クリア直後〜次の文が始まるまで（この間は文タイムアウトしない・入力も無視） */
   awaitingNextPhrase: false,
 };
@@ -337,7 +344,7 @@ function pickRandomPhrase() {
 }
 
 function rankStorageKey() {
-  return `gomaTop10:${state.diff.id}:${state.lenMode.id}`;
+  return `gomaTop10:${state.diff.id}:${state.lenMode.id}:${state.mistakeMode.id}`;
 }
 
 function loadRank() {
@@ -385,7 +392,8 @@ function renderRankList() {
 function openRanking() {
   state.diff = DIFFICULTY[$("difficulty").value];
   state.lenMode = LENGTH_MODE[$("lengthMode").value];
-  $("rankContext").textContent = `${state.diff.label} × ${state.lenMode.label}モード（1プレイのスコア）`;
+  state.mistakeMode = MISTAKE_MODE[$("mistakeMode").value];
+  $("rankContext").textContent = `${state.diff.label} × ${state.lenMode.label} × ${state.mistakeMode.label}（1プレイのスコア）`;
   renderRankList();
   $("rankPanel").classList.remove("hidden");
   $("rankPanel").classList.add("rank-overlay");
@@ -471,6 +479,21 @@ function updateHud(gameRemain, phraseRemain) {
   $("stockCount").textContent = String(state.baitStock);
 }
 
+/** 打ち始めたあとエサに追従するときだけ歩行アニメ（座り→跳びの切り替え） */
+function syncBunnyRunningClass() {
+  const bunny = $("bunny");
+  const bait = $("bait");
+  if (!bunny) return;
+  const chasing =
+    state.playing &&
+    !state.awaitingNextPhrase &&
+    !!state.typedRomaji &&
+    state.typedRomaji.length > 0 &&
+    bait &&
+    !bait.hidden;
+  bunny.classList.toggle("bunny--running", chasing);
+}
+
 function updateBunnyMotion() {
   const scene = $("scene");
   const bunny = $("bunny");
@@ -523,6 +546,30 @@ function onSuccessPhrase() {
   }, PHRASE_SUCCESS_GAP_MS);
 }
 
+/** 現在のお題のローマ字入力だけ最初からやり直し（やさしいモードの打ち間違い用） */
+function resetCurrentPhraseTyping() {
+  if (!state.currentPhrase) return;
+  const baseRomaji = yomiToRomaji(state.currentPhrase.yomi);
+  state.romajiCandidates = buildRomajiVariants(baseRomaji);
+  state.typedRomaji = "";
+  state.index = 0;
+  renderTypeline();
+}
+
+/** 打ち間違い：しっかり＝ペナルティ、やさしい＝入力だけやり直し */
+function handleTypo() {
+  if (!state.mistakeMode.penalty) {
+    resetCurrentPhraseTyping();
+    return;
+  }
+  onMistakeOrTimeout();
+}
+
+/** タイムアウト：どちらのミスモードでもエサが逃げてペナルティ（打ち間違いだけやさしいモードで緩和） */
+function handleTimeout() {
+  onMistakeOrTimeout();
+}
+
 function onMistakeOrTimeout() {
   state.baitStock = Math.max(0, state.baitStock - 1);
   clearTypelineDisplay();
@@ -569,15 +616,26 @@ function gameLoop(now) {
     return;
   }
   if (!state.awaitingNextPhrase && phraseRemain <= 0) {
-    onMistakeOrTimeout();
+    handleTimeout();
   }
   state.raf = requestAnimationFrame(gameLoop);
+}
+
+function updateStockHudLabel() {
+  const el = $("stockLabel");
+  if (!el) return;
+  el.textContent =
+    state.mistakeMode.penalty === true
+      ? "エサストック（ミス・タイムアウトで1つなくなる）"
+      : "エサストック（やさしい：打ち間違いでは減りません・時間切れは減ります）";
 }
 
 function startGame() {
   state.diff = DIFFICULTY[$("difficulty").value];
   state.lenMode = LENGTH_MODE[$("lengthMode").value];
+  state.mistakeMode = MISTAKE_MODE[$("mistakeMode").value];
   setSceneDifficultyClass();
+  updateStockHudLabel();
   state.score = 0;
   state.baitStock = 0;
   state.playing = true;
@@ -615,7 +673,7 @@ function processTypedChar(ch) {
   const nextPrefix = `${state.typedRomaji}${ch}`;
   const narrowed = state.romajiCandidates.filter((romaji) => romaji.startsWith(nextPrefix));
   if (narrowed.length === 0) {
-    onMistakeOrTimeout();
+    handleTypo();
     return;
   }
   state.romajiCandidates = narrowed;

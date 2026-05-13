@@ -1,13 +1,16 @@
 # AWS Amplify Hosting — ビルドなしの静的サイト（index.html / game.js / styles.css）
+# JS/CSS は index 内のスクリプトで毎回 ?v=Date.now() を付けて読み込みます（キャッシュ対策）。
+# customHttp.yml で Cache-Control も指定しています。
 version: 1
 frontend:
   phases:
     preBuild:
       commands:
-        - echo preBuild-ok
+        - echo "preBuild — アプリルートに index.html があるか確認します"
+        - test -f index.html || (echo "ERROR: index.html がありません。Amplify コンソールの「リポジトリのルートディレクトリ」が、このプロジェクトのフォルダ（index.html がある場所）になっているか確認してください。" && exit 1)
     build:
       commands:
-        - echo build-ok
+        - echo "build-ok — 静的ファイルをそのまま公開します"
   artifacts:
     baseDirectory: .
     files:

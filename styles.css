@@ -131,6 +131,19 @@ body.is-playing .input-hint {
   max-width: 52ch;
 }
 
+.deploy-banner {
+  margin: -0.15rem 0 0.85rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.deploy-banner .build-id {
+  font-size: 0.74rem;
+  padding: 0.05rem 0.35rem;
+  border-radius: 6px;
+  background: rgba(61, 58, 54, 0.06);
+}
+
 .shell {
   max-width: 960px;
   margin: 0 auto;
@@ -344,71 +357,500 @@ input[type="text"] {
   }
 }
 
-/* ごまちゃん：写真イラストを順番に切り替え（座り／跳び） */
+/* ごまちゃん：CSSイラストを座り／跳びで交互表示 */
 .bunny.bunny--side {
   position: absolute;
   z-index: 2;
   left: 4%;
   bottom: 6%;
-  width: clamp(140px, 38vw, 240px);
-  height: clamp(105px, 30vw, 180px);
+  width: clamp(126px, 32vw, 176px);
+  height: clamp(92px, 24vw, 130px);
   transition: transform 0.35s ease, left 0.25s ease-out;
   transform: scaleX(-1) scale(var(--goma-char-scale));
   transform-origin: 50% 92%;
   animation: bunny-bob 1.6s ease-in-out infinite;
-  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.18));
+  filter: drop-shadow(0 3px 2px rgba(0, 0, 0, 0.1));
 }
 
+/* プレイ中は少しテンポを上げて、待機中より元気に動く */
 body.is-playing .bunny.bunny--side {
   animation-duration: 1.05s;
 }
 
-.bunny-sprite {
-  position: relative;
-  width: 100%;
-  height: 100%;
-}
-
-.bunny-frame {
+.bunny.bunny--side .bunny-pose {
   position: absolute;
-  left: 0;
-  bottom: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  object-position: bottom center;
+  inset: 0;
   pointer-events: none;
-  user-select: none;
 }
 
-.bunny-frame--leap {
+.bunny.bunny--side .bunny-pose--leap {
   opacity: 0;
 }
 
-.bunny.bunny--running .bunny-frame--sit {
-  animation: goma-frame-sit 0.48s ease-in-out infinite;
+/* 背中から腰へ繋がる主シルエット */
+.bunny.bunny--side .bunny-pose--sit::before,
+.bunny.bunny--side .bunny-pose--leap::before {
+  content: "";
+  position: absolute;
+  left: 11%;
+  bottom: 30%;
+  width: 64%;
+  height: 48%;
+  background: linear-gradient(162deg, #b6b3b1 0%, #a8a5a3 58%, #9e9b99 100%);
+  border-radius: 62% 38% 50% 52% / 56% 44% 56% 44%;
+  transform: rotate(-2deg);
+  z-index: 0;
+  box-shadow: inset 4px 2px 6px rgba(255, 255, 255, 0.16), inset -4px -3px 8px rgba(0, 0, 0, 0.08);
 }
 
-.bunny.bunny--running .bunny-frame--leap {
-  animation: goma-frame-leap 0.48s ease-in-out infinite;
+/* 肩〜胸側の柔らかい明部 */
+.bunny.bunny--side .bunny-pose--sit::after,
+.bunny.bunny--side .bunny-pose--leap::after {
+  content: "";
+  position: absolute;
+  left: 21%;
+  bottom: 41%;
+  width: 30%;
+  height: 16%;
+  background: radial-gradient(ellipse at 40% 40%, rgba(255, 255, 255, 0.24) 0%, transparent 75%);
+  border-radius: 50%;
+  opacity: 0.9;
+  z-index: 2;
+  pointer-events: none;
 }
 
-@keyframes goma-frame-sit {
+/* ぽんっとした尻尾の玉 */
+.bunny.bunny--side .bunny-pose .bunny-tail {
+  position: absolute;
+  right: 2%;
+  top: 30%;
+  width: 16%;
+  height: 16%;
+  background: radial-gradient(circle at 34% 34%, #f4f4f4, #bcb9b7 84%);
+  border-radius: 52% 48% 50% 47%;
+  box-shadow: inset -3px -2px 4px rgba(0, 0, 0, 0.08), 2px 2px 0 rgba(255, 255, 255, 0.35);
+  animation: bunny-tail-wiggle 0.7s ease-in-out infinite alternate;
+}
+
+/* 腰の大きな塊（ウサギらしい後躯） */
+.bunny.bunny--side .bunny-pose .bunny-haunch {
+  position: absolute;
+  z-index: 1;
+  right: 9%;
+  bottom: 30%;
+  width: 34%;
+  height: 44%;
+  background: linear-gradient(164deg, #b5b2b0 0%, #a5a2a0 55%, #9b9896 100%);
+  border-radius: 56% 38% 50% 46%;
+  transform: rotate(4deg);
+  box-shadow: inset 3px -3px 7px rgba(0, 0, 0, 0.09), inset -2px 2px 4px rgba(255, 255, 255, 0.1);
+}
+
+/* 後脚（太もも） */
+.bunny.bunny--side .bunny-pose .bunny-hind-thigh {
+  position: absolute;
+  right: 8%;
+  bottom: 13%;
+  width: 30%;
+  height: 55%;
+  background: linear-gradient(166deg, #b4b1af 0%, #a4a19f 56%, #989593 100%);
+  border-radius: 56% 38% 46% 40% / 60% 48% 44% 34%;
+  transform: rotate(8deg);
+  transform-origin: 52% 12%;
+  box-shadow: inset -4px 2px 8px rgba(255, 255, 255, 0.12), inset 2px -5px 9px rgba(0, 0, 0, 0.08);
+}
+
+.bunny.bunny--side .bunny-pose .bunny-hind-thigh::after {
+  content: "";
+  position: absolute;
+  left: 10%;
+  top: 24%;
+  width: 44%;
+  height: 58%;
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.2) 0%, transparent 55%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* 後ろ足先 */
+.bunny.bunny--side .bunny-pose .bunny-hind-paw {
+  position: absolute;
+  right: -2%;
+  bottom: -4%;
+  width: 25%;
+  height: 30%;
+  background: linear-gradient(165deg, #b2afad 0%, #a09d9b 55%, #93908e 100%);
+  border-radius: 42% 56% 36% 40% / 48% 44% 52% 40%;
+  transform: rotate(16deg);
+  transform-origin: 30% 24%;
+  box-shadow: inset 3px -2px 4px rgba(0, 0, 0, 0.12), inset -1px 2px 3px rgba(255, 255, 255, 0.1), 0 3px 0 rgba(0, 0, 0, 0.05);
+}
+
+.bunny.bunny--side .bunny-pose .bunny-hind-paw::before {
+  content: "";
+  position: absolute;
+  inset: 14% 18% auto 40%;
+  height: 42%;
+  width: 30%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.18), transparent);
+  border-radius: 50%;
+}
+
+/* 胴体（胸） */
+.bunny.bunny--side .bunny-pose .bunny-body {
+  position: absolute;
+  z-index: 1;
+  left: 20%;
+  bottom: 36%;
+  width: 36%;
+  height: 50%;
+  background: linear-gradient(164deg, #b6b3b1 0%, #a8a5a3 58%, #9d9a98 100%);
+  border-radius: 62% 38% 48% 54% / 58% 42% 54% 46%;
+  transform: rotate(-4deg);
+  box-shadow: inset 3px 2px 6px rgba(255, 255, 255, 0.16), inset -3px -2px 6px rgba(0, 0, 0, 0.06);
+}
+
+.bunny.bunny--side .bunny-pose .bunny-body::before {
+  content: "";
+  position: absolute;
+  right: -2%;
+  top: 40%;
+  width: 12%;
+  height: 26%;
+  background: rgba(0, 0, 0, 0.05);
+  opacity: 0.35;
+  pointer-events: none;
+  border-radius: 50%;
+}
+
+/* 胸のハイライト */
+.bunny.bunny--side .bunny-pose .bunny-belly-highlight {
+  position: absolute;
+  left: 24%;
+  bottom: 50%;
+  width: 30%;
+  height: 34%;
+  background: radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.18) 0%, transparent 80%);
+  border-radius: 50%;
+  pointer-events: none;
+  transform: rotate(-8deg);
+}
+
+/* 首 */
+.bunny.bunny--side .bunny-pose .bunny-neck {
+  position: absolute;
+  z-index: 2;
+  left: 13%;
+  bottom: 57%;
+  width: 21%;
+  height: 31%;
+  background: linear-gradient(162deg, #b6b3b1, #9f9c9a);
+  border-radius: 54% 46% 50% 50%;
+  transform: rotate(-10deg);
+  box-shadow: inset 2px 2px 4px rgba(255, 255, 255, 0.2);
+}
+
+/* 前脚（上腕） */
+.bunny.bunny--side .bunny-pose .bunny-fore-thigh {
+  position: absolute;
+  left: 24%;
+  bottom: 20%;
+  width: 17%;
+  height: 58%;
+  background: linear-gradient(170deg, #b3b0ae 0%, #a19e9c 60%, #93908e 100%);
+  border-radius: 50% 40% 46% 50% / 48% 56% 42% 40%;
+  transform: rotate(4deg);
+  transform-origin: 50% 8%;
+  box-shadow: inset 2px 1px 5px rgba(255, 255, 255, 0.15), inset -1px -4px 6px rgba(0, 0, 0, 0.08);
+}
+
+.bunny.bunny--side .bunny-pose .bunny-fore-thigh::after {
+  content: "";
+  position: absolute;
+  right: 12%;
+  top: 18%;
+  width: 45%;
+  height: 55%;
+  background: linear-gradient(200deg, rgba(255, 255, 255, 0.2) 0%, transparent 60%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* 前脚（手〜手首） */
+.bunny.bunny--side .bunny-pose .bunny-fore-paw {
+  position: absolute;
+  left: 19%;
+  bottom: 1%;
+  width: 15%;
+  height: 40%;
+  background: linear-gradient(170deg, #b3b0ae 0%, #9f9c9a 60%, #93908e 100%);
+  border-radius: 45% 50% 42% 48% / 48% 42% 45% 38%;
+  transform: rotate(2deg);
+  transform-origin: 50% 8%;
+  box-shadow: inset 1px -1px 3px rgba(0, 0, 0, 0.1), inset -1px 2px 2px rgba(255, 255, 255, 0.08);
+}
+
+/* 前足の足先（つま先）: 右向き */
+.bunny.bunny--side .bunny-pose .bunny-fore-paw::before {
+  content: "";
+  position: absolute;
+  right: -30%;
+  bottom: 8%;
+  width: 58%;
+  height: 34%;
+  background: linear-gradient(170deg, #b1aeac 0%, #9a9795 100%);
+  border-radius: 36% 60% 54% 42% / 44% 58% 42% 46%;
+  transform: rotate(14deg);
+  box-shadow: inset 1px -1px 2px rgba(0, 0, 0, 0.12), inset -1px 1px 2px rgba(255, 255, 255, 0.1);
+}
+
+.bunny.bunny--side .bunny-pose .bunny-fore-paw::after {
+  content: "";
+  position: absolute;
+  right: -42%;
+  bottom: 18%;
+  width: 22%;
+  height: 10%;
+  background: rgba(90, 86, 83, 0.36);
+  border-radius: 999px;
+  transform: rotate(12deg);
+}
+
+.bunny.bunny--side .bunny-pose .bunny-fore-toe {
+  position: absolute;
+  left: 29%;
+  bottom: 4%;
+  width: 13%;
+  height: 10%;
+  background: linear-gradient(170deg, #aba8a6 0%, #908d8b 100%);
+  border-radius: 35% 65% 50% 45%;
+  transform: rotate(6deg);
+  box-shadow: inset 1px -1px 2px rgba(0, 0, 0, 0.12);
+  z-index: 2;
+}
+
+/* 頭 */
+.bunny.bunny--side .bunny-pose .bunny-head {
+  position: absolute;
+  z-index: 3;
+  left: 3%;
+  bottom: 64%;
+  width: 46%;
+  height: 54%;
+  background: linear-gradient(160deg, #b7b4b2 0%, #a8a5a3 58%, #9d9a98 100%);
+  border-radius: 50% 42% 40% 52%;
+  box-shadow: inset 3px 2px 6px rgba(255, 255, 255, 0.16), inset -3px -2px 5px rgba(0, 0, 0, 0.06);
+}
+
+.bunny.bunny--side .bunny-pose .bunny-head::before {
+  content: "";
+  position: absolute;
+  left: -4%;
+  top: 54%;
+  width: 28%;
+  height: 22%;
+  background: linear-gradient(160deg, #b4b1af 0%, #a29f9d 100%);
+  border-radius: 54% 46% 50% 50%;
+}
+
+/* 奥の耳（半透明で奥行き） */
+.bunny.bunny--side .bunny-pose .bunny-ear.bunny-ear--rear {
+  position: absolute;
+  left: 10%;
+  top: 2%;
+  width: 22%;
+  height: 108%;
+  background: linear-gradient(102deg, #d0cfce 0%, #787675 100%);
+  border-radius: 50% 46% 64% 60%;
+  box-shadow: inset -6px -3px 8px rgba(0, 0, 0, 0.1);
+  transform: rotate(-118deg);
+  transform-origin: 24% 10%;
+  opacity: 0.9;
+  z-index: 0;
+}
+
+/* 手前の耳（灰毛＋ほんのりピンクの内側） */
+.bunny.bunny--side .bunny-pose .bunny-ear.bunny-ear--front {
+  position: absolute;
+  left: 6%;
+  top: 0;
+  width: 34%;
+  height: 122%;
+  background: linear-gradient(118deg, #f0efee 12%, #8a8886 96%);
+  border-radius: 44% 52% 66% 62%;
+  transform: rotate(-102deg);
+  transform-origin: 20% 10%;
+  box-shadow: inset -10px -4px 14px rgba(0, 0, 0, 0.1), inset 6px 6px 10px rgba(255, 255, 255, 0.45);
+  z-index: 1;
+}
+
+.bunny.bunny--side .bunny-pose .bunny-ear--front::after {
+  content: "";
+  position: absolute;
+  left: 20%;
+  top: 14%;
+  right: 18%;
+  bottom: 20%;
+  background: radial-gradient(ellipse at 45% 40%, rgba(255, 220, 230, 0.95) 0%, rgba(240, 180, 190, 0.45) 45%, transparent 72%);
+  border-radius: inherit;
+}
+
+.bunny.bunny--side .bunny-pose .bunny-eye {
+  position: absolute;
+  left: 10%;
+  top: 43%;
+  width: 16%;
+  height: 14%;
+  background: radial-gradient(ellipse at 35% 35%, #1a1716 58%, #3b3634 100%);
+  border-radius: 55% 45% 60% 40%;
+  overflow: visible;
+  z-index: 2;
+  transform: rotate(-8deg);
+}
+
+.bunny.bunny--side .bunny-pose .bunny-eye-highlight {
+  position: absolute;
+  left: 20%;
+  top: 22%;
+  width: 38%;
+  height: 38%;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 50%;
+}
+
+/* ひげ（細線のシャドウで表現） */
+.bunny.bunny--side .bunny-pose .bunny-whiskers {
+  position: absolute;
+  left: -3%;
+  top: 53%;
+  width: 52%;
+  height: 26%;
+  pointer-events: none;
+  box-shadow:
+    62% -6px 0 0 rgba(52, 47, 45, 0.22),
+    78% -1px 0 0 rgba(52, 47, 45, 0.2),
+    70% 4px 0 0 rgba(52, 47, 45, 0.24),
+    85% 8px 0 0 rgba(52, 47, 45, 0.18);
+}
+
+.bunny.bunny--side .bunny-pose .bunny-whiskers::before {
+  content: "";
+  position: absolute;
+  left: 100%;
+  top: 42%;
+  width: 118%;
+  height: 0.06rem;
+  max-height: 1px;
+  background: linear-gradient(to right, rgba(52, 47, 45, 0.18), transparent);
+  transform: rotate(7deg);
+  transform-origin: left center;
+}
+
+.bunny.bunny--side .bunny-pose .bunny-whiskers::after {
+  content: "";
+  position: absolute;
+  left: 100%;
+  top: 55%;
+  width: 128%;
+  height: 0.06rem;
+  max-height: 1px;
+  background: linear-gradient(to right, rgba(52, 47, 45, 0.16), transparent);
+  transform: rotate(-11deg);
+  transform-origin: left center;
+}
+
+/* 鼻 */
+.bunny.bunny--side .bunny-pose .bunny-nose {
+  position: absolute;
+  left: -6%;
+  top: 53%;
+  width: 17%;
+  height: 21%;
+  background: radial-gradient(ellipse at 40% 40%, #ebe4e6 12%, #6c5f63 92%);
+  border-radius: 50%;
+  box-shadow: inset 1px 2px 2px rgba(255, 255, 255, 0.4), 0 2px 3px rgba(0, 0, 0, 0.12);
+}
+
+.bunny.bunny--side .bunny-pose .bunny-nose::after {
+  content: "";
+  position: absolute;
+  left: 48%;
+  top: 78%;
+  width: 1px;
+  height: 11px;
+  background: rgba(60, 55, 52, 0.45);
+  transform: rotate(8deg);
+  border-radius: 999px;
+}
+
+.bunny.bunny--side .bunny-pose .bunny-nose-shine {
+  position: absolute;
+  left: -5%;
+  top: 53%;
+  width: 5%;
+  height: 9%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.72) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+
+/* 跳びポーズの見た目（座りレイヤーと差をつける） */
+.bunny.bunny--side .bunny-pose--leap .bunny-body {
+  transform: translateY(-14px) rotate(-5deg);
+}
+
+.bunny.bunny--side .bunny-pose--leap .bunny-haunch {
+  transform: translateY(5px) rotate(9deg);
+}
+
+.bunny.bunny--side .bunny-pose--leap .bunny-head {
+  transform: translateY(-10px);
+}
+
+.bunny.bunny--side .bunny-pose--leap .bunny-fore-paw {
+  transform: translateY(-12px) rotate(-12deg);
+}
+
+.bunny.bunny--side .bunny-pose--leap .bunny-hind-paw {
+  transform: translateY(-8px);
+}
+
+.bunny.bunny--side .bunny-pose--leap .bunny-ear.bunny-ear--rear {
+  transform: rotate(-142deg);
+}
+
+.bunny.bunny--side .bunny-pose--leap .bunny-ear.bunny-ear--front {
+  transform: rotate(-128deg);
+}
+
+/* エサに追従して進むとき：先に座り、つぎに跳び（交互ループ） */
+.bunny.bunny--running .bunny-pose--sit {
+  animation: goma-illus-sit 0.48s ease-in-out infinite;
+}
+
+.bunny.bunny--running .bunny-pose--leap {
+  animation: goma-illus-leap 0.48s ease-in-out infinite;
+}
+
+@keyframes goma-illus-sit {
   0%,
   44% {
     opacity: 1;
   }
+
   50%,
   100% {
     opacity: 0;
   }
 }
 
-@keyframes goma-frame-leap {
+@keyframes goma-illus-leap {
   0%,
   44% {
     opacity: 0;
   }
+
   50%,
   100% {
     opacity: 1;
@@ -423,6 +865,16 @@ body.is-playing .bunny.bunny--side {
 
   50% {
     transform: translateY(-4px) scaleX(-1) scale(var(--goma-char-scale));
+  }
+}
+
+@keyframes bunny-tail-wiggle {
+  from {
+    transform: rotate(-2deg);
+  }
+
+  to {
+    transform: rotate(8deg);
   }
 }
 
