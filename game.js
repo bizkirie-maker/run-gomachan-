@@ -300,13 +300,73 @@ const BUNNY_HOME_X = 4;
 
 /** 文正解後はすぐ次のお題へ（待ちなし） */
 
-/** 正しく打ったローマ字がこの回数に達するたび、全体の残り時間に秒を追加（+1→+2→+3→+1…） */
-const CORRECT_KEYS_FOR_TIME_BONUS = 15;
+/** 累計の正解打鍵で全体秒ボーナス（15→+1秒、20→+2秒、25→+3秒、その後25刻みで繰り返し） */
+const TIME_BONUS_WAVE_STEP = 25;
+const TIME_BONUS_MILESTONES = [
+  { off: 15, sec: 1 },
+  { off: 20, sec: 2 },
+  { off: 25, sec: 3 },
+];
+
+/** 称号：60秒1プレイの最高スコアがこの値ごとに次の段階（50, 100, …） */
+const TITLE_FROM_BEST_PER = 50;
+
+/** 装備解放：累計ポイントがこの間隔で次のアイテム（2000, 4000, …） */
+const EQUIP_UNLOCK_STEP = 2000;
+
+/** この称号を装っているときは装備ビジュアルを「光速」テーマに */
+const SPEED_TITLE_NAME = "光速もふターボ";
 
 const LS_CAREER_ROMAJI = "gomaCareerRomaji";
 const LS_CAREER_POINTS = "gomaCareerPoints";
+const LS_BEST_SINGLE_PLAY = "gomaBestSinglePlayScore";
+const LS_EQUIPPED_IDS = "gomaEquippedIds";
 
-/** ウサギっぽい称号（1ptで最初、その後10ptごとに次の段階） */
+/** 同時に身につけられる装備の最大数 */
+const MAX_EQUIPPED = 4;
+
+/**
+ * 体に付ける装備カタログ（冠・衣・剣・靴・指輪など）。
+ * unlockPts = 累計ポイント（2000pt 刻みで解放）。
+ */
+const EQUIP_CATALOG = [
+  { id: "ribbon_crown", name: "にんじんリボン冠", kind: "冠", unlockPts: 2000, mulPerLevel: 0.07, secPerLevel: 0.05 },
+  { id: "clover_cape", name: "よつばもふマント", kind: "衣", unlockPts: 4000, mulPerLevel: 0.055, secPerLevel: 0.055 },
+  { id: "carrot_blade", name: "にんじん細剣", kind: "剣", unlockPts: 6000, mulPerLevel: 0.12, secPerLevel: 0.03 },
+  { id: "field_boots", name: "花畑ふかふかブーツ", kind: "靴", unlockPts: 8000, mulPerLevel: 0.045, secPerLevel: 0.06 },
+  {
+    id: "rainbow_tiara",
+    name: "にじ玉ティアラ",
+    kind: "冠",
+    unlockPts: 10000,
+    mulPerLevel: 0.07,
+    secPerLevel: 0.04,
+    startStock: 1,
+  },
+  {
+    id: "star_mantle",
+    name: "ほしぞらローブ",
+    kind: "衣",
+    unlockPts: 12000,
+    mulPerLevel: 0.06,
+    secPerLevel: 0.06,
+    startBonusMs: 2500,
+  },
+  {
+    id: "gomadango_rod",
+    name: "ごまだんごのししょう棒",
+    kind: "剣",
+    unlockPts: 14000,
+    mulPerLevel: 0.1,
+    secPerLevel: 0.05,
+    startBonusMs: 2500,
+  },
+  { id: "clover_ring", name: "よつばリング", kind: "指輪", unlockPts: 16000, mulPerLevel: 0.05, secPerLevel: 0.07 },
+];
+
+const EQUIP_BY_ID = Object.fromEntries(EQUIP_CATALOG.map((d) => [d.id, d]));
+
+/** ウサギっぽい称号（60秒プレイの自己ベストが 50pt ごとに次の段階） */
 const RABBIT_TITLES = [
   "初めの一飛び",
   "うさぎゃるっ♪",
@@ -338,29 +398,6 @@ const RABBIT_TITLES = [
   "うさ耳ハリケーン",
   "伝説の三跳び",
   "光速もふターボ",
-];
-
-/** 装備解放の累計ポイント（このあと +300 刻み） */
-const EQUIP_THRESHOLDS = [50, 100, 200, 280, 350, 500, 600];
-
-/** 装備段階ごとの二文字風の呼び名（ごまちゃんの漢字表示） */
-const EQUIP_EPITHETS = [
-  "",
-  "跳兎",
-  "星耳",
-  "光速",
-  "飛玉",
-  "花跳",
-  "神耳",
-  "大跳",
-  "天耳",
-  "覇兎",
-  "仙跳",
-  "極兎",
-  "聖跳",
-  "幻耳",
-  "龍跳",
-  "宙兎",
 ];
 
 const state = {
@@ -407,93 +444,173 @@ function saveCareerPoints(n) {
   localStorage.setItem(LS_CAREER_POINTS, String(Math.max(0, n)));
 }
 
-/** 累計ポイントから解放される装備の段数（0＝なし） */
-function computeMaxEquipTier(careerPts) {
-  let tier = 0;
-  for (let i = 0; i < EQUIP_THRESHOLDS.length; i += 1) {
-    if (careerPts >= EQUIP_THRESHOLDS[i]) tier = i + 1;
-  }
-  let gate = 600;
-  while (careerPts >= gate + 300) {
-    gate += 300;
-    tier += 1;
-  }
-  return tier;
+/** 60秒1プレイの最高スコア（称号の解放はこれを 50pt ごとに見る） */
+function loadBestSinglePlayScore() {
+  const n = Number.parseInt(localStorage.getItem(LS_BEST_SINGLE_PLAY) || "0", 10);
+  return Number.isFinite(n) && n >= 0 ? n : 0;
 }
 
-/** 称号の段階数（0＝未獲得） */
-function unlockedTitleCount(careerPts) {
-  if (careerPts < 1) return 0;
-  const raw = 1 + Math.floor((careerPts - 1) / 10);
-  return Math.min(raw, RABBIT_TITLES.length);
+function saveBestSinglePlayScore(n) {
+  localStorage.setItem(LS_BEST_SINGLE_PLAY, String(Math.max(0, n)));
 }
 
-function currentTitleName(careerPts) {
-  const n = unlockedTitleCount(careerPts);
+/** 初回だけ：装備の保存キーが無いとき、解放済みを最大4つまで自動で装着（旧「段階」相当のおまけを途切れさせない） */
+function migrateEquippedStorageIfNeeded() {
+  if (localStorage.getItem(LS_EQUIPPED_IDS) !== null) return;
+  const p = loadCareerPoints();
+  const picks = EQUIP_CATALOG.filter((d) => p >= d.unlockPts)
+    .slice(0, MAX_EQUIPPED)
+    .map((d) => d.id);
+  localStorage.setItem(LS_EQUIPPED_IDS, JSON.stringify(picks));
+}
+
+function getEquippedIds() {
+  try {
+    const raw = localStorage.getItem(LS_EQUIPPED_IDS);
+    if (!raw) return [];
+    const arr = JSON.parse(raw);
+    if (!Array.isArray(arr)) return [];
+    const p = loadCareerPoints();
+    const out = [];
+    const seen = new Set();
+    for (const id of arr) {
+      if (typeof id !== "string" || seen.has(id)) continue;
+      const d = EQUIP_BY_ID[id];
+      if (!d || p < d.unlockPts) continue;
+      seen.add(id);
+      out.push(id);
+      if (out.length >= MAX_EQUIPPED) break;
+    }
+    return out;
+  } catch {
+    return [];
+  }
+}
+
+function saveEquippedIds(ids) {
+  const p = loadCareerPoints();
+  const uniq = [];
+  const seen = new Set();
+  for (const id of ids) {
+    if (typeof id !== "string" || seen.has(id)) continue;
+    const d = EQUIP_BY_ID[id];
+    if (!d || p < d.unlockPts) continue;
+    seen.add(id);
+    uniq.push(id);
+    if (uniq.length >= MAX_EQUIPPED) break;
+  }
+  localStorage.setItem(LS_EQUIPPED_IDS, JSON.stringify(uniq));
+}
+
+/** 累計ptで育つ装備レベル（解放後のみ。最大20） */
+function getEquipLevel(id, careerPts) {
+  const d = EQUIP_BY_ID[id];
+  if (!d || careerPts < d.unlockPts) return 0;
+  return Math.min(20, 1 + Math.floor((careerPts - d.unlockPts) / 500));
+}
+
+function aggregateEquipBonus(careerPts) {
+  const ids = getEquippedIds();
+  let phraseSecAdd = 0;
+  let mulAdd = 0;
+  let startStock = 0;
+  let startBonusMs = 0;
+  for (const id of ids) {
+    const d = EQUIP_BY_ID[id];
+    if (!d) continue;
+    const lv = getEquipLevel(id, careerPts);
+    phraseSecAdd += (d.secPerLevel || 0) * lv;
+    mulAdd += (d.mulPerLevel || 0) * lv;
+    startStock += d.startStock || 0;
+    startBonusMs += d.startBonusMs || 0;
+  }
+  return {
+    phraseSecAdd: Math.min(2.5, phraseSecAdd),
+    scoreMult: Math.min(2.35, 1 + mulAdd),
+    startStock,
+    startBonusMs: Math.min(5000, startBonusMs),
+  };
+}
+
+/** 称号の段階数（0＝未獲得）。60秒プレイの自己ベストが TITLE_FROM_BEST_PER ごと */
+function unlockedTitleCount(best = loadBestSinglePlayScore()) {
+  if (best < TITLE_FROM_BEST_PER) return 0;
+  return Math.min(RABBIT_TITLES.length, Math.floor(best / TITLE_FROM_BEST_PER));
+}
+
+function currentTitleName(best = loadBestSinglePlayScore()) {
+  const n = unlockedTitleCount(best);
   if (n === 0) return "（まだなし）";
   return RABBIT_TITLES[n - 1];
 }
 
-function nextTitlePointsRemaining(careerPts) {
-  const n = unlockedTitleCount(careerPts);
+function nextTitlePointsRemaining(best = loadBestSinglePlayScore()) {
+  const n = unlockedTitleCount(best);
   if (n >= RABBIT_TITLES.length) return 0;
-  const nextAt = 1 + 10 * n;
-  return Math.max(0, nextAt - careerPts);
-}
-
-function equipEpithetForTier(tier) {
-  if (tier <= 0) return "";
-  if (tier > 0 && tier < EQUIP_EPITHETS.length) return EQUIP_EPITHETS[tier];
-  return `極兎${tier}`;
+  const nextAt = TITLE_FROM_BEST_PER * (n + 1);
+  return Math.max(0, nextAt - best);
 }
 
 function effectivePhraseSec() {
   let s = state.diff.phraseSec;
-  const t = computeMaxEquipTier(loadCareerPoints());
-  if (t >= 2) s += 0.5;
-  if (t >= 4) s += 0.5;
-  if (t >= 6) s += 0.5;
+  const { phraseSecAdd } = aggregateEquipBonus(loadCareerPoints());
+  s += phraseSecAdd;
   return Math.max(2, s);
 }
 
 function refreshBunnyEquipVisual() {
   const bunny = $("bunny");
   const badge = $("bunnyTitleBadge");
+  const gear = $("bunnyGear");
   if (!bunny) return;
   for (let i = 0; i <= 16; i += 1) bunny.classList.remove(`equip-tier-${i}`);
-  const t = computeMaxEquipTier(loadCareerPoints());
-  if (t > 0) {
-    bunny.classList.add(`equip-tier-${Math.min(t, 16)}`);
-    if (badge) {
-      badge.textContent = equipEpithetForTier(t);
-      badge.hidden = false;
-    }
-  } else if (badge) {
+  bunny.classList.toggle("bunny--equip-theme-speed", currentTitleName() === SPEED_TITLE_NAME);
+  const ids = getEquippedIds();
+  if (badge) {
     badge.textContent = "";
     badge.hidden = true;
+  }
+  if (gear) {
+    gear.innerHTML = "";
+    ids.forEach((id, idx) => {
+      const sp = document.createElement("span");
+      sp.className = `gear-slot gear-slot--i${idx} gear--${id}`;
+      sp.setAttribute("aria-hidden", "true");
+      gear.appendChild(sp);
+    });
   }
 }
 
 function refreshCareerHud() {
+  migrateEquippedStorageIfNeeded();
   const r = loadCareerRomaji();
   const p = loadCareerPoints();
+  const best = loadBestSinglePlayScore();
   const elR = $("careerRomaji");
   const elP = $("careerPoints");
+  const elBest = $("careerBestPlay");
   const elT = $("careerTitle");
   const elN = $("careerNextTitle");
-  const elE = $("careerEquip");
+  const elSum = $("careerEquipSummary");
   if (elR) elR.textContent = String(r);
   if (elP) elP.textContent = String(p);
-  if (elT) elT.textContent = currentTitleName(p);
+  if (elBest) elBest.textContent = String(best);
+  if (elT) elT.textContent = currentTitleName(best);
   if (elN) {
-    const left = nextTitlePointsRemaining(p);
-    if (unlockedTitleCount(p) >= RABBIT_TITLES.length) elN.textContent = "称号はいちばんの段までたっせい！";
-    else elN.textContent = `つぎの称号まであと ${left} pt`;
+    const left = nextTitlePointsRemaining(best);
+    if (unlockedTitleCount(best) >= RABBIT_TITLES.length) elN.textContent = "称号はいちばんの段までたっせい！";
+    else elN.textContent = `60秒プレイのベストをあと ${left} pt あげると つぎの称号`;
   }
-  if (elE) {
-    const t = computeMaxEquipTier(p);
-    if (t <= 0) elE.textContent = "装備：まだ解放されていません（累計50pt で にんじんリボン など）";
-    else elE.textContent = `装備：${equipEpithetForTier(t)}（段階 ${t}）— エサの得点${t >= 1 ? " 2倍" : ""} ＋ お題の秒がのびます`;
+  if (elSum) {
+    const ids = getEquippedIds();
+    const unlocked = EQUIP_CATALOG.filter((d) => p >= d.unlockPts);
+    if (unlocked.length === 0) {
+      elSum.textContent = `まだ解放されていません（累計 ${EQUIP_UNLOCK_STEP} pt から）。「装備」で一覧を見られます。`;
+    } else if (ids.length === 0) {
+      elSum.textContent = `解放 ${unlocked.length} 種類／装着 0 。「装備」で最大4つまでえらべます。`;
+    } else {
+      elSum.textContent = `装着中 ${ids.length}／${MAX_EQUIPPED}（アイコンは「装備」メニューでかえられます）`;
+    }
   }
 }
 
@@ -518,16 +635,37 @@ function showTitleToast(name) {
   showTitleToast._t = window.setTimeout(() => el.classList.remove("toast-panel--show"), 2200);
 }
 
+function timeBonusSecAtKeyCount(c) {
+  for (let wave = 0; wave < 80; wave += 1) {
+    for (const m of TIME_BONUS_MILESTONES) {
+      const thresh = wave * TIME_BONUS_WAVE_STEP + m.off;
+      if (c === thresh) return m.sec;
+    }
+  }
+  return 0;
+}
+
+function nextTimeBonusMilestoneAfter(c) {
+  for (let wave = 0; wave < 80; wave += 1) {
+    for (const m of TIME_BONUS_MILESTONES) {
+      const thresh = wave * TIME_BONUS_WAVE_STEP + m.off;
+      if (thresh > c) return { threshold: thresh, bonusSec: m.sec };
+    }
+  }
+  return null;
+}
+
 function keysUntilNextTimeBonus() {
   const c = state.correctKeyCount;
-  if (c === 0) return CORRECT_KEYS_FOR_TIME_BONUS;
-  const r = c % CORRECT_KEYS_FOR_TIME_BONUS;
-  return r === 0 ? CORRECT_KEYS_FOR_TIME_BONUS : CORRECT_KEYS_FOR_TIME_BONUS - r;
+  const next = nextTimeBonusMilestoneAfter(c);
+  if (!next) return 999;
+  return next.threshold - c;
 }
 
 function nextTimeBonusSecondsPreview() {
-  const b = Math.floor(state.correctKeyCount / CORRECT_KEYS_FOR_TIME_BONUS);
-  return (b % 3) + 1;
+  const c = state.correctKeyCount;
+  const next = nextTimeBonusMilestoneAfter(c);
+  return next ? next.bonusSec : 1;
 }
 
 function updateBonusKeyHint() {
@@ -619,9 +757,8 @@ function closeRanking() {
 
 function phrasePoints() {
   const base = state.diff.points + state.lenMode.bonus;
-  let mul = 1;
-  if (computeMaxEquipTier(loadCareerPoints()) >= 1) mul *= 2;
-  return Math.floor(base * mul);
+  const { scoreMult } = aggregateEquipBonus(loadCareerPoints());
+  return Math.floor(base * scoreMult);
 }
 
 function setSceneDifficultyClass() {
@@ -684,14 +821,103 @@ function escapeHtml(s) {
   return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
 
-/** 寿司打風：15打鍵ごとに gameEndAt を延長（+1,+2,+3秒を順に繰り返し） */
+/**
+ * ブラウザ内の簡易BGM・効果音（著作物の転載ではなく、草原っぽい和音のオリジナル生成）。
+ * 商用サイトの特定楽曲（例：OtoLogic の作品番号）のコピーではありません。
+ */
+let gomaAudioCtx = null;
+let gomaMasterGain = null;
+let gomaBgmInterval = 0;
+
+function ensureGomaAudio() {
+  if (gomaAudioCtx) return gomaAudioCtx;
+  const AC = window.AudioContext || window.webkitAudioContext;
+  if (!AC) return null;
+  gomaAudioCtx = new AC();
+  gomaMasterGain = gomaAudioCtx.createGain();
+  gomaMasterGain.gain.value = 0.12;
+  gomaMasterGain.connect(gomaAudioCtx.destination);
+  return gomaAudioCtx;
+}
+
+async function resumeGomaAudio() {
+  const ctx = ensureGomaAudio();
+  if (ctx && ctx.state === "suspended") await ctx.resume();
+}
+
+function stopGomaBgm() {
+  if (gomaBgmInterval) {
+    window.clearInterval(gomaBgmInterval);
+    gomaBgmInterval = 0;
+  }
+}
+
+function playPastoralChord(when) {
+  const ctx = gomaAudioCtx;
+  const master = gomaMasterGain;
+  if (!ctx || !master || !state.playing) return;
+  const freqs = [392, 493.88, 587.33, 659.25, 783.99];
+  freqs.forEach((f, i) => {
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = i % 2 === 0 ? "triangle" : "sine";
+    o.frequency.value = f;
+    const peak = 0.045 - i * 0.004;
+    g.gain.setValueAtTime(0.0001, when);
+    g.gain.linearRampToValueAtTime(Math.max(0.008, peak), when + 0.18 + i * 0.02);
+    g.gain.exponentialRampToValueAtTime(0.0001, when + 2.5);
+    o.connect(g);
+    g.connect(master);
+    o.start(when);
+    o.stop(when + 2.55);
+  });
+}
+
+function tickGomaFieldBgm() {
+  if (!state.playing) return;
+  const ctx = ensureGomaAudio();
+  if (!ctx) return;
+  playPastoralChord(ctx.currentTime + 0.02);
+}
+
+function startGomaFieldBgm() {
+  stopGomaBgm();
+  if (!ensureGomaAudio()) return;
+  tickGomaFieldBgm();
+  gomaBgmInterval = window.setInterval(tickGomaFieldBgm, 2800);
+}
+
+function playGomaTimeBonusSting() {
+  const ctx = gomaAudioCtx;
+  const master = gomaMasterGain;
+  if (!ctx || !master) return;
+  let t = ctx.currentTime + 0.002;
+  const notes = [523.25, 659.25, 880, 1046.5];
+  notes.forEach((f) => {
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = "square";
+    o.frequency.value = f;
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.1, t + 0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.11);
+    o.connect(g);
+    g.connect(master);
+    o.start(t);
+    o.stop(t + 0.12);
+    t += 0.05;
+  });
+}
+
+/** 累計の正解打鍵が 15→+1秒、20→+2秒、25→+3秒（以降 25 打鍵ごとに同じパターンで繰り返し） */
 function maybeGrantTimeBonus() {
   if (!state.playing) return;
-  if (state.correctKeyCount === 0 || state.correctKeyCount % CORRECT_KEYS_FOR_TIME_BONUS !== 0) return;
-  const block = Math.floor(state.correctKeyCount / CORRECT_KEYS_FOR_TIME_BONUS);
-  const bonusSec = ((block - 1) % 3) + 1;
+  const bonusSec = timeBonusSecAtKeyCount(state.correctKeyCount);
+  if (!bonusSec) return;
   state.gameEndAt += bonusSec * 1000;
   showTimeBonusFlash(bonusSec);
+  void resumeGomaAudio();
+  playGomaTimeBonusSting();
   const wrap = $("centerTimers");
   const totalBox = wrap && wrap.querySelector(".center-timer--total");
   if (totalBox) {
@@ -775,12 +1001,8 @@ function bumpBunny() {
 function onSuccessPhrase() {
   const pts = phrasePoints();
   const oldP = loadCareerPoints();
-  const oldTitles = unlockedTitleCount(oldP);
   state.score += pts;
   saveCareerPoints(oldP + pts);
-  const newP = oldP + pts;
-  const newTitles = unlockedTitleCount(newP);
-  if (newTitles > oldTitles) showTitleToast(currentTitleName(newP));
 
   state.baitStock += 1;
   bumpBunny();
@@ -794,20 +1016,9 @@ function onSuccessPhrase() {
   });
 }
 
-/** 現在のお題のローマ字入力だけ最初からやり直し（やさしいモードの打ち間違い用） */
-function resetCurrentPhraseTyping() {
-  if (!state.currentPhrase) return;
-  const baseRomaji = yomiToRomaji(state.currentPhrase.yomi);
-  state.romajiCandidates = buildRomajiVariants(baseRomaji);
-  state.typedRomaji = "";
-  state.index = 0;
-  renderTypeline();
-}
-
-/** 打ち間違い：しっかり＝ペナルティ、やさしい＝入力だけやり直し */
+/** 打ち間違い：しっかり＝ペナルティ、やさしい＝そのキーは無視（画面も入力もそのまま） */
 function handleTypo() {
   if (!state.mistakeMode.penalty) {
-    resetCurrentPhraseTyping();
     return;
   }
   onMistakeOrTimeout();
@@ -829,6 +1040,7 @@ function onMistakeOrTimeout() {
 
 function endGame() {
   state.playing = false;
+  stopGomaBgm();
   detachPlayKeyCapture();
   state.awaitingNextPhrase = false;
   document.body.classList.remove("is-playing");
@@ -839,12 +1051,28 @@ function endGame() {
   $("finalScore").textContent = String(state.score);
   const fk = $("finalKeyCount");
   if (fk) fk.textContent = String(state.correctKeyCount);
+
+  const oldBest = loadBestSinglePlayScore();
+  const oldTitles = unlockedTitleCount(oldBest);
+  if (state.score > oldBest) {
+    saveBestSinglePlayScore(state.score);
+  }
+  const newBest = loadBestSinglePlayScore();
+  const newTitles = unlockedTitleCount(newBest);
+  if (newTitles > oldTitles) {
+    showTitleToast(currentTitleName(newBest));
+  }
+
   const cs = $("careerSummary");
   if (cs) {
     const r = loadCareerRomaji();
     const p = loadCareerPoints();
-    cs.textContent = `これまでのローマ字（累計）：${r} もじ　／　これまでのポイント（累計）：${p} pt　／　いまの称号：${currentTitleName(p)}`;
+    const best = loadBestSinglePlayScore();
+    cs.textContent = `これまでのローマ字（累計）：${r} もじ　／　これまでのポイント（累計）：${p} pt　／　60秒ベスト：${best} pt　／　いまの称号：${currentTitleName(best)}`;
   }
+  refreshCareerHud();
+  refreshBunnyEquipVisual();
+
   const name = ($("playerName").value || "").trim() || "ななし";
   const before = loadRank();
   const minTop = before.length < 10 ? 0 : before[before.length - 1].score;
@@ -883,7 +1111,7 @@ function updateStockHudLabel() {
   el.textContent =
     state.mistakeMode.penalty === true
       ? "エサストック（ミス・タイムアウトで1つなくなる）"
-      : "エサストック（やさしい：打ち間違いでは減りません・時間切れは減ります）";
+      : "エサストック（やさしい：打ち間違いは無視・時間切れだけストックが減ります）";
 }
 
 function startGame() {
@@ -892,12 +1120,10 @@ function startGame() {
   state.mistakeMode = MISTAKE_MODE[$("mistakeMode").value];
   setSceneDifficultyClass();
   updateStockHudLabel();
+  migrateEquippedStorageIfNeeded();
   state.score = 0;
-  let stock = 0;
-  const eq = computeMaxEquipTier(loadCareerPoints());
-  if (eq >= 3) stock += 1;
-  if (eq >= 5) stock += 1;
-  state.baitStock = stock;
+  const b = aggregateEquipBonus(loadCareerPoints());
+  state.baitStock = b.startStock;
   state.correctKeyCount = 0;
   state.playing = true;
   state.bunnyX = BUNNY_HOME_X;
@@ -905,12 +1131,13 @@ function startGame() {
   const bunnyEl = $("bunny");
   if (bunnyEl) bunnyEl.classList.remove("bunny--running");
   const now = performance.now();
-  const startBonusMs = eq >= 8 ? 5000 : eq >= 7 ? 4000 : eq >= 5 ? 2000 : 0;
-  state.gameEndAt = now + 60_000 + startBonusMs;
+  state.gameEndAt = now + 60_000 + b.startBonusMs;
   $("resultPanel").classList.add("hidden");
   $("setupPanel").classList.add("setup-hidden");
   $("stageWrap").classList.remove("setup-hidden");
   attachPlayKeyCapture();
+  void resumeGomaAudio();
+  startGomaFieldBgm();
   newPhrase();
   refreshBunnyEquipVisual();
   updateBonusKeyHint();
@@ -921,6 +1148,7 @@ function startGame() {
 
 function resetToSetup() {
   state.playing = false;
+  stopGomaBgm();
   detachPlayKeyCapture();
   state.awaitingNextPhrase = false;
   document.body.classList.remove("is-playing");
@@ -989,6 +1217,114 @@ function detachPlayKeyCapture() {
   window.removeEventListener("keydown", onPlayKeydown, true);
 }
 
+/** 装備モーダル内の一時選択（開いたときに保存内容で初期化） */
+let equipModalDraft = null;
+
+function closeTitlesModal() {
+  const m = $("titlesModal");
+  if (m) m.classList.add("hidden");
+}
+
+function closeEquipsModal() {
+  equipModalDraft = null;
+  const m = $("equipsModal");
+  if (m) m.classList.add("hidden");
+}
+
+function openTitlesModal() {
+  const m = $("titlesModal");
+  const list = $("titlesModalList");
+  const hint = $("titlesModalHint");
+  if (!m || !list || !hint) return;
+  const best = loadBestSinglePlayScore();
+  const n = unlockedTitleCount(best);
+  hint.textContent = `60秒プレイのベスト ${best} pt。称号は ${n}／${RABBIT_TITLES.length} こ（ベストが ${TITLE_FROM_BEST_PER} pt ごと）。`;
+  list.innerHTML = "";
+  RABBIT_TITLES.forEach((name, i) => {
+    const need = TITLE_FROM_BEST_PER * (i + 1);
+    const got = n > i;
+    const li = document.createElement("li");
+    if (!got) li.classList.add("is-locked");
+    if (got && n > 0 && i === n - 1) li.classList.add("is-current");
+    li.textContent = `${got ? "【ひらいた】" : "【まだ】"} 60秒で ${need} pt 以上　「${name}」`;
+    list.appendChild(li);
+  });
+  m.classList.remove("hidden");
+}
+
+function showEquipLimitToast() {
+  const el = $("toastPanel");
+  if (!el) return;
+  el.textContent = "装備は4つまでです。ほかをオフにしてからにしてください。";
+  el.classList.add("toast-panel--show");
+  window.clearTimeout(showEquipLimitToast._t);
+  showEquipLimitToast._t = window.setTimeout(() => el.classList.remove("toast-panel--show"), 2200);
+}
+
+function renderEquipsModalBody() {
+  const body = $("equipsModalBody");
+  const hint = $("equipsModalHint");
+  if (!body || !hint) return;
+  const p = loadCareerPoints();
+  const sel = equipModalDraft || getEquippedIds();
+  hint.textContent = `累計 ${p} pt（装備は ${EQUIP_UNLOCK_STEP} pt ごとに解放）／ 同時 ${MAX_EQUIPPED} スロット／アイコンをタップで ON／OFF`;
+  body.innerHTML = "";
+  EQUIP_CATALOG.forEach((def) => {
+    const unlocked = p >= def.unlockPts;
+    const checked = sel.includes(def.id);
+    const cid = `eqpick_${def.id}`;
+    const row = document.createElement("div");
+    row.className = `ff5-equip-row career-equip-row${unlocked ? "" : " is-locked"}${checked ? " ff5-equip-row--on" : ""}`;
+    const input = document.createElement("input");
+    input.type = "checkbox";
+    input.className = "ff5-equip-check";
+    input.id = cid;
+    input.checked = checked;
+    input.disabled = !unlocked;
+    input.setAttribute("aria-label", `${def.name}（${def.kind}）を${checked ? "はずす" : "つける"}`);
+    input.addEventListener("change", () => {
+      onEquipToggle(def.id, input.checked, input);
+    });
+    const hit = document.createElement("label");
+    hit.className = "ff5-equip-hit";
+    hit.htmlFor = cid;
+    const sprite = document.createElement("span");
+    sprite.className = `ff5-equip-sprite ff5-equip-sprite--${def.id}`;
+    sprite.setAttribute("aria-hidden", "true");
+    hit.appendChild(sprite);
+    row.append(input, hit);
+    body.appendChild(row);
+  });
+}
+
+function onEquipToggle(id, on, inputEl) {
+  let sel = [...(equipModalDraft || getEquippedIds())];
+  if (on) {
+    if (sel.includes(id)) return;
+    if (sel.length >= MAX_EQUIPPED) {
+      inputEl.checked = false;
+      showEquipLimitToast();
+      return;
+    }
+    sel.push(id);
+  } else {
+    sel = sel.filter((x) => x !== id);
+  }
+  equipModalDraft = sel;
+  saveEquippedIds(sel);
+  refreshCareerHud();
+  refreshBunnyEquipVisual();
+  renderEquipsModalBody();
+}
+
+function openEquipsModal() {
+  migrateEquippedStorageIfNeeded();
+  equipModalDraft = [...getEquippedIds()];
+  renderEquipsModalBody();
+  const m = $("equipsModal");
+  if (m) m.classList.remove("hidden");
+}
+
 function init() {
   $("stageWrap").classList.add("setup-hidden");
   $("setupPanel").classList.remove("setup-hidden");
@@ -998,6 +1334,17 @@ function init() {
   $("backBtn").addEventListener("click", resetToSetup);
   $("openRankingBtn").addEventListener("click", openRanking);
   $("closeRankBtn").addEventListener("click", closeRanking);
+
+  $("openTitlesBtn").addEventListener("click", openTitlesModal);
+  $("openEquipsBtn").addEventListener("click", openEquipsModal);
+  $("closeTitlesBtn").addEventListener("click", closeTitlesModal);
+  $("closeEquipsBtn").addEventListener("click", closeEquipsModal);
+  document.querySelectorAll("[data-career-close]").forEach((el) => {
+    el.addEventListener("click", () => {
+      if (el.dataset.careerClose === "titles") closeTitlesModal();
+      if (el.dataset.careerClose === "equips") closeEquipsModal();
+    });
+  });
 
   $("ghostInput").addEventListener("input", (ev) => {
     if (!state.playing || state.awaitingNextPhrase) return;

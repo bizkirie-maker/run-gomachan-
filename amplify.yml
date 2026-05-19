@@ -1,13 +1,22 @@
-# AWS Amplify Hosting（Gen1）— 静的サイト。ビルドは不要。
-# アプリの「ルートディレクトリ」がこのリポジトリのルート（index.html がある場所）になっているか確認してください。
-# カスタムヘッダーが必要なら Amplify コンソールから追加するか、後から customHttp.yml を足してください。
+# AWS Amplify Hosting（Gen1）— 静的サイト
+# コンソールの「ビルド設定」が「buildspec をリポジトリから読む」になっているか確認してください。
+# アプリの「ルートディレクトリ」は index.html があるリポジトリのルートにしてください（サブフォルダ指定だと MissingBuildArtifacts になりやすいです）。
 version: 1
 frontend:
   phases:
+    preBuild:
+      commands:
+        - echo "=== preBuild ===" && pwd && ls -la
     build:
       commands:
-        - echo "static site — no compile"
+        - echo "static site - no compile"
+        - test -f index.html && test -f styles.css && test -f game.js || (echo "ERROR: index.html / styles.css / game.js が見つかりません。Amplify のルートディレクトリ設定を確認してください。" && exit 1)
+    postBuild:
+      commands:
+        - echo "=== postBuild OK ==="
   artifacts:
     baseDirectory: .
     files:
-      - "**/*"
+      - index.html
+      - styles.css
+      - game.js

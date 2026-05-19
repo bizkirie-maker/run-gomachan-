@@ -825,9 +825,8 @@ body.is-playing .bunny.bunny--side.bunny--running {
   width: 52%;
   height: 26%;
   pointer-events: none;
+  /* 負の Y オフセットのシャドウは目の上に線が乗って「眉毛」に見えるため、口元〜横のひげだけ残す */
   box-shadow:
-    62% -6px 0 0 rgba(52, 47, 45, 0.22),
-    78% -1px 0 0 rgba(52, 47, 45, 0.2),
     70% 4px 0 0 rgba(52, 47, 45, 0.24),
     85% 8px 0 0 rgba(52, 47, 45, 0.18);
 }
@@ -1298,6 +1297,7 @@ body.is-playing .bunny.bunny--side.bunny--running {
 
 .result-panel.hidden,
 .rank-panel.hidden,
+.career-modal.hidden,
 .setup-hidden {
   display: none !important;
 }
@@ -1474,20 +1474,437 @@ body.is-playing .bonus-key-hint {
   white-space: nowrap;
 }
 
-.bunny.equip-tier-1 .bunny-title-badge,
-.bunny.equip-tier-2 .bunny-title-badge {
-  border-color: rgba(255, 140, 80, 0.55);
+/* 装備の見た目（体に付く小さなシルエット。最大4スロット） */
+.bunny-gear {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
 }
 
-.bunny.equip-tier-3 .bunny-title-badge,
-.bunny.equip-tier-4 .bunny-title-badge {
-  border-color: rgba(120, 180, 255, 0.55);
-  box-shadow: 0 0 0 2px rgba(255, 220, 120, 0.35), 0 3px 0 rgba(61, 58, 54, 0.1);
+.bunny .gear-slot {
+  position: absolute;
+  display: block;
+  opacity: 0.95;
+  overflow: visible;
 }
 
-.bunny.equip-tier-5 .bunny-title-badge,
-.bunny.equip-tier-6 .bunny-title-badge {
-  border-color: rgba(180, 120, 220, 0.5);
+.bunny .gear-slot--i0 {
+  left: 24%;
+  top: 4%;
+  width: 26%;
+  height: 16%;
+}
+
+.bunny .gear-slot--i1 {
+  right: 4%;
+  top: 34%;
+  width: 12%;
+  height: 36%;
+}
+
+.bunny .gear-slot--i2 {
+  left: 12%;
+  top: 48%;
+  width: 42%;
+  height: 24%;
+}
+
+.bunny .gear-slot--i3 {
+  left: 6%;
+  bottom: 10%;
+  width: 32%;
+  height: 14%;
+}
+
+.career-line-title,
+.career-line-equip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.35rem 0.5rem;
+  margin-top: 0.15rem;
+}
+
+.career-open-btn {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0.12rem 0.55rem;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  color: #2f4a38;
+  background: linear-gradient(180deg, #f4fff0 0%, #d8f0d0 100%);
+  border: 1px solid rgba(80, 140, 90, 0.45);
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 2px 0 rgba(61, 58, 54, 0.08);
+}
+
+.career-open-btn:hover {
+  filter: brightness(1.04);
+}
+
+.career-open-btn:focus-visible {
+  outline: 2px solid var(--accent-dim);
+  outline-offset: 2px;
+}
+
+.career-inline {
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.career-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0.75rem;
+  box-sizing: border-box;
+}
+
+.career-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(24, 22, 18, 0.45);
+  cursor: pointer;
+}
+
+.career-modal__panel {
+  position: relative;
+  width: min(440px, 100%);
+  max-height: min(78vh, 520px);
+  overflow: auto;
+  padding: 0.85rem 1rem 1rem;
+  margin-bottom: env(safe-area-inset-bottom, 0);
+  background: rgba(255, 252, 248, 0.98);
+  border-radius: 16px 16px 12px 12px;
+  border: 1px solid rgba(200, 160, 120, 0.35);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.18);
+}
+
+.career-modal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.35rem;
+}
+
+.career-modal__head h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.career-modal-list {
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.career-modal-list li {
+  margin: 0.35rem 0;
+  padding: 0.45rem 0.55rem;
+  font-size: 0.86rem;
+  line-height: 1.45;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(200, 180, 160, 0.35);
+}
+
+.career-modal-list li.is-locked {
+  opacity: 0.62;
+}
+
+.career-modal-list li.is-current {
+  border-color: rgba(90, 150, 110, 0.55);
+  background: rgba(230, 250, 230, 0.55);
+}
+
+.career-equip-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  margin: 0.4rem 0;
+  padding: 0.45rem 0.5rem;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px solid rgba(200, 180, 160, 0.35);
+}
+
+.career-equip-row.is-locked {
+  opacity: 0.58;
+}
+
+.career-equip-row label {
+  cursor: pointer;
+  flex: 1;
+}
+
+.career-equip-row input:disabled + span,
+.career-equip-row.is-locked label {
+  cursor: default;
+}
+
+.career-equip-meta {
+  display: block;
+  font-size: 0.78rem;
+  opacity: 0.78;
+  margin-top: 0.15rem;
+}
+
+/* FF5 風メニュー（青枠・暗背景のコマンドウィンドウ） */
+.career-modal__panel--ff5 {
+  background: linear-gradient(180deg, #1e2c4a 0%, #0f1628 55%, #0a101c 100%);
+  border: 3px solid #6ca8e8;
+  border-radius: 4px;
+  box-shadow:
+    inset 1px 1px 0 rgba(255, 255, 255, 0.12),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.35),
+    0 0 0 1px #0a1424,
+    0 16px 48px rgba(0, 0, 0, 0.5);
+  color: #e6eefc;
+}
+
+.career-modal__panel--ff5 .muted {
+  color: rgba(180, 210, 255, 0.78);
+}
+
+.career-modal__panel--ff5 .career-modal__head h2 {
+  color: #bfe0ff;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.85);
+  letter-spacing: 0.12em;
+  font-size: 0.95rem;
+}
+
+.career-modal__panel--ff5 .ghost.small {
+  color: #dcecff;
+  border-color: rgba(120, 170, 230, 0.65);
+  background: rgba(30, 55, 100, 0.55);
+}
+
+.career-modal__panel--ff5 .career-modal-list li {
+  background: rgba(8, 22, 48, 0.72);
+  border: 2px solid #4a6fa8;
+  border-radius: 2px;
+  color: #f0f6ff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.career-modal__panel--ff5 .career-modal-list li.is-locked {
+  opacity: 0.55;
+  filter: grayscale(0.25);
+}
+
+.career-modal__panel--ff5 .career-modal-list li.is-current {
+  border-color: #ffd873;
+  background: rgba(40, 70, 120, 0.85);
+  box-shadow:
+    inset 4px 0 0 #ffd873,
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+/* 装備行：アイコンのみ（文字なし） */
+.ff5-equip-row {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  min-height: 3.1rem;
+  margin: 0.28rem 0;
+  padding: 0.25rem 0.35rem;
+  background: rgba(8, 22, 48, 0.75);
+  border: 2px solid #4a6fa8;
+  border-radius: 2px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
+}
+
+.ff5-equip-row--on {
+  border-color: #ffd873;
+  box-shadow:
+    inset 5px 0 0 #ffd873,
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.ff5-equip-row.is-locked {
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.ff5-equip-check {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+.ff5-equip-hit {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  min-height: 2.85rem;
+}
+
+.ff5-equip-sprite {
+  width: min(72px, 22vw);
+  height: min(72px, 22vw);
+  border-radius: 6px;
+  border: 2px solid rgba(255, 255, 255, 0.18);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.35);
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.career-modal__panel--ff5 .ff5-equip-sprite--ribbon_crown {
+  background: radial-gradient(circle at 50% 120%, #ff9c4a 0%, #e85a18 45%, #6b2a0a 100%);
+  clip-path: polygon(15% 100%, 35% 35%, 50% 18%, 65% 35%, 85% 100%);
+}
+
+.career-modal__panel--ff5 .ff5-equip-sprite--clover_cape {
+  background: conic-gradient(from 200deg, #5ecf6a, #1e6a2a, #7ef098, #2d8a3a, #5ecf6a);
+  clip-path: polygon(10% 25%, 90% 15%, 100% 100%, 0 100%);
+}
+
+.career-modal__panel--ff5 .ff5-equip-sprite--carrot_blade {
+  background: linear-gradient(125deg, #fff2c2 0%, #f59e0b 40%, #b45309 100%);
+  clip-path: polygon(8% 40%, 92% 10%, 100% 90%, 12% 100%);
+}
+
+.career-modal__panel--ff5 .ff5-equip-sprite--field_boots {
+  background: radial-gradient(ellipse at 50% 20%, #e8ddd4 0%, #7a6a5f 70%, #3a322c 100%);
+  border-radius: 40% 40% 45% 45%;
+}
+
+.career-modal__panel--ff5 .ff5-equip-sprite--rainbow_tiara {
+  background: linear-gradient(90deg, #ffb3f3, #9ecbff, #b8ffc9, #fff59a);
+  clip-path: polygon(8% 100%, 18% 22%, 50% 0, 82% 22%, 92% 100%);
+}
+
+.career-modal__panel--ff5 .ff5-equip-sprite--star_mantle {
+  background: radial-gradient(ellipse at 30% 15%, #fff8e0 0%, #5a6fd0 50%, #1a2550 100%);
+  border-radius: 40% 55% 50% 45%;
+}
+
+.career-modal__panel--ff5 .ff5-equip-sprite--gomadango_rod {
+  background: linear-gradient(180deg, #fde68a 0%, #a16207 55%, #422006 100%);
+  clip-path: polygon(45% 0, 58% 0, 55% 100%, 38% 100%);
+}
+
+.career-modal__panel--ff5 .ff5-equip-sprite--clover_ring {
+  background: radial-gradient(circle at 38% 38%, #fff 0%, #34d399 42%, #064e3b 100%);
+  border-radius: 50%;
+}
+
+/* ごまちゃん身上の装備：イラスト寄り（無文字） */
+.bunny .gear--ribbon_crown {
+  position: relative;
+  background: radial-gradient(circle at 50% 115%, #ffb366 0%, #e86b2a 55%, #7a3010 100%);
+  border-radius: 50% 50% 42% 42%;
+  box-shadow:
+    inset 0 -4px 6px rgba(0, 0, 0, 0.18),
+    0 2px 0 rgba(255, 255, 255, 0.25);
+}
+
+.bunny .gear--ribbon_crown::after {
+  content: "";
+  position: absolute;
+  left: 18%;
+  top: 8%;
+  width: 18%;
+  height: 22%;
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff4e0 0%, #ff9a4a 70%, transparent 72%);
+  opacity: 0.9;
+}
+
+.bunny .gear--clover_cape {
+  background: radial-gradient(ellipse at 40% 20%, #b8ffbe 0%, #2f9a3f 55%, #0f3d18 100%);
+  border-radius: 45% 55% 50% 50%;
+  opacity: 0.92;
+  box-shadow: inset -6px -4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.bunny .gear--carrot_blade {
+  background: linear-gradient(115deg, #fff7d6 0%, #fbbf24 45%, #b45309 100%);
+  border-radius: 30% 40% 35% 40%;
+  transform: rotate(-12deg);
+  box-shadow: 2px 3px 0 rgba(0, 0, 0, 0.12);
+}
+
+.bunny .gear--field_boots {
+  background: radial-gradient(ellipse at 50% 25%, #ddd2c8 0%, #6f625a 100%);
+  border-radius: 42% 42% 48% 48%;
+}
+
+.bunny .gear--rainbow_tiara {
+  background: linear-gradient(95deg, #fbc2eb, #a6c1ff, #c2ffd8, #fff1a6);
+  clip-path: polygon(10% 100%, 18% 22%, 50% 0, 82% 22%, 90% 100%);
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.12));
+}
+
+.bunny .gear--star_mantle {
+  background: radial-gradient(ellipse at 28% 12%, #fff9ec 0%, #6b7fd7 52%, #1e2a5c 100%);
+  border-radius: 48%;
+  opacity: 0.9;
+}
+
+.bunny .gear--gomadango_rod {
+  background: linear-gradient(185deg, #fef3c7 0%, #92400e 50%, #3f1a0a 100%);
+  border-radius: 22% 22% 42% 42%;
+  transform: rotate(8deg);
+}
+
+.bunny .gear--clover_ring {
+  background: radial-gradient(circle at 40% 40%, #fff 0%, #22c55e 44%, #14532d 100%);
+  border-radius: 50%;
+  box-shadow:
+    inset 0 0 0 3px rgba(255, 255, 255, 0.35),
+    0 1px 2px rgba(0, 0, 0, 0.2);
+}
+
+/* 称号「光速もふターボ」装着時：装備を光速テーマの色に */
+.bunny.bunny--equip-theme-speed .gear-slot {
+  filter: drop-shadow(0 0 10px rgba(0, 255, 255, 0.55)) saturate(1.35);
+}
+
+.bunny.bunny--equip-theme-speed .gear--ribbon_crown {
+  background: radial-gradient(circle at 50% 110%, #e0ffff 0%, #22d3ee 45%, #2563eb 100%);
+}
+
+.bunny.bunny--equip-theme-speed .gear--clover_cape {
+  background: radial-gradient(ellipse at 40% 20%, #cffafe 0%, #06b6d4 55%, #1e3a8a 100%);
+}
+
+.bunny.bunny--equip-theme-speed .gear--carrot_blade {
+  background: linear-gradient(115deg, #fef9ff 0%, #38bdf8 50%, #6366f1 100%);
+}
+
+.bunny.bunny--equip-theme-speed .gear--field_boots {
+  background: radial-gradient(ellipse at 50% 25%, #e0f2fe 0%, #334155 100%);
+}
+
+.bunny.bunny--equip-theme-speed .gear--rainbow_tiara {
+  background: linear-gradient(95deg, #f0abfc, #67e8f9, #a7f3d0, #fde68a);
+}
+
+.bunny.bunny--equip-theme-speed .gear--star_mantle {
+  background: radial-gradient(ellipse at 30% 10%, #f8fafc 0%, #38bdf8 50%, #312e81 100%);
+}
+
+.bunny.bunny--equip-theme-speed .gear--gomadango_rod {
+  background: linear-gradient(185deg, #e0f2fe 0%, #0ea5e9 50%, #1e1b4b 100%);
+}
+
+.bunny.bunny--equip-theme-speed .gear--clover_ring {
+  background: radial-gradient(circle at 40% 40%, #fff 0%, #22d3ee 44%, #1e3a8a 100%);
 }
 
 .time-bonus-overlay {

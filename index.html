@@ -43,7 +43,10 @@
       <h2 id="setup-heading">はじめる前の設定</h2>
       <p class="muted deploy-banner">
         <strong>更新確認</strong> — このページの読み込み ID：<code class="build-id" id="cacheBustTag">…</code>
-        （ページを開き直すたびに数字が変わります。<strong>同じ数字のまま</strong>なら古いページを見ています。別タブで開き直すか、シークレットウィンドウでも試してください）
+        <br />
+        <strong>ルール版</strong> — 称号は「60秒の結果スコア」の自己ベストが 50pt ごと。装備は累計ポイントが <strong>2000pt</strong> ごとに解放。
+        <br />
+        （ページを開き直すたびに ID の数字が変わります。<strong>同じ数字のまま</strong>なら古いページを見ています。別タブで開き直すか、スーパーリロード／スーパーリフレッシュでも試してください）
         <br />
         下に「<strong>ミスときのルール</strong>」があればこの HTML は新しい版です。
       </p>
@@ -69,10 +72,10 @@
         <div class="field">
           <span class="label">ミスときのルール</span>
           <select id="mistakeMode" aria-label="ミスときのルール">
-            <option value="relaxed" selected>やさしい — 打ち間違いはその場でやり直し（ストックは減りません。時間切れは減ります）</option>
+            <option value="relaxed" selected>やさしい — 打ち間違いは無視（画面はそのまま。時間切れだけストックが減ります）</option>
             <option value="strict">しっかり — ミス・タイムアウトでストックが1つ減ります（寿司打に近い）</option>
           </select>
-          <span class="hint"><strong>やさしい</strong>は<strong>打ち間違いだけ</strong>やり直し（ストックは減りません）。<strong>時間切れ</strong>はどちらのモードでもストックが減ります。<strong>しっかり</strong>は打ち間違いでもストックが減ります。トップ10はこの3項目の組み合わせごとに別々です。</span>
+          <span class="hint"><strong>やさしい</strong>は<strong>打ち間違いのキーは無視</strong>（ローマ字の表示もそのまま）。<strong>時間切れ</strong>はどちらのモードでもストックが減ります。<strong>しっかり</strong>は打ち間違いでもストックが減ります。トップ10はこの3項目の組み合わせごとに別々です。</span>
         </div>
         <div class="field">
           <span class="label">ランキング用の名前</span>
@@ -82,9 +85,16 @@
           <span class="label">きろく（このブラウザだけ）</span>
           <p class="career-lines">
             これまでのローマ字：<strong id="careerRomaji">0</strong> もじ　／　これまでのポイント：<strong id="careerPoints">0</strong> pt<br />
-            いまの称号：<strong id="careerTitle">（まだなし）</strong><br />
+            60秒プレイのいちばん：<strong id="careerBestPlay">0</strong> pt（称号はこのスコアが <strong>50</strong> pt ごと）<br />
+            <span class="career-line-title">
+              <button type="button" class="career-open-btn" id="openTitlesBtn">称号</button>
+              <span class="career-inline">いまは <strong id="careerTitle">（まだなし）</strong></span>
+            </span><br />
             <span class="career-sub" id="careerNextTitle"></span><br />
-            <span id="careerEquip" class="career-equip"></span>
+            <span class="career-line-equip">
+              <button type="button" class="career-open-btn" id="openEquipsBtn">装備</button>
+              <span class="career-inline career-equip" id="careerEquipSummary"></span>
+            </span>
           </p>
         </div>
       </div>
@@ -128,6 +138,7 @@
         <!-- ごまちゃん：CSSイラストを座り／跳びで交互表示（エサ追従時） -->
         <div class="bunny bunny--side" id="bunny" aria-hidden="true">
           <div class="bunny-title-badge" id="bunnyTitleBadge" hidden lang="ja"></div>
+          <div class="bunny-gear" id="bunnyGear" aria-hidden="true"></div>
           <div class="bunny-pose bunny-pose--sit">
             <span class="bunny-tail"></span>
             <span class="bunny-haunch"></span>
@@ -191,7 +202,7 @@
           <div><span class="hud-label">スコア</span> <strong id="score">0</strong> pt</div>
           <div><span class="hud-label" id="stockLabel">エサストック</span> <strong id="stockCount">0</strong> こ</div>
         </div>
-        <p class="input-hint">正解は<strong>ローマ字だけ</strong>（ひらがな・漢字の変換は使いません）。IME は英字（半角）にして a〜z を打ってください。お題の下のローマ字を、エサが通りすぎる前に打ち終えましょう。正しく打ち始めるとごまちゃんがエサの方へ近づきます。<strong>時間切れ</strong>はどちらのモードでもストックが減ります。<strong>しっかり</strong>は打ち間違いでもストックが減ります。<strong>やさしい</strong>は打ち間違いだけやり直しです。<strong>正しく打ったローマ字が15文字に達するたび</strong>、この60秒に<strong>＋1秒→＋2秒→＋3秒</strong>の順でボーナスが入ります（また＋1秒から繰り返し）。</p>
+        <p class="input-hint">正解は<strong>ローマ字だけ</strong>（ひらがな・漢字の変換は使いません）。IME は英字（半角）にして a〜z を打ってください。お題の下のローマ字を、エサが通りすぎる前に打ち終えましょう。正しく打ち始めるとごまちゃんがエサの方へ近づきます。<strong>時間切れ</strong>はどちらのモードでもストックが減ります。<strong>しっかり</strong>は打ち間違いでもストックが減ります。<strong>やさしい</strong>は打ち間違いのキーは無視です。<strong>正しく打った文字が 15→20→25 文字目</strong>のとき、この60秒に<strong>＋1秒・＋2秒・＋3秒</strong>が順に入ります（そのあとも同じ間隔で繰り返し）。プレイ中はブラウザ内で<strong>草原風のBGM</strong>が鳴り、時間プラスでは別の効果音が鳴ります（著作楽曲の転載ではありません）。</p>
         <input
           id="ghostInput"
           class="ghost-input"
@@ -227,6 +238,30 @@
       <p class="muted" id="rankContext"></p>
       <ol class="rank-list" id="rankList"></ol>
     </section>
+
+    <div class="career-modal hidden" id="titlesModal" role="dialog" aria-modal="true" aria-labelledby="titlesModalHeading">
+      <div class="career-modal__backdrop" data-career-close="titles"></div>
+      <div class="career-modal__panel career-modal__panel--ff5">
+        <div class="career-modal__head">
+          <h2 id="titlesModalHeading">称号</h2>
+          <button type="button" class="ghost small" id="closeTitlesBtn">とじる</button>
+        </div>
+        <p class="muted" id="titlesModalHint"></p>
+        <ul class="career-modal-list" id="titlesModalList"></ul>
+      </div>
+    </div>
+
+    <div class="career-modal hidden" id="equipsModal" role="dialog" aria-modal="true" aria-labelledby="equipsModalHeading">
+      <div class="career-modal__backdrop" data-career-close="equips"></div>
+      <div class="career-modal__panel career-modal__panel--ff5">
+        <div class="career-modal__head">
+          <h2 id="equipsModalHeading">装備</h2>
+          <button type="button" class="ghost small" id="closeEquipsBtn">とじる</button>
+        </div>
+        <p class="muted" id="equipsModalHint"></p>
+        <div id="equipsModalBody"></div>
+      </div>
+    </div>
   </main>
 
   <footer class="foot">
