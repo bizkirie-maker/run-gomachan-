@@ -1732,8 +1732,44 @@ body.is-playing .bonus-key-hint {
 }
 
 .ff5-equip-row.is-locked {
-  opacity: 0.5;
-  pointer-events: none;
+  opacity: 0.55;
+}
+
+.ff5-equip-row-btn {
+  width: 100%;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+}
+
+.ff5-equip-row-btn:disabled {
+  cursor: not-allowed;
+}
+
+.ff5-equip-row-inner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.ff5-equip-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+  color: #e8eef8;
+  font-size: 0.88rem;
+}
+
+.ff5-equip-meta strong {
+  font-size: 0.95rem;
+}
+
+.ff5-equip-meta span {
+  opacity: 0.82;
+  font-size: 0.8rem;
 }
 
 .ff5-equip-check {
@@ -2064,6 +2100,19 @@ body.is-playing .bonus-key-hint {
   padding: 0;
   display: grid;
   gap: 0.65rem;
+  max-height: min(58vh, 520px);
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.story-menu-meta {
+  margin: 0.35rem 0 0;
+  font-weight: 700;
+}
+
+.story-chapter-item.is-cleared .story-chapter-btn {
+  border-color: rgba(90, 140, 90, 0.35);
+  background: rgba(240, 252, 240, 0.85);
 }
 
 .story-chapter-btn {

@@ -330,15 +330,15 @@ const MAX_EQUIPPED = 3;
  * unlockPts = 累計ポイント（2000pt 刻みで解放）。
  */
 const EQUIP_CATALOG = [
-  { id: "ribbon_crown", name: "にんじんリボン冠", kind: "冠", unlockPts: 2000, mulPerLevel: 0.07, secPerLevel: 0.05 },
-  { id: "clover_cape", name: "よつばもふマント", kind: "衣", unlockPts: 4000, mulPerLevel: 0.055, secPerLevel: 0.055 },
-  { id: "carrot_blade", name: "にんじん細剣", kind: "剣", unlockPts: 6000, mulPerLevel: 0.12, secPerLevel: 0.03 },
-  { id: "field_boots", name: "花畑ふかふかブーツ", kind: "靴", unlockPts: 8000, mulPerLevel: 0.045, secPerLevel: 0.06 },
+  { id: "ribbon_crown", name: "にんじんリボン冠", kind: "冠", unlockPts: 0, mulPerLevel: 0.07, secPerLevel: 0.05 },
+  { id: "clover_cape", name: "よつばもふマント", kind: "衣", unlockPts: 2000, mulPerLevel: 0.055, secPerLevel: 0.055 },
+  { id: "carrot_blade", name: "にんじん細剣", kind: "剣", unlockPts: 4000, mulPerLevel: 0.12, secPerLevel: 0.03 },
+  { id: "field_boots", name: "花畑ふかふかブーツ", kind: "靴", unlockPts: 6000, mulPerLevel: 0.045, secPerLevel: 0.06 },
   {
     id: "rainbow_tiara",
     name: "にじ玉ティアラ",
     kind: "冠",
-    unlockPts: 10000,
+    unlockPts: 8000,
     mulPerLevel: 0.07,
     secPerLevel: 0.04,
     startStock: 1,
@@ -347,7 +347,7 @@ const EQUIP_CATALOG = [
     id: "star_mantle",
     name: "ほしぞらローブ",
     kind: "衣",
-    unlockPts: 12000,
+    unlockPts: 10000,
     mulPerLevel: 0.06,
     secPerLevel: 0.06,
     startBonusMs: 2500,
@@ -356,12 +356,12 @@ const EQUIP_CATALOG = [
     id: "gomadango_rod",
     name: "ごまだんごのししょう棒",
     kind: "剣",
-    unlockPts: 14000,
+    unlockPts: 12000,
     mulPerLevel: 0.1,
     secPerLevel: 0.05,
     startBonusMs: 2500,
   },
-  { id: "clover_ring", name: "よつばリング", kind: "指輪", unlockPts: 16000, mulPerLevel: 0.05, secPerLevel: 0.07 },
+  { id: "clover_ring", name: "よつばリング", kind: "指輪", unlockPts: 14000, mulPerLevel: 0.05, secPerLevel: 0.07 },
 ];
 
 const EQUIP_BY_ID = Object.fromEntries(EQUIP_CATALOG.map((d) => [d.id, d]));
@@ -400,29 +400,64 @@ const RABBIT_TITLES = [
   "光速もふターボ",
 ];
 
-/** 話モード：章と敵（試作品） */
-const STORY_CHAPTERS = [
-  {
-    id: "ch1",
-    title: "第1章　菜の花畑のはじまり",
-    intro: "ごまちゃんは菜の花畑を歩いていたら、まん丸い虫（まるむし）がエサを守っていました。",
-    enemies: [
-      { name: "まるむし", sprite: "bug", hp: 28, phraseSec: 6 },
-      { name: "はなどんぐり", sprite: "nut", hp: 36, phraseSec: 5 },
-    ],
-    outro: "敵をたおして、花畑の奥へ進みました。ごまちゃんは少し自信をつけました！",
-  },
-  {
-    id: "ch2",
-    title: "第2章　風のなかのにんじん",
-    intro: "風がふいて、にんじん畑の番人「にんじんナイト」が立ちはだかります。",
-    enemies: [
-      { name: "にんじんナイト", sprite: "carrot", hp: 42, phraseSec: 5 },
-      { name: "たんぽぽ魔人", sprite: "dandelion", hp: 50, phraseSec: 4 },
-    ],
-    outro: "たいせんな敵もたおしました。ごまちゃんのタイピングは花畑中のうわさです！",
-  },
+/** 話モード：章数（試作品） */
+const STORY_CHAPTER_COUNT = 200;
+
+const STORY_ENEMY_SPRITES = ["bug", "nut", "carrot", "dandelion"];
+const STORY_ENEMY_NAMES = [
+  "まるむし",
+  "はなどんぐり",
+  "にんじんナイト",
+  "たんぽぽ魔人",
+  "くもぐも",
+  "石ころゴーレム",
+  "風の精霊",
+  "菜の花の精",
+  "ごま団子ゴブリン",
+  "耳とらの番人",
 ];
+const STORY_LOCATIONS = [
+  "菜の花畑",
+  "にんじん畑",
+  "たんぽぽ草原",
+  "ごま団子坂",
+  "耳とらの森",
+  "風の丘",
+  "池のほとり",
+  "学校裏庭",
+  "図書館前",
+  "星見台",
+];
+
+function buildStoryChapters(count) {
+  const chapters = [];
+  for (let i = 0; i < count; i += 1) {
+    const n = i + 1;
+    const loc = STORY_LOCATIONS[i % STORY_LOCATIONS.length];
+    const enemyCount = 1 + (i % 3);
+    const enemies = [];
+    for (let e = 0; e < enemyCount; e += 1) {
+      const name = STORY_ENEMY_NAMES[(i + e) % STORY_ENEMY_NAMES.length];
+      const sprite = STORY_ENEMY_SPRITES[(i + e) % STORY_ENEMY_SPRITES.length];
+      enemies.push({
+        name: enemyCount > 1 ? `${name}${e + 1}` : name,
+        sprite,
+        hp: 24 + Math.floor(i * 1.15) + e * 10,
+        phraseSec: Math.max(3, 6 - Math.floor(i / 50)),
+      });
+    }
+    chapters.push({
+      id: `ch${n}`,
+      title: `第${n}章　${loc}`,
+      intro: `ごまちゃんは「${loc}」へ向かいました。${enemies[0].name}が 道を ふさいでいます。`,
+      enemies,
+      outro: `第${n}章を クリア！ ごまちゃんは ${loc}を 越え、つぎの ぼうけんへ 進みます。`,
+    });
+  }
+  return chapters;
+}
+
+const STORY_CHAPTERS = buildStoryChapters(STORY_CHAPTER_COUNT);
 
 const LS_STORY_PROGRESS = "gomaStoryChapterClear";
 
@@ -1403,38 +1438,49 @@ function renderEquipPicker(bodyId, hintId, isHub = false) {
   const hint = hintId ? $(hintId) : null;
   if (!body) return;
   const p = loadCareerPoints();
-  const sel = equipModalDraft || getEquippedIds();
+  const sel = equipModalDraft ?? getEquippedIds();
+  const unlockedCount = EQUIP_CATALOG.filter((d) => p >= d.unlockPts).length;
   if (hint) {
     hint.textContent = isHub
-      ? `累計 ${p} pt。解放したアイテムをタップして、最大 ${MAX_EQUIPPED} つまで装着できます。`
-      : `累計 ${p} pt（装備は ${EQUIP_UNLOCK_STEP} pt ごとに解放）／ 同時 ${MAX_EQUIPPED} スロット／アイコンをタップで ON／OFF`;
+      ? `累計 ${p} pt。解放済み ${unlockedCount} 種類。ボタンを押すと装着 ON/OFF（最大 ${MAX_EQUIPPED} つ）。`
+      : `累計 ${p} pt（装備は ${EQUIP_UNLOCK_STEP} pt ごとに解放）／ 同時 ${MAX_EQUIPPED} スロット`;
   }
   body.innerHTML = "";
   EQUIP_CATALOG.forEach((def) => {
     const unlocked = p >= def.unlockPts;
     const checked = sel.includes(def.id);
-    const cid = `eqpick_${def.id}_${bodyId}`;
-    const row = document.createElement("div");
-    row.className = `ff5-equip-row career-equip-row${unlocked ? "" : " is-locked"}${checked ? " ff5-equip-row--on" : ""}`;
-    const input = document.createElement("input");
-    input.type = "checkbox";
-    input.className = "ff5-equip-check";
-    input.id = cid;
-    input.checked = checked;
-    input.disabled = !unlocked;
-    input.setAttribute("aria-label", `${def.name}（${def.kind}）を${checked ? "はずす" : "つける"}`);
-    input.addEventListener("change", () => {
-      onEquipToggle(def.id, input.checked, input);
-    });
-    const hit = document.createElement("label");
-    hit.className = "ff5-equip-hit";
-    hit.htmlFor = cid;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = `ff5-equip-row ff5-equip-row-btn career-equip-row${unlocked ? "" : " is-locked"}${checked ? " ff5-equip-row--on" : ""}`;
+    btn.disabled = !unlocked;
+    btn.setAttribute("aria-pressed", checked ? "true" : "false");
+    btn.setAttribute(
+      "aria-label",
+      unlocked
+        ? `${def.name}（${def.kind}）${checked ? "を外す" : "をつける"}`
+        : `${def.name} — 累計 ${def.unlockPts} pt で解放`
+    );
+
+    const inner = document.createElement("span");
+    inner.className = "ff5-equip-row-inner";
+
     const sprite = document.createElement("span");
     sprite.className = `ff5-equip-sprite ff5-equip-sprite--${def.id}`;
     sprite.setAttribute("aria-hidden", "true");
-    hit.appendChild(sprite);
-    row.append(input, hit);
-    body.appendChild(row);
+
+    const meta = document.createElement("span");
+    meta.className = "ff5-equip-meta";
+    meta.innerHTML = `<strong>${escapeHtml(def.name)}</strong><span>${escapeHtml(def.kind)}${
+      unlocked ? (checked ? " — 装着中" : "") : ` — 解放 ${def.unlockPts} pt`
+    }</span>`;
+
+    inner.append(sprite, meta);
+    btn.appendChild(inner);
+    btn.addEventListener("click", () => {
+      if (!unlocked) return;
+      onEquipToggle(def.id, !checked);
+    });
+    body.appendChild(btn);
   });
 }
 
@@ -1442,12 +1488,11 @@ function renderEquipsModalBody() {
   renderEquipPicker("equipsModalBody", "equipsModalHint", false);
 }
 
-function onEquipToggle(id, on, inputEl) {
-  let sel = [...(equipModalDraft || getEquippedIds())];
+function onEquipToggle(id, on) {
+  let sel = [...(equipModalDraft ?? getEquippedIds())];
   if (on) {
     if (sel.includes(id)) return;
     if (sel.length >= MAX_EQUIPPED) {
-      inputEl.checked = false;
       showEquipLimitToast();
       return;
     }
@@ -1492,19 +1537,23 @@ function updateStoryHud() {
 
 function renderStoryChapterList() {
   const list = $("storyChapterList");
+  const meta = $("storyMenuMeta");
+  if (meta) {
+    meta.textContent = `全 ${STORY_CHAPTER_COUNT} 章。クリア済み ${loadStoryProgress()} 章。`;
+  }
   if (!list) return;
   const cleared = loadStoryProgress();
   list.innerHTML = "";
   STORY_CHAPTERS.forEach((ch, i) => {
     const locked = i > cleared;
     const li = document.createElement("li");
-    li.className = `story-chapter-item${locked ? " is-locked" : ""}`;
+    li.className = `story-chapter-item${locked ? " is-locked" : ""}${i < cleared ? " is-cleared" : ""}`;
     const btn = document.createElement("button");
     btn.type = "button";
     btn.className = "story-chapter-btn";
     btn.disabled = locked;
-    const sub = locked ? "前の章をクリアすると解放されます" : `${ch.enemies.length} 体の敵とバトル`;
-    btn.innerHTML = `<strong>${escapeHtml(ch.title)}</strong><span>${escapeHtml(sub)}</span>`;
+    const badge = i < cleared ? "クリア済み" : locked ? "ロック中" : `${ch.enemies.length} 体の敵`;
+    btn.innerHTML = `<strong>${escapeHtml(ch.title)}</strong><span>${escapeHtml(badge)}</span>`;
     if (!locked) btn.addEventListener("click", () => startStoryChapter(i));
     li.appendChild(btn);
     list.appendChild(li);
