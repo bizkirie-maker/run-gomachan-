@@ -323,7 +323,7 @@ const LS_BEST_SINGLE_PLAY = "gomaBestSinglePlayScore";
 const LS_EQUIPPED_IDS = "gomaEquippedIds";
 
 /** 同時に身につけられる装備の最大数 */
-const MAX_EQUIPPED = 4;
+const MAX_EQUIPPED = 3;
 
 /**
  * 体に付ける装備カタログ（冠・衣・剣・靴・指輪など）。
@@ -400,6 +400,52 @@ const RABBIT_TITLES = [
   "光速もふターボ",
 ];
 
+/** 話モード：章と敵（試作品） */
+const STORY_CHAPTERS = [
+  {
+    id: "ch1",
+    title: "第1章　菜の花畑のはじまり",
+    intro: "ごまちゃんは菜の花畑を歩いていたら、まん丸い虫（まるむし）がエサを守っていました。",
+    enemies: [
+      { name: "まるむし", sprite: "bug", hp: 28, phraseSec: 6 },
+      { name: "はなどんぐり", sprite: "nut", hp: 36, phraseSec: 5 },
+    ],
+    outro: "敵をたおして、花畑の奥へ進みました。ごまちゃんは少し自信をつけました！",
+  },
+  {
+    id: "ch2",
+    title: "第2章　風のなかのにんじん",
+    intro: "風がふいて、にんじん畑の番人「にんじんナイト」が立ちはだかります。",
+    enemies: [
+      { name: "にんじんナイト", sprite: "carrot", hp: 42, phraseSec: 5 },
+      { name: "たんぽぽ魔人", sprite: "dandelion", hp: 50, phraseSec: 4 },
+    ],
+    outro: "たいせんな敵もたおしました。ごまちゃんのタイピングは花畑中のうわさです！",
+  },
+];
+
+const LS_STORY_PROGRESS = "gomaStoryChapterClear";
+
+const storyState = {
+  active: false,
+  chapterIdx: 0,
+  enemyIdx: 0,
+  enemyHp: 0,
+  enemyMaxHp: 0,
+  playerHp: 100,
+  playerMaxHp: 100,
+  phraseEndAt: 0,
+  phraseStartedAt: 0,
+  currentPhrase: null,
+  targetChars: [],
+  romajiCandidates: [],
+  typedRomaji: "",
+  phraseSec: 5,
+  raf: 0,
+  typosThisPhrase: 0,
+  phraseBusy: false,
+};
+
 const state = {
   playing: false,
   gameEndAt: 0,
@@ -424,7 +470,104 @@ const state = {
   awaitingNextPhrase: false,
   /** 1プレイ中に「正しく打って進んだ」ローマ字の文字数（結果画面用） */
   correctKeyCount: 0,
+  /** practice | story */
+  gameMode: "practice",
 };
+
+const MAIN_SCREENS = [
+  "homePanel",
+  "practicePanel",
+  "equipHubPanel",
+  "storyMenuPanel",
+  "stageWrap",
+  "storyStageWrap",
+  "resultPanel",
+  "storyResultPanel",
+];
+
+function hideAllMainScreens() {
+  MAIN_SCREENS.forEach((id) => {
+    const el = $(id);
+    if (el) el.classList.add("hidden");
+  });
+}
+
+function loadStoryProgress() {
+  const n = Number.parseInt(localStorage.getItem(LS_STORY_PROGRESS) || "0", 10);
+  return Number.isFinite(n) && n >= 0 ? n : 0;
+}
+
+function saveStoryProgress(clearedCount) {
+  localStorage.setItem(LS_STORY_PROGRESS, String(Math.max(0, clearedCount)));
+}
+
+function refreshHomeCareer() {
+  const p = loadCareerPoints();
+  const best = loadBestSinglePlayScore();
+  const hp = $("homeCareerPoints");
+  const hb = $("homeCareerBest");
+  const ht = $("homeCareerTitle");
+  if (hp) hp.textContent = String(p);
+  if (hb) hb.textContent = String(best);
+  if (ht) ht.textContent = currentTitleName(best);
+}
+
+function showHome() {
+  state.playing = false;
+  storyState.active = false;
+  stopGomaBgm();
+  detachPlayKeyCapture();
+  detachStoryKeyCapture();
+  document.body.classList.remove("is-playing", "is-story");
+  cancelAnimationFrame(state.raf);
+  cancelAnimationFrame(storyState.raf);
+  hideAllMainScreens();
+  $("homePanel")?.classList.remove("hidden");
+  refreshHomeCareer();
+  refreshCareerHud();
+}
+
+function showPracticePanel() {
+  state.playing = false;
+  storyState.active = false;
+  stopGomaBgm();
+  detachPlayKeyCapture();
+  detachStoryKeyCapture();
+  document.body.classList.remove("is-playing", "is-story");
+  cancelAnimationFrame(state.raf);
+  hideAllMainScreens();
+  $("practicePanel")?.classList.remove("hidden");
+  refreshCareerHud();
+}
+
+function showEquipHub() {
+  state.playing = false;
+  storyState.active = false;
+  stopGomaBgm();
+  detachPlayKeyCapture();
+  detachStoryKeyCapture();
+  document.body.classList.remove("is-playing", "is-story");
+  hideAllMainScreens();
+  $("equipHubPanel")?.classList.remove("hidden");
+  equipModalDraft = [...getEquippedIds()];
+  renderEquipPicker("equipHubBody", "equipHubHint", true);
+  const p = loadCareerPoints();
+  const ep = $("equipHubPoints");
+  const ec = $("equipHubCount");
+  if (ep) ep.textContent = String(p);
+  if (ec) ec.textContent = String(getEquippedIds().length);
+}
+
+function showStoryMenu() {
+  state.playing = false;
+  storyState.active = false;
+  stopGomaBgm();
+  detachStoryKeyCapture();
+  document.body.classList.remove("is-playing", "is-story");
+  hideAllMainScreens();
+  $("storyMenuPanel")?.classList.remove("hidden");
+  renderStoryChapterList();
+}
 
 function loadCareerRomaji() {
   const n = Number.parseInt(localStorage.getItem(LS_CAREER_ROMAJI) || "0", 10);
@@ -454,7 +597,7 @@ function saveBestSinglePlayScore(n) {
   localStorage.setItem(LS_BEST_SINGLE_PLAY, String(Math.max(0, n)));
 }
 
-/** 初回だけ：装備の保存キーが無いとき、解放済みを最大4つまで自動で装着（旧「段階」相当のおまけを途切れさせない） */
+/** 初回だけ：装備の保存キーが無いとき、解放済みを最大3つまで自動で装着 */
 function migrateEquippedStorageIfNeeded() {
   if (localStorage.getItem(LS_EQUIPPED_IDS) !== null) return;
   const p = loadCareerPoints();
@@ -559,25 +702,28 @@ function effectivePhraseSec() {
 }
 
 function refreshBunnyEquipVisual() {
-  const bunny = $("bunny");
-  const badge = $("bunnyTitleBadge");
-  const gear = $("bunnyGear");
-  if (!bunny) return;
-  for (let i = 0; i <= 16; i += 1) bunny.classList.remove(`equip-tier-${i}`);
-  bunny.classList.toggle("bunny--equip-theme-speed", currentTitleName() === SPEED_TITLE_NAME);
   const ids = getEquippedIds();
+  const speedTheme = currentTitleName() === SPEED_TITLE_NAME;
+  for (const bunnyId of ["bunny", "storyBunny"]) {
+    const bunny = $(bunnyId);
+    const gear = bunnyId === "bunny" ? $("bunnyGear") : $("storyBunnyGear");
+    if (!bunny) continue;
+    for (let i = 0; i <= 16; i += 1) bunny.classList.remove(`equip-tier-${i}`);
+    bunny.classList.toggle("bunny--equip-theme-speed", speedTheme);
+    if (gear) {
+      gear.innerHTML = "";
+      ids.forEach((id, idx) => {
+        const sp = document.createElement("span");
+        sp.className = `gear-slot gear-slot--i${idx} gear--${id}`;
+        sp.setAttribute("aria-hidden", "true");
+        gear.appendChild(sp);
+      });
+    }
+  }
+  const badge = $("bunnyTitleBadge");
   if (badge) {
     badge.textContent = "";
     badge.hidden = true;
-  }
-  if (gear) {
-    gear.innerHTML = "";
-    ids.forEach((id, idx) => {
-      const sp = document.createElement("span");
-      sp.className = `gear-slot gear-slot--i${idx} gear--${id}`;
-      sp.setAttribute("aria-hidden", "true");
-      gear.appendChild(sp);
-    });
   }
 }
 
@@ -591,7 +737,6 @@ function refreshCareerHud() {
   const elBest = $("careerBestPlay");
   const elT = $("careerTitle");
   const elN = $("careerNextTitle");
-  const elSum = $("careerEquipSummary");
   if (elR) elR.textContent = String(r);
   if (elP) elP.textContent = String(p);
   if (elBest) elBest.textContent = String(best);
@@ -600,17 +745,6 @@ function refreshCareerHud() {
     const left = nextTitlePointsRemaining(best);
     if (unlockedTitleCount(best) >= RABBIT_TITLES.length) elN.textContent = "称号はいちばんの段までたっせい！";
     else elN.textContent = `60秒プレイのベストをあと ${left} pt あげると つぎの称号`;
-  }
-  if (elSum) {
-    const ids = getEquippedIds();
-    const unlocked = EQUIP_CATALOG.filter((d) => p >= d.unlockPts);
-    if (unlocked.length === 0) {
-      elSum.textContent = `まだ解放されていません（累計 ${EQUIP_UNLOCK_STEP} pt から）。「装備」で一覧を見られます。`;
-    } else if (ids.length === 0) {
-      elSum.textContent = `解放 ${unlocked.length} 種類／装着 0 。「装備」で最大4つまでえらべます。`;
-    } else {
-      elSum.textContent = `装着中 ${ids.length}／${MAX_EQUIPPED}（アイコンは「装備」メニューでかえられます）`;
-    }
   }
 }
 
@@ -678,6 +812,15 @@ function updateBonusKeyHint() {
 
 function randomInt(min, max) {
   return min + Math.floor(Math.random() * (max - min + 1));
+}
+
+function pickStoryPhrase() {
+  const candidates = PHRASES.filter((p) => {
+    const n = yomiCharCount(p.yomi);
+    return n >= 2 && n <= 10;
+  });
+  if (candidates.length > 0) return candidates[randomInt(0, candidates.length - 1)];
+  return PHRASES[randomInt(0, PHRASES.length - 1)];
 }
 
 function pickRandomPhrase() {
@@ -855,7 +998,7 @@ function stopGomaBgm() {
 function playPastoralChord(when) {
   const ctx = gomaAudioCtx;
   const master = gomaMasterGain;
-  if (!ctx || !master || !state.playing) return;
+  if (!ctx || !master || (!state.playing && !storyState.active)) return;
   const freqs = [392, 493.88, 587.33, 659.25, 783.99];
   freqs.forEach((f, i) => {
     const o = ctx.createOscillator();
@@ -874,7 +1017,7 @@ function playPastoralChord(when) {
 }
 
 function tickGomaFieldBgm() {
-  if (!state.playing) return;
+  if (!state.playing && !storyState.active) return;
   const ctx = ensureGomaAudio();
   if (!ctx) return;
   playPastoralChord(ctx.currentTime + 0.02);
@@ -1047,7 +1190,8 @@ function endGame() {
   cancelAnimationFrame(state.raf);
   $("ghostInput").blur();
   $("bait").hidden = true;
-  $("resultPanel").classList.remove("hidden");
+  hideAllMainScreens();
+  $("resultPanel")?.classList.remove("hidden");
   $("finalScore").textContent = String(state.score);
   const fk = $("finalKeyCount");
   if (fk) fk.textContent = String(state.correctKeyCount);
@@ -1115,6 +1259,7 @@ function updateStockHudLabel() {
 }
 
 function startGame() {
+  state.gameMode = "practice";
   state.diff = DIFFICULTY[$("difficulty").value];
   state.lenMode = LENGTH_MODE[$("lengthMode").value];
   state.mistakeMode = MISTAKE_MODE[$("mistakeMode").value];
@@ -1132,9 +1277,9 @@ function startGame() {
   if (bunnyEl) bunnyEl.classList.remove("bunny--running");
   const now = performance.now();
   state.gameEndAt = now + 60_000 + b.startBonusMs;
-  $("resultPanel").classList.add("hidden");
-  $("setupPanel").classList.add("setup-hidden");
-  $("stageWrap").classList.remove("setup-hidden");
+  hideAllMainScreens();
+  $("stageWrap")?.classList.remove("hidden");
+  $("resultPanel")?.classList.add("hidden");
   attachPlayKeyCapture();
   void resumeGomaAudio();
   startGomaFieldBgm();
@@ -1147,17 +1292,8 @@ function startGame() {
 }
 
 function resetToSetup() {
-  state.playing = false;
-  stopGomaBgm();
-  detachPlayKeyCapture();
-  state.awaitingNextPhrase = false;
-  document.body.classList.remove("is-playing");
-  cancelAnimationFrame(state.raf);
-  $("setupPanel").classList.remove("setup-hidden");
-  $("stageWrap").classList.add("setup-hidden");
-  $("resultPanel").classList.add("hidden");
+  showPracticePanel();
   $("bait").hidden = true;
-  refreshCareerHud();
 }
 
 function processTypedChar(ch) {
@@ -1219,6 +1355,7 @@ function detachPlayKeyCapture() {
 
 /** 装備モーダル内の一時選択（開いたときに保存内容で初期化） */
 let equipModalDraft = null;
+let storyResultVictory = false;
 
 function closeTitlesModal() {
   const m = $("titlesModal");
@@ -1255,24 +1392,28 @@ function openTitlesModal() {
 function showEquipLimitToast() {
   const el = $("toastPanel");
   if (!el) return;
-  el.textContent = "装備は4つまでです。ほかをオフにしてからにしてください。";
+  el.textContent = `装備は${MAX_EQUIPPED}つまでです。ほかをオフにしてからにしてください。`;
   el.classList.add("toast-panel--show");
   window.clearTimeout(showEquipLimitToast._t);
   showEquipLimitToast._t = window.setTimeout(() => el.classList.remove("toast-panel--show"), 2200);
 }
 
-function renderEquipsModalBody() {
-  const body = $("equipsModalBody");
-  const hint = $("equipsModalHint");
-  if (!body || !hint) return;
+function renderEquipPicker(bodyId, hintId, isHub = false) {
+  const body = $(bodyId);
+  const hint = hintId ? $(hintId) : null;
+  if (!body) return;
   const p = loadCareerPoints();
   const sel = equipModalDraft || getEquippedIds();
-  hint.textContent = `累計 ${p} pt（装備は ${EQUIP_UNLOCK_STEP} pt ごとに解放）／ 同時 ${MAX_EQUIPPED} スロット／アイコンをタップで ON／OFF`;
+  if (hint) {
+    hint.textContent = isHub
+      ? `累計 ${p} pt。解放したアイテムをタップして、最大 ${MAX_EQUIPPED} つまで装着できます。`
+      : `累計 ${p} pt（装備は ${EQUIP_UNLOCK_STEP} pt ごとに解放）／ 同時 ${MAX_EQUIPPED} スロット／アイコンをタップで ON／OFF`;
+  }
   body.innerHTML = "";
   EQUIP_CATALOG.forEach((def) => {
     const unlocked = p >= def.unlockPts;
     const checked = sel.includes(def.id);
-    const cid = `eqpick_${def.id}`;
+    const cid = `eqpick_${def.id}_${bodyId}`;
     const row = document.createElement("div");
     row.className = `ff5-equip-row career-equip-row${unlocked ? "" : " is-locked"}${checked ? " ff5-equip-row--on" : ""}`;
     const input = document.createElement("input");
@@ -1297,6 +1438,10 @@ function renderEquipsModalBody() {
   });
 }
 
+function renderEquipsModalBody() {
+  renderEquipPicker("equipsModalBody", "equipsModalHint", false);
+}
+
 function onEquipToggle(id, on, inputEl) {
   let sel = [...(equipModalDraft || getEquippedIds())];
   if (on) {
@@ -1313,8 +1458,14 @@ function onEquipToggle(id, on, inputEl) {
   equipModalDraft = sel;
   saveEquippedIds(sel);
   refreshCareerHud();
+  refreshHomeCareer();
   refreshBunnyEquipVisual();
   renderEquipsModalBody();
+  if (!$("equipHubPanel")?.classList.contains("hidden")) {
+    renderEquipPicker("equipHubBody", "equipHubHint", true);
+    const ec = $("equipHubCount");
+    if (ec) ec.textContent = String(getEquippedIds().length);
+  }
 }
 
 function openEquipsModal() {
@@ -1325,9 +1476,317 @@ function openEquipsModal() {
   if (m) m.classList.remove("hidden");
 }
 
+/* ── 話モード ── */
+
+function setStoryDialog(text) {
+  const el = $("storyDialog");
+  if (el) el.textContent = text;
+}
+
+function updateStoryHud() {
+  const php = $("storyPlayerHp");
+  const ehp = $("storyEnemyHp");
+  if (php) php.textContent = String(Math.max(0, storyState.playerHp));
+  if (ehp) ehp.textContent = String(Math.max(0, storyState.enemyHp));
+}
+
+function renderStoryChapterList() {
+  const list = $("storyChapterList");
+  if (!list) return;
+  const cleared = loadStoryProgress();
+  list.innerHTML = "";
+  STORY_CHAPTERS.forEach((ch, i) => {
+    const locked = i > cleared;
+    const li = document.createElement("li");
+    li.className = `story-chapter-item${locked ? " is-locked" : ""}`;
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "story-chapter-btn";
+    btn.disabled = locked;
+    const sub = locked ? "前の章をクリアすると解放されます" : `${ch.enemies.length} 体の敵とバトル`;
+    btn.innerHTML = `<strong>${escapeHtml(ch.title)}</strong><span>${escapeHtml(sub)}</span>`;
+    if (!locked) btn.addEventListener("click", () => startStoryChapter(i));
+    li.appendChild(btn);
+    list.appendChild(li);
+  });
+}
+
+function beginStoryBattle() {
+  storyState.active = true;
+  storyState.phraseBusy = false;
+  hideAllMainScreens();
+  $("storyStageWrap")?.classList.remove("hidden");
+  $("storyResultPanel")?.classList.add("hidden");
+  document.body.classList.add("is-story");
+  attachStoryKeyCapture();
+  refreshBunnyEquipVisual();
+  void resumeGomaAudio();
+  startGomaFieldBgm();
+  $("storyGhostInput")?.focus({ preventScroll: true });
+}
+
+function startStoryChapter(chapterIdx) {
+  const ch = STORY_CHAPTERS[chapterIdx];
+  if (!ch) return;
+  storyState.chapterIdx = chapterIdx;
+  storyState.enemyIdx = 0;
+  storyState.playerHp = 100;
+  storyState.playerMaxHp = 100;
+  setStoryDialog(ch.intro);
+  beginStoryBattle();
+  window.setTimeout(() => {
+    if (storyState.active) startStoryEnemy();
+  }, 1400);
+}
+
+function startStoryEnemy() {
+  const ch = STORY_CHAPTERS[storyState.chapterIdx];
+  const enemy = ch.enemies[storyState.enemyIdx];
+  if (!enemy) return;
+  storyState.enemyMaxHp = enemy.hp;
+  storyState.enemyHp = enemy.hp;
+  storyState.phraseSec = enemy.phraseSec;
+  const nameEl = $("storyEnemyName");
+  const spriteEl = $("storyEnemySprite");
+  if (nameEl) nameEl.textContent = enemy.name;
+  if (spriteEl) {
+    spriteEl.className = "story-enemy__sprite";
+    spriteEl.classList.add(`story-enemy__sprite--${enemy.sprite}`);
+  }
+  setStoryDialog(`${enemy.name} があらわれた！ お題を打って攻撃しよう。`);
+  updateStoryHud();
+  storyNewPhrase();
+  cancelAnimationFrame(storyState.raf);
+  storyState.raf = requestAnimationFrame(storyLoop);
+}
+
+function storyNewPhrase() {
+  storyState.phraseBusy = false;
+  storyState.currentPhrase = pickStoryPhrase();
+  const baseRomaji = yomiToRomaji(storyState.currentPhrase.yomi);
+  storyState.targetChars = [...baseRomaji];
+  storyState.romajiCandidates = buildRomajiVariants(baseRomaji);
+  storyState.typedRomaji = "";
+  storyState.typosThisPhrase = 0;
+  const now = performance.now();
+  storyState.phraseStartedAt = now;
+  storyState.phraseEndAt = now + storyState.phraseSec * 1000;
+  const textEl = $("storyPhraseText");
+  if (textEl) {
+    textEl.innerHTML = phraseRubyHtml(storyState.currentPhrase.text, storyState.currentPhrase.yomi);
+  }
+  storyRenderTypeline();
+  const inp = $("storyGhostInput");
+  if (inp) inp.value = "";
+}
+
+function storyRenderTypeline() {
+  const guide =
+    storyState.romajiCandidates.find((s) => s.startsWith(storyState.typedRomaji)) ||
+    storyState.targetChars.join("");
+  const rest = guide.slice(storyState.typedRomaji.length);
+  const line = $("storyTargetLine");
+  if (line) line.innerHTML = `<span class="rest">${escapeHtml(rest)}</span>`;
+  const caret = $("storyCaret");
+  if (caret) caret.classList.remove("caret--hide");
+}
+
+function storyOnPhraseSuccess() {
+  if (storyState.phraseBusy) return;
+  storyState.phraseBusy = true;
+  const remain = Math.max(0, (storyState.phraseEndAt - performance.now()) / 1000);
+  const speedBonus = Math.floor(remain * 3);
+  const accuracyBonus = storyState.typosThisPhrase === 0 ? 6 : 0;
+  const lenBonus = Math.floor(storyState.targetChars.length / 3);
+  const dmg = 8 + speedBonus + accuracyBonus + lenBonus;
+  storyState.enemyHp = Math.max(0, storyState.enemyHp - dmg);
+  const enemy = STORY_CHAPTERS[storyState.chapterIdx].enemies[storyState.enemyIdx];
+  setStoryDialog(
+    `${enemy.name} に ${dmg} ダメージ！${speedBonus >= 6 ? " 速い！" : ""}${accuracyBonus ? " ミスなしボーナス！" : ""}`
+  );
+  updateStoryHud();
+  flashStoryEnemyHit();
+  if (storyState.enemyHp <= 0) {
+    window.setTimeout(() => storyOnEnemyDefeated(), 600);
+    return;
+  }
+  window.setTimeout(() => storyNewPhrase(), 450);
+}
+
+function flashStoryEnemyHit() {
+  const el = $("storyEnemy");
+  if (!el) return;
+  el.classList.remove("story-enemy--hit");
+  void el.offsetWidth;
+  el.classList.add("story-enemy--hit");
+}
+
+function storyOnEnemyDefeated() {
+  const ch = STORY_CHAPTERS[storyState.chapterIdx];
+  const defeated = ch.enemies[storyState.enemyIdx];
+  storyState.enemyIdx += 1;
+  if (storyState.enemyIdx >= ch.enemies.length) {
+    finishStoryChapter();
+    return;
+  }
+  setStoryDialog(`${defeated.name} をたおした！ つぎの敵が現れた…`);
+  window.setTimeout(() => startStoryEnemy(), 1100);
+}
+
+function storyPlayerHit(dmg, msg) {
+  storyState.playerHp = Math.max(0, storyState.playerHp - dmg);
+  setStoryDialog(`${msg} ごまちゃんが ${dmg} ダメージを受けた。`);
+  updateStoryHud();
+  const bunny = $("storyBunny");
+  if (bunny) {
+    bunny.classList.remove("bunny--hurt");
+    void bunny.offsetWidth;
+    bunny.classList.add("bunny--hurt");
+  }
+  if (storyState.playerHp <= 0) {
+    window.setTimeout(() => storyOnDefeat(), 700);
+  }
+}
+
+function storyOnTypo() {
+  storyState.typosThisPhrase += 1;
+  storyPlayerHit(5, "打ち間違い！");
+  if (storyState.playerHp <= 0) return;
+  storyState.typedRomaji = "";
+  storyState.romajiCandidates = buildRomajiVariants(storyState.targetChars.join(""));
+  storyRenderTypeline();
+}
+
+function storyOnTimeout() {
+  if (storyState.phraseBusy) return;
+  storyState.phraseBusy = true;
+  storyPlayerHit(10, "時間切れ！");
+  if (storyState.playerHp <= 0) return;
+  window.setTimeout(() => storyNewPhrase(), 500);
+}
+
+function storyOnDefeat() {
+  storyResultVictory = false;
+  storyState.active = false;
+  stopGomaBgm();
+  detachStoryKeyCapture();
+  cancelAnimationFrame(storyState.raf);
+  document.body.classList.remove("is-story");
+  hideAllMainScreens();
+  $("storyResultPanel")?.classList.remove("hidden");
+  $("storyResultHeading").textContent = "冒険失敗…";
+  $("storyResultText").textContent =
+    "ごまちゃんは力尽きました。練習モードでタイピングを鍛えて、もう一度挑戦しましょう。";
+  const cont = $("storyContinueBtn");
+  if (cont) cont.textContent = "章を選び直す";
+}
+
+function finishStoryChapter() {
+  storyResultVictory = true;
+  stopGomaBgm();
+  detachStoryKeyCapture();
+  cancelAnimationFrame(storyState.raf);
+  document.body.classList.remove("is-story");
+  const ch = STORY_CHAPTERS[storyState.chapterIdx];
+  const prog = loadStoryProgress();
+  if (storyState.chapterIdx + 1 > prog) saveStoryProgress(storyState.chapterIdx + 1);
+  hideAllMainScreens();
+  $("storyResultPanel")?.classList.remove("hidden");
+  $("storyResultHeading").textContent = `${ch.title} クリア！`;
+  $("storyResultText").textContent = ch.outro;
+  const cont = $("storyContinueBtn");
+  if (cont) {
+    const next = storyState.chapterIdx + 1;
+    cont.textContent =
+      next < STORY_CHAPTERS.length && next <= loadStoryProgress() ? "つぎの章へ" : "章一覧にもどる";
+  }
+}
+
+function quitStory() {
+  if (storyState.active && !window.confirm("冒険をやめてホームにもどりますか？")) return;
+  storyState.active = false;
+  stopGomaBgm();
+  detachStoryKeyCapture();
+  cancelAnimationFrame(storyState.raf);
+  document.body.classList.remove("is-story");
+  showHome();
+}
+
+function storyProcessTypedChar(ch) {
+  if (!storyState.active || storyState.phraseBusy || storyState.playerHp <= 0) return;
+  const nextPrefix = `${storyState.typedRomaji}${ch}`;
+  const narrowed = storyState.romajiCandidates.filter((romaji) => romaji.startsWith(nextPrefix));
+  if (narrowed.length === 0) {
+    storyOnTypo();
+    return;
+  }
+  storyState.romajiCandidates = narrowed;
+  storyState.typedRomaji = nextPrefix;
+  saveCareerRomaji(loadCareerRomaji() + 1);
+  storyRenderTypeline();
+  const done = narrowed.length === 1 && narrowed[0] === storyState.typedRomaji;
+  if (done) storyOnPhraseSuccess();
+}
+
+function onStoryKeydown(ev) {
+  if (!storyState.active || storyState.phraseBusy) return;
+  if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
+  if (ev.isComposing) return;
+  if (ev.key === "Enter" || ev.key === "Backspace" || ev.key === " " || ev.key === "　") {
+    ev.preventDefault();
+    return;
+  }
+  if (!/^[a-zA-Z]$/.test(ev.key)) return;
+  ev.preventDefault();
+  ev.stopPropagation();
+  storyProcessTypedChar(ev.key.toLowerCase());
+}
+
+function attachStoryKeyCapture() {
+  detachStoryKeyCapture();
+  window.addEventListener("keydown", onStoryKeydown, true);
+}
+
+function detachStoryKeyCapture() {
+  window.removeEventListener("keydown", onStoryKeydown, true);
+}
+
+function storyLoop(now) {
+  if (!storyState.active) return;
+  const remain = (storyState.phraseEndAt - now) / 1000;
+  const pt = $("storyPhraseTimer");
+  if (pt) pt.textContent = Math.max(0, remain).toFixed(1);
+  if (!storyState.phraseBusy && remain <= 0) storyOnTimeout();
+  storyState.raf = requestAnimationFrame(storyLoop);
+}
+
+function onStoryContinue() {
+  if (!storyResultVictory) {
+    showStoryMenu();
+    return;
+  }
+  const next = storyState.chapterIdx + 1;
+  if (next < STORY_CHAPTERS.length && next <= loadStoryProgress()) {
+    startStoryChapter(next);
+    return;
+  }
+  showStoryMenu();
+}
+
 function init() {
-  $("stageWrap").classList.add("setup-hidden");
-  $("setupPanel").classList.remove("setup-hidden");
+  hideAllMainScreens();
+  $("homePanel")?.classList.remove("hidden");
+  $("stageWrap")?.classList.add("hidden");
+
+  $("goPracticeBtn")?.addEventListener("click", showPracticePanel);
+  $("goEquipBtn")?.addEventListener("click", showEquipHub);
+  $("goStoryBtn")?.addEventListener("click", showStoryMenu);
+  $("backHomeFromPracticeBtn")?.addEventListener("click", showHome);
+  $("backHomeFromEquipBtn")?.addEventListener("click", showHome);
+  $("backHomeFromStoryBtn")?.addEventListener("click", showHome);
+  $("quitStoryBtn")?.addEventListener("click", quitStory);
+  $("storyContinueBtn")?.addEventListener("click", onStoryContinue);
+  $("storyBackHomeBtn")?.addEventListener("click", showHome);
 
   $("startBtn").addEventListener("click", startGame);
   $("againBtn").addEventListener("click", startGame);
@@ -1336,7 +1795,7 @@ function init() {
   $("closeRankBtn").addEventListener("click", closeRanking);
 
   $("openTitlesBtn").addEventListener("click", openTitlesModal);
-  $("openEquipsBtn").addEventListener("click", openEquipsModal);
+  document.getElementById("openEquipsBtn")?.addEventListener("click", openEquipsModal);
   $("closeTitlesBtn").addEventListener("click", closeTitlesModal);
   $("closeEquipsBtn").addEventListener("click", closeEquipsModal);
   document.querySelectorAll("[data-career-close]").forEach((el) => {
@@ -1359,6 +1818,15 @@ function init() {
     if (state.playing) $("ghostInput").focus({ preventScroll: true });
   };
   $("scene").addEventListener("click", refocus);
+  $("storyScene")?.addEventListener("click", () => {
+    if (storyState.active) $("storyGhostInput")?.focus({ preventScroll: true });
+  });
+  $("storyGhostInput")?.addEventListener("input", (ev) => {
+    if (storyState.active) ev.target.value = "";
+  });
+  $("storyGhostInput")?.addEventListener("paste", (ev) => {
+    if (storyState.active) ev.preventDefault();
+  });
   $("difficulty").addEventListener("change", () => {
     if (!state.playing) {
       state.diff = DIFFICULTY[$("difficulty").value];
@@ -1368,6 +1836,7 @@ function init() {
 
   setSceneDifficultyClass();
   refreshCareerHud();
+  refreshHomeCareer();
   refreshBunnyEquipVisual();
 }
 

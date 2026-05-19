@@ -35,16 +35,46 @@
 
   <header class="top-bar">
     <h1><span class="title-icon" aria-hidden="true">🐰</span> ごまちゃんのエサタイピング <small>試作品</small></h1>
-    <p class="tagline">菜の花がふわっとゆれる花畑。文のついたエサをタイプして、ごまちゃんといっしょにポイントを集めよう。</p>
+    <p class="tagline">菜の花畑のごまちゃんと、<strong>練習</strong>・<strong>装備</strong>・<strong>話</strong>の3つの遊び方でタイピングを楽しもう。</p>
   </header>
 
   <main class="shell">
-    <section class="panel setup-panel" id="setupPanel" aria-labelledby="setup-heading">
-      <h2 id="setup-heading">はじめる前の設定</h2>
+    <!-- 最初の画面：3つのモードから選ぶ -->
+    <section class="panel home-panel" id="homePanel" aria-labelledby="home-heading">
+      <h2 id="home-heading">なにをしますか？</h2>
+      <p class="muted home-lead">ごまちゃんと一緒に、タイピングで遊ぼう。</p>
+      <div class="mode-grid">
+        <button type="button" class="mode-card mode-card--practice" id="goPracticeBtn">
+          <span class="mode-card__icon" aria-hidden="true">🥕</span>
+          <span class="mode-card__title">練習</span>
+          <span class="mode-card__desc">モードを選んで、60秒タイムアタックで練習</span>
+        </button>
+        <button type="button" class="mode-card mode-card--equip" id="goEquipBtn">
+          <span class="mode-card__icon" aria-hidden="true">👑</span>
+          <span class="mode-card__title">装備</span>
+          <span class="mode-card__desc">解放したアイテムを<strong>3つまで</strong>身につける</span>
+        </button>
+        <button type="button" class="mode-card mode-card--story" id="goStoryBtn">
+          <span class="mode-card__icon" aria-hidden="true">📖</span>
+          <span class="mode-card__title">話</span>
+          <span class="mode-card__desc">正確さと速さで敵をたおし、物語をすすめる</span>
+        </button>
+      </div>
+      <p class="home-career muted">
+        累計 <strong id="homeCareerPoints">0</strong> pt　／　60秒ベスト <strong id="homeCareerBest">0</strong> pt　／　称号 <strong id="homeCareerTitle">（まだなし）</strong>
+      </p>
+    </section>
+
+    <!-- 練習モード：従来の設定画面 -->
+    <section class="panel setup-panel hidden" id="practicePanel" aria-labelledby="setup-heading">
+      <div class="sub-head">
+        <button type="button" class="ghost small back-home-btn" id="backHomeFromPracticeBtn">← ホーム</button>
+        <h2 id="setup-heading">練習モード</h2>
+      </div>
       <p class="muted deploy-banner">
         <strong>更新確認</strong> — このページの読み込み ID：<code class="build-id" id="cacheBustTag">…</code>
         <br />
-        <strong>ルール版</strong> — 称号は「60秒の結果スコア」の自己ベストが 50pt ごと。装備は累計ポイントが <strong>2000pt</strong> ごとに解放。
+        <strong>ルール版</strong> — ホームから「練習・装備・話」を選べます。装備は<strong>3つまで</strong>。称号は60秒ベスト50ptごと。
         <br />
         （ページを開き直すたびに ID の数字が変わります。<strong>同じ数字のまま</strong>なら古いページを見ています。別タブで開き直すか、スーパーリロード／スーパーリフレッシュでも試してください）
         <br />
@@ -91,15 +121,36 @@
               <span class="career-inline">いまは <strong id="careerTitle">（まだなし）</strong></span>
             </span><br />
             <span class="career-sub" id="careerNextTitle"></span><br />
-            <span class="career-line-equip">
-              <button type="button" class="career-open-btn" id="openEquipsBtn">装備</button>
-              <span class="career-inline career-equip" id="careerEquipSummary"></span>
-            </span>
+            <span class="career-line-equip career-equip--hint">装備の変更はホームの「装備」から</span>
           </p>
         </div>
       </div>
       <button type="button" class="primary" id="startBtn">1分タイムアタックをはじめる</button>
       <button type="button" class="ghost" id="openRankingBtn">このモードのトップ10を見る</button>
+    </section>
+
+    <!-- 装備モード：3つまで装着 -->
+    <section class="panel equip-hub-panel hidden" id="equipHubPanel" aria-labelledby="equip-hub-heading">
+      <div class="sub-head">
+        <button type="button" class="ghost small back-home-btn" id="backHomeFromEquipBtn">← ホーム</button>
+        <h2 id="equip-hub-heading">装備</h2>
+      </div>
+      <p class="muted" id="equipHubHint"></p>
+      <p class="equip-hub-career">
+        累計ポイント：<strong id="equipHubPoints">0</strong> pt（<strong>2000</strong> pt ごとに解放）　／　装着 <strong id="equipHubCount">0</strong>／3
+      </p>
+      <div class="equip-hub-body career-modal__panel career-modal__panel--ff5" id="equipHubBody"></div>
+      <p class="muted equip-hub-note">アイコンをタップして ON／OFF。同時に付けられるのは<strong>3つまで</strong>です。</p>
+    </section>
+
+    <!-- 話モード：章を選ぶ -->
+    <section class="panel story-menu-panel hidden" id="storyMenuPanel" aria-labelledby="story-menu-heading">
+      <div class="sub-head">
+        <button type="button" class="ghost small back-home-btn" id="backHomeFromStoryBtn">← ホーム</button>
+        <h2 id="story-menu-heading">話モード</h2>
+      </div>
+      <p class="muted">お題を<strong>正確に・速く</strong>打つと敵に大ダメージ。ミスや時間切れはごまちゃんがダメージを受けます。章を選んで冒険をはじめましょう。</p>
+      <ul class="story-chapter-list" id="storyChapterList"></ul>
     </section>
 
     <section class="stage-wrap" id="stageWrap" aria-live="polite">
@@ -226,7 +277,68 @@
       <p id="rankMessage"></p>
       <div class="buttons">
         <button type="button" class="primary" id="againBtn">同じ設定でもう一回</button>
-        <button type="button" class="ghost" id="backBtn">設定にもどる</button>
+        <button type="button" class="ghost" id="backBtn">練習にもどる</button>
+      </div>
+    </section>
+
+    <!-- 話モード：バトル画面 -->
+    <section class="story-stage-wrap hidden" id="storyStageWrap" aria-live="polite">
+      <div class="story-scene" id="storyScene">
+        <div class="field-bg" aria-hidden="true"></div>
+        <div class="story-enemy" id="storyEnemy" aria-hidden="true">
+          <span class="story-enemy__sprite" id="storyEnemySprite"></span>
+          <span class="story-enemy__name" id="storyEnemyName"></span>
+        </div>
+        <div class="bunny bunny--side bunny--story" id="storyBunny" aria-hidden="true">
+          <div class="bunny-gear" id="storyBunnyGear" aria-hidden="true"></div>
+          <div class="bunny-pose bunny-pose--sit">
+            <span class="bunny-tail"></span>
+            <span class="bunny-haunch"></span>
+            <span class="bunny-hind-thigh"></span>
+            <span class="bunny-hind-paw"></span>
+            <span class="bunny-body"></span>
+            <span class="bunny-belly-highlight"></span>
+            <span class="bunny-neck"></span>
+            <span class="bunny-fore-thigh"></span>
+            <span class="bunny-fore-paw"></span>
+            <span class="bunny-fore-toe"></span>
+            <span class="bunny-head">
+              <span class="bunny-ear bunny-ear--rear"></span>
+              <span class="bunny-ear bunny-ear--front"></span>
+              <span class="bunny-eye"><span class="bunny-eye-highlight"></span></span>
+              <span class="bunny-whiskers"></span>
+              <span class="bunny-nose"></span>
+              <span class="bunny-nose-shine"></span>
+              <span class="bunny-cheeks" aria-hidden="true"></span>
+            </span>
+          </div>
+        </div>
+        <div class="story-phrase-card" id="storyPhraseCard">
+          <p class="story-phrase-kanji" id="storyPhraseText" lang="ja"></p>
+          <div class="story-phrase-romaji">
+            <span id="storyTargetLine"></span><span id="storyCaret" class="caret">丨</span>
+          </div>
+        </div>
+      </div>
+      <section class="story-hud-panel" aria-label="話モードの状態">
+        <p class="story-dialog" id="storyDialog"></p>
+        <div class="story-hud-row">
+          <div><span class="hud-label">ごまちゃん</span> <strong id="storyPlayerHp">100</strong>／100</div>
+          <div><span class="hud-label">敵</span> <strong id="storyEnemyHp">0</strong></div>
+          <div><span class="hud-label">お題</span> <strong id="storyPhraseTimer">5.0</strong> 秒</div>
+        </div>
+        <p class="input-hint story-input-hint">ローマ字だけ打ってください（IME は英字）。<strong>速く打ち終えるほどダメージ大</strong>。ミス・時間切れでごまちゃんがダメージを受けます。</p>
+        <input id="storyGhostInput" class="ghost-input" type="text" lang="en" inputmode="latin" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="話モード用キー入力" />
+        <button type="button" class="ghost small" id="quitStoryBtn">冒険をやめる</button>
+      </section>
+    </section>
+
+    <section class="panel story-result-panel hidden" id="storyResultPanel">
+      <h2 id="storyResultHeading">章クリア！</h2>
+      <p class="story-result-text" id="storyResultText"></p>
+      <div class="buttons">
+        <button type="button" class="primary" id="storyContinueBtn">つぎへ</button>
+        <button type="button" class="ghost" id="storyBackHomeBtn">ホームにもどる</button>
       </div>
     </section>
 

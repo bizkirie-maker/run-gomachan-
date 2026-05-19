@@ -1,22 +1,22 @@
-# AWS Amplify Hosting（Gen1）— 静的サイト
-# コンソールの「ビルド設定」が「buildspec をリポジトリから読む」になっているか確認してください。
-# アプリの「ルートディレクトリ」は index.html があるリポジトリのルートにしてください（サブフォルダ指定だと MissingBuildArtifacts になりやすいです）。
+# AWS Amplify Hosting — 静的サイト（ビルド不要）
+# Amplify コンソール: アプリの「ルートディレクトリ」は空欄または /（index.html があるリポジトリのルート）
+# ビルド設定: リポジトリの amplify.yml を使用
 version: 1
 frontend:
   phases:
-    preBuild:
-      commands:
-        - echo "=== preBuild ===" && pwd && ls -la
     build:
       commands:
-        - echo "static site - no compile"
-        - test -f index.html && test -f styles.css && test -f game.js || (echo "ERROR: index.html / styles.css / game.js が見つかりません。Amplify のルートディレクトリ設定を確認してください。" && exit 1)
-    postBuild:
-      commands:
-        - echo "=== postBuild OK ==="
+        - echo "=== static site deploy ==="
+        - pwd
+        - ls -la
+        - |
+          if [ ! -f index.html ] || [ ! -f styles.css ] || [ ! -f game.js ]; then
+            echo "ERROR: index.html / styles.css / game.js がこのディレクトリにありません。"
+            echo "Amplify の「ルートディレクトリ」がサブフォルダになっていないか確認してください。"
+            exit 1
+          fi
+        - echo "=== files OK ==="
   artifacts:
     baseDirectory: .
     files:
-      - index.html
-      - styles.css
-      - game.js
+      - "**/*"
