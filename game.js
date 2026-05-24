@@ -400,58 +400,91 @@ const RABBIT_TITLES = [
   "光速もふターボ",
 ];
 
-/** 話モード：章数（試作品） */
+/** 話モード：桃太郎タイピング風（全200章） */
 const STORY_CHAPTER_COUNT = 200;
 
-const STORY_ENEMY_SPRITES = ["bug", "nut", "carrot", "dandelion"];
+/** 桃太郎の仲間（章クリア数で解放） */
+const STORY_COMPANIONS = [
+  { id: "dog", name: "犬", icon: "🐕", unlockClear: 20, attackBonus: 2, defenseSecBonus: 0 },
+  { id: "monkey", name: "サル", icon: "🐒", unlockClear: 50, attackBonus: 1, defenseSecBonus: 0.8 },
+  { id: "pheasant", name: "キジ", icon: "🐦", unlockClear: 85, attackBonus: 0, defenseSecBonus: 0, healOnPerfect: 8 },
+];
+
+const STORY_ENEMY_SPRITES = ["bug", "nut", "carrot", "dandelion", "oni"];
 const STORY_ENEMY_NAMES = [
-  "まるむし",
-  "はなどんぐり",
-  "にんじんナイト",
-  "たんぽぽ魔人",
-  "くもぐも",
-  "石ころゴーレム",
-  "風の精霊",
-  "菜の花の精",
-  "ごま団子ゴブリン",
-  "耳とらの番人",
+  "妖団子",
+  "わらびもち魔",
+  "きびだんご邪鬼",
+  "あまいあやかし",
+  "かたいせんべい",
+  "つぶあんぐり",
+  "にんじん小鬼",
+  "たんぽぽ妖",
+  "ごまだんご王",
+  "野菜の大将",
 ];
 const STORY_LOCATIONS = [
-  "菜の花畑",
-  "にんじん畑",
+  "花畑の村",
+  "きびだんご街道",
+  "菜の花原",
+  "にんじん坂",
   "たんぽぽ草原",
-  "ごま団子坂",
+  "ごま団子森",
   "耳とらの森",
-  "風の丘",
-  "池のほとり",
-  "学校裏庭",
-  "図書館前",
-  "星見台",
+  "鬼ヶ島手前",
+  "鬼ヶ島",
+  "桃の木の下",
 ];
+
+function storyArcLabel(chapterIdx) {
+  if (chapterIdx < 30) return "第1幕：旅立ち";
+  if (chapterIdx < 70) return "第2幕：仲間を集める";
+  if (chapterIdx < 150) return "第3幕：鬼ヶ島への道";
+  return "第4幕：鬼退治";
+}
+
+function buildStoryIntro(n, loc, enemyName) {
+  if (n === 1) return "花畑の村に、大きな菜の花からごまちゃんが生まれました。妖野菜を退治する旅に出ます。";
+  if (n === 20) return "旅の途中、犬がきびだんごをねだってきました。「つれていって」——犬が仲間になりました！";
+  if (n === 50) return "猿が木の上から。「きびだんごくれ」——サルが仲間になりました！";
+  if (n === 85) return "キジが空から舞い降りて。「ぼくも行く」——キジが仲間になりました！";
+  if (n >= 190) return `いよいよ鬼ヶ島。${enemyName}が 最後の壁を 守っています。`;
+  return `ごまちゃん一行は「${loc}」へ。${enemyName}が 道を ふさいでいます。`;
+}
+
+function buildStoryOutro(n, loc) {
+  if (n === 200) return "鬼を退治し、花畑の村に平和が戻りました。ごまちゃんは英雄です！";
+  if (n === 20 || n === 50 || n === 85) return "仲間が増え、旅は続きます。つぎの章へ進みましょう。";
+  return `第${n}章クリア！ ${loc}を越え、鬼ヶ島へ一歩近づきました。`;
+}
 
 function buildStoryChapters(count) {
   const chapters = [];
   for (let i = 0; i < count; i += 1) {
     const n = i + 1;
     const loc = STORY_LOCATIONS[i % STORY_LOCATIONS.length];
-    const enemyCount = 1 + (i % 3);
+    const enemyCount = n >= 180 ? 2 + (i % 2) : 1 + (i % 3);
     const enemies = [];
     for (let e = 0; e < enemyCount; e += 1) {
-      const name = STORY_ENEMY_NAMES[(i + e) % STORY_ENEMY_NAMES.length];
-      const sprite = STORY_ENEMY_SPRITES[(i + e) % STORY_ENEMY_SPRITES.length];
+      const baseName = STORY_ENEMY_NAMES[(i + e) % STORY_ENEMY_NAMES.length];
+      const sprite =
+        n >= 195 && e === enemyCount - 1 ? "oni" : STORY_ENEMY_SPRITES[(i + e) % (STORY_ENEMY_SPRITES.length - 1)];
       enemies.push({
-        name: enemyCount > 1 ? `${name}${e + 1}` : name,
+        name: enemyCount > 1 ? `${baseName}${e + 1}` : baseName,
         sprite,
-        hp: 24 + Math.floor(i * 1.15) + e * 10,
-        phraseSec: Math.max(3, 6 - Math.floor(i / 50)),
+        hp: 22 + Math.floor(i * 1.1) + e * 12,
+        phraseSec: Math.max(3, 6 - Math.floor(i / 45)),
+        defenseSec: Math.max(2.5, 4.5 - Math.floor(i / 60)),
       });
     }
+    const arc = storyArcLabel(i);
     chapters.push({
       id: `ch${n}`,
       title: `第${n}章　${loc}`,
-      intro: `ごまちゃんは「${loc}」へ向かいました。${enemies[0].name}が 道を ふさいでいます。`,
+      arc,
+      intro: buildStoryIntro(n, loc, enemies[0].name),
       enemies,
-      outro: `第${n}章を クリア！ ごまちゃんは ${loc}を 越え、つぎの ぼうけんへ 進みます。`,
+      outro: buildStoryOutro(n, loc),
     });
   }
   return chapters;
@@ -476,9 +509,14 @@ const storyState = {
   romajiCandidates: [],
   typedRomaji: "",
   phraseSec: 5,
+  defenseSec: 4,
   raf: 0,
   typosThisPhrase: 0,
   phraseBusy: false,
+  /** attack | defense — 桃太郎タイピング風 */
+  phase: "attack",
+  attackCount: 0,
+  currentEnemy: null,
 };
 
 const state = {
@@ -847,6 +885,15 @@ function updateBonusKeyHint() {
 
 function randomInt(min, max) {
   return min + Math.floor(Math.random() * (max - min + 1));
+}
+
+function pickStoryDefensePhrase() {
+  const candidates = PHRASES.filter((p) => {
+    const n = yomiCharCount(p.yomi);
+    return n >= 2 && n <= 5;
+  });
+  if (candidates.length > 0) return candidates[randomInt(0, candidates.length - 1)];
+  return PHRASES[randomInt(0, Math.min(20, PHRASES.length - 1))];
 }
 
 function pickStoryPhrase() {
@@ -1521,25 +1568,76 @@ function openEquipsModal() {
   if (m) m.classList.remove("hidden");
 }
 
-/* ── 話モード ── */
+/* ── 話モード（桃太郎タイピング風） ── */
 
-function setStoryDialog(text) {
+function getUnlockedCompanions() {
+  const cleared = loadStoryProgress();
+  return STORY_COMPANIONS.filter((c) => cleared >= c.unlockClear);
+}
+
+function renderStoryCompanionStrip() {
+  const strip = $("storyCompanionStrip");
+  const party = $("storyParty");
+  const cleared = loadStoryProgress();
+  const html = STORY_COMPANIONS.map((c) => {
+    const on = cleared >= c.unlockClear;
+    return `<span class="momo-companion${on ? " is-on" : ""}" title="${on ? `${c.name}（仲間）` : `第${c.unlockClear}章クリアで仲間`}">${c.icon} ${c.name}</span>`;
+  }).join("");
+  if (strip) strip.innerHTML = html;
+  if (party) party.innerHTML = html;
+}
+
+function storyCompanionAttackBonus() {
+  return getUnlockedCompanions().reduce((s, c) => s + (c.attackBonus || 0), 0);
+}
+
+function storyCompanionDefenseSecBonus() {
+  return getUnlockedCompanions().reduce((s, c) => s + (c.defenseSecBonus || 0), 0);
+}
+
+function setStoryDialog(text, speaker = "ごまちゃん") {
   const el = $("storyDialog");
+  const sp = $("storySpeakerName");
   if (el) el.textContent = text;
+  if (sp) sp.textContent = speaker;
+}
+
+function updateStoryPhaseUi() {
+  const badge = $("storyPhaseBadge");
+  const card = $("storyPhraseCard");
+  if (!badge) return;
+  const isDef = storyState.phase === "defense";
+  badge.textContent = isDef ? "ぼうぎょ！" : "こうげき！";
+  badge.classList.toggle("momo-phase-badge--attack", !isDef);
+  badge.classList.toggle("momo-phase-badge--defense", isDef);
+  if (card) {
+    card.classList.toggle("momo-phrase-card--defense", isDef);
+    card.classList.toggle("momo-phrase-card--attack", !isDef);
+  }
 }
 
 function updateStoryHud() {
   const php = $("storyPlayerHp");
   const ehp = $("storyEnemyHp");
+  const pBar = $("storyPlayerHpBar");
+  const eBar = $("storyEnemyHpBar");
+  const eNameHud = $("storyEnemyNameHud");
+  const pPct = Math.max(0, (storyState.playerHp / storyState.playerMaxHp) * 100);
+  const ePct =
+    storyState.enemyMaxHp > 0 ? Math.max(0, (storyState.enemyHp / storyState.enemyMaxHp) * 100) : 0;
   if (php) php.textContent = String(Math.max(0, storyState.playerHp));
   if (ehp) ehp.textContent = String(Math.max(0, storyState.enemyHp));
+  if (pBar) pBar.style.width = `${pPct}%`;
+  if (eBar) eBar.style.width = `${ePct}%`;
+  if (eNameHud && storyState.currentEnemy) eNameHud.textContent = storyState.currentEnemy.name;
 }
 
 function renderStoryChapterList() {
   const list = $("storyChapterList");
   const meta = $("storyMenuMeta");
+  renderStoryCompanionStrip();
   if (meta) {
-    meta.textContent = `全 ${STORY_CHAPTER_COUNT} 章。クリア済み ${loadStoryProgress()} 章。`;
+    meta.textContent = `旅のしおり — 全 ${STORY_CHAPTER_COUNT} 章。クリア ${loadStoryProgress()} 章。`;
   }
   if (!list) return;
   const cleared = loadStoryProgress();
@@ -1550,10 +1648,10 @@ function renderStoryChapterList() {
     li.className = `story-chapter-item${locked ? " is-locked" : ""}${i < cleared ? " is-cleared" : ""}`;
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.className = "story-chapter-btn";
+    btn.className = "story-chapter-btn momo-chapter-btn";
     btn.disabled = locked;
-    const badge = i < cleared ? "クリア済み" : locked ? "ロック中" : `${ch.enemies.length} 体の敵`;
-    btn.innerHTML = `<strong>${escapeHtml(ch.title)}</strong><span>${escapeHtml(badge)}</span>`;
+    const badge = i < cleared ? "クリア済み" : locked ? "ロック" : ch.arc;
+    btn.innerHTML = `<strong>${escapeHtml(ch.title)}</strong><span>${escapeHtml(badge)} — ${ch.enemies.length} 戦</span>`;
     if (!locked) btn.addEventListener("click", () => startStoryChapter(i));
     li.appendChild(btn);
     list.appendChild(li);
@@ -1563,10 +1661,12 @@ function renderStoryChapterList() {
 function beginStoryBattle() {
   storyState.active = true;
   storyState.phraseBusy = false;
+  storyState.phase = "attack";
   hideAllMainScreens();
   $("storyStageWrap")?.classList.remove("hidden");
   $("storyResultPanel")?.classList.add("hidden");
   document.body.classList.add("is-story");
+  renderStoryCompanionStrip();
   attachStoryKeyCapture();
   refreshBunnyEquipVisual();
   void resumeGomaAudio();
@@ -1581,6 +1681,9 @@ function startStoryChapter(chapterIdx) {
   storyState.enemyIdx = 0;
   storyState.playerHp = 100;
   storyState.playerMaxHp = 100;
+  storyState.attackCount = 0;
+  const label = $("storyChapterLabel");
+  if (label) label.textContent = ch.title;
   setStoryDialog(ch.intro);
   beginStoryBattle();
   window.setTimeout(() => {
@@ -1592,9 +1695,12 @@ function startStoryEnemy() {
   const ch = STORY_CHAPTERS[storyState.chapterIdx];
   const enemy = ch.enemies[storyState.enemyIdx];
   if (!enemy) return;
+  storyState.currentEnemy = enemy;
   storyState.enemyMaxHp = enemy.hp;
   storyState.enemyHp = enemy.hp;
   storyState.phraseSec = enemy.phraseSec;
+  storyState.defenseSec = enemy.defenseSec || Math.max(2.5, enemy.phraseSec - 1);
+  storyState.attackCount = 0;
   const nameEl = $("storyEnemyName");
   const spriteEl = $("storyEnemySprite");
   if (nameEl) nameEl.textContent = enemy.name;
@@ -1602,17 +1708,16 @@ function startStoryEnemy() {
     spriteEl.className = "story-enemy__sprite";
     spriteEl.classList.add(`story-enemy__sprite--${enemy.sprite}`);
   }
-  setStoryDialog(`${enemy.name} があらわれた！ お題を打って攻撃しよう。`);
+  setStoryDialog(`${enemy.name} があらわれた！ ローマ字を打ってこうげき！`, "ナレーション");
   updateStoryHud();
-  storyNewPhrase();
+  storyStartAttackPhrase();
   cancelAnimationFrame(storyState.raf);
   storyState.raf = requestAnimationFrame(storyLoop);
 }
 
-function storyNewPhrase() {
-  storyState.phraseBusy = false;
-  storyState.currentPhrase = pickStoryPhrase();
-  const baseRomaji = yomiToRomaji(storyState.currentPhrase.yomi);
+function storySetupPhrase(phrase) {
+  storyState.currentPhrase = phrase;
+  const baseRomaji = yomiToRomaji(phrase.yomi);
   storyState.targetChars = [...baseRomaji];
   storyState.romajiCandidates = buildRomajiVariants(baseRomaji);
   storyState.typedRomaji = "";
@@ -1621,12 +1726,30 @@ function storyNewPhrase() {
   storyState.phraseStartedAt = now;
   storyState.phraseEndAt = now + storyState.phraseSec * 1000;
   const textEl = $("storyPhraseText");
-  if (textEl) {
-    textEl.innerHTML = phraseRubyHtml(storyState.currentPhrase.text, storyState.currentPhrase.yomi);
-  }
+  if (textEl) textEl.innerHTML = phraseRubyHtml(phrase.text, phrase.yomi);
   storyRenderTypeline();
   const inp = $("storyGhostInput");
   if (inp) inp.value = "";
+}
+
+function storyStartAttackPhrase() {
+  storyState.phase = "attack";
+  storyState.phraseBusy = false;
+  storyState.phraseSec = storyState.currentEnemy?.phraseSec || 5;
+  updateStoryPhaseUi();
+  storySetupPhrase(pickStoryPhrase());
+}
+
+function storyStartDefensePhrase() {
+  storyState.phase = "defense";
+  storyState.phraseBusy = false;
+  let sec = storyState.currentEnemy?.defenseSec || 4;
+  sec += storyCompanionDefenseSecBonus();
+  storyState.phraseSec = sec;
+  updateStoryPhaseUi();
+  const enemy = storyState.currentEnemy;
+  setStoryDialog(`${enemy?.name || "敵"}のこうげき！ 打ってぼうぎょ！`, enemy?.name || "敵");
+  storySetupPhrase(pickStoryDefensePhrase());
 }
 
 function storyRenderTypeline() {
@@ -1634,32 +1757,64 @@ function storyRenderTypeline() {
     storyState.romajiCandidates.find((s) => s.startsWith(storyState.typedRomaji)) ||
     storyState.targetChars.join("");
   const rest = guide.slice(storyState.typedRomaji.length);
+  const head = rest.slice(0, 1);
+  const tail = rest.slice(1);
   const line = $("storyTargetLine");
-  if (line) line.innerHTML = `<span class="rest">${escapeHtml(rest)}</span>`;
+  if (line) {
+    line.innerHTML = head
+      ? `<span class="momo-key-next">${escapeHtml(head)}</span><span class="rest">${escapeHtml(tail)}</span>`
+      : `<span class="rest">${escapeHtml(rest)}</span>`;
+  }
   const caret = $("storyCaret");
-  if (caret) caret.classList.remove("caret--hide");
+  if (caret) caret.classList.toggle("caret--hide", rest.length === 0);
 }
 
-function storyOnPhraseSuccess() {
+function storyOnAttackSuccess() {
   if (storyState.phraseBusy) return;
   storyState.phraseBusy = true;
+  storyState.attackCount += 1;
   const remain = Math.max(0, (storyState.phraseEndAt - performance.now()) / 1000);
   const speedBonus = Math.floor(remain * 3);
   const accuracyBonus = storyState.typosThisPhrase === 0 ? 6 : 0;
   const lenBonus = Math.floor(storyState.targetChars.length / 3);
-  const dmg = 8 + speedBonus + accuracyBonus + lenBonus;
+  const companion = storyCompanionAttackBonus();
+  const dmg = 8 + speedBonus + accuracyBonus + lenBonus + companion;
   storyState.enemyHp = Math.max(0, storyState.enemyHp - dmg);
-  const enemy = STORY_CHAPTERS[storyState.chapterIdx].enemies[storyState.enemyIdx];
-  setStoryDialog(
-    `${enemy.name} に ${dmg} ダメージ！${speedBonus >= 6 ? " 速い！" : ""}${accuracyBonus ? " ミスなしボーナス！" : ""}`
-  );
+  const enemy = storyState.currentEnemy;
+  let msg = `${enemy?.name || "敵"}に ${dmg} ダメージ！`;
+  if (companion > 0) msg += " 仲間の援護！";
+  if (speedBonus >= 6) msg += " 速攻！";
+  setStoryDialog(msg, "ごまちゃん");
   updateStoryHud();
   flashStoryEnemyHit();
   if (storyState.enemyHp <= 0) {
     window.setTimeout(() => storyOnEnemyDefeated(), 600);
     return;
   }
-  window.setTimeout(() => storyNewPhrase(), 450);
+  window.setTimeout(() => storyStartDefensePhrase(), 500);
+}
+
+function storyOnDefenseSuccess() {
+  if (storyState.phraseBusy) return;
+  storyState.phraseBusy = true;
+  if (storyState.typosThisPhrase === 0) {
+    const heal = getUnlockedCompanions().reduce((s, c) => s + (c.healOnPerfect || 0), 0);
+    if (heal > 0) {
+      storyState.playerHp = Math.min(storyState.playerMaxHp, storyState.playerHp + heal);
+      setStoryDialog(`ぼうぎょ成功！ キジの加護で ${heal} 回復！`, "ごまちゃん");
+    } else {
+      setStoryDialog("ぼうぎょ成功！ ダメージを防いだ！", "ごまちゃん");
+    }
+  } else {
+    setStoryDialog("ぼうぎょ成功！ ダメージは小さかった。", "ごまちゃん");
+  }
+  updateStoryHud();
+  window.setTimeout(() => storyStartAttackPhrase(), 550);
+}
+
+function storyOnPhraseSuccess() {
+  if (storyState.phase === "defense") storyOnDefenseSuccess();
+  else storyOnAttackSuccess();
 }
 
 function flashStoryEnemyHit() {
@@ -1678,13 +1833,13 @@ function storyOnEnemyDefeated() {
     finishStoryChapter();
     return;
   }
-  setStoryDialog(`${defeated.name} をたおした！ つぎの敵が現れた…`);
+  setStoryDialog(`${defeated.name} をたおした！ つぎの敵が現れた…`, "ナレーション");
   window.setTimeout(() => startStoryEnemy(), 1100);
 }
 
-function storyPlayerHit(dmg, msg) {
+function storyPlayerHit(dmg, msg, speaker = "ナレーション") {
   storyState.playerHp = Math.max(0, storyState.playerHp - dmg);
-  setStoryDialog(`${msg} ごまちゃんが ${dmg} ダメージを受けた。`);
+  setStoryDialog(`${msg} ごまちゃんは ${dmg} ダメージ。`, speaker);
   updateStoryHud();
   const bunny = $("storyBunny");
   if (bunny) {
@@ -1699,19 +1854,30 @@ function storyPlayerHit(dmg, msg) {
 
 function storyOnTypo() {
   storyState.typosThisPhrase += 1;
-  storyPlayerHit(5, "打ち間違い！");
-  if (storyState.playerHp <= 0) return;
-  storyState.typedRomaji = "";
-  storyState.romajiCandidates = buildRomajiVariants(storyState.targetChars.join(""));
-  storyRenderTypeline();
+  if (storyState.phase === "defense") {
+    storyPlayerHit(12, "ぼうぎょしっぱい！");
+    if (storyState.playerHp <= 0) return;
+    storyState.typedRomaji = "";
+    storyState.romajiCandidates = buildRomajiVariants(storyState.targetChars.join(""));
+    storyRenderTypeline();
+    return;
+  }
+  setStoryDialog("打ち間違い！ こうげきは外れた…", "ごまちゃん");
+  window.setTimeout(() => storyStartDefensePhrase(), 450);
 }
 
 function storyOnTimeout() {
   if (storyState.phraseBusy) return;
   storyState.phraseBusy = true;
-  storyPlayerHit(10, "時間切れ！");
+  if (storyState.phase === "defense") {
+    storyPlayerHit(14, "ぼうぎょ間に合わず！");
+    if (storyState.playerHp <= 0) return;
+    window.setTimeout(() => storyStartAttackPhrase(), 500);
+    return;
+  }
+  storyPlayerHit(8, "時間切れ！");
   if (storyState.playerHp <= 0) return;
-  window.setTimeout(() => storyNewPhrase(), 500);
+  window.setTimeout(() => storyStartDefensePhrase(), 450);
 }
 
 function storyOnDefeat() {

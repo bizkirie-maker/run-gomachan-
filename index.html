@@ -57,7 +57,7 @@
         <button type="button" class="mode-card mode-card--story" id="goStoryBtn">
           <span class="mode-card__icon" aria-hidden="true">📖</span>
           <span class="mode-card__title">話</span>
-          <span class="mode-card__desc">正確さと速さで敵をたおし、物語をすすめる</span>
+          <span class="mode-card__desc">桃太郎タイピング風。攻撃と防御のローマ字で妖野菜を退治</span>
         </button>
       </div>
       <p class="home-career muted">
@@ -143,15 +143,16 @@
       <p class="muted equip-hub-note">ボタンを押すと装着 ON／OFF。同時に付けられるのは<strong>3つまで</strong>です。最初の「にんじんリボン冠」は最初から使えます。</p>
     </section>
 
-    <!-- 話モード：章を選ぶ -->
+    <!-- 話モード：旅のしおり（章選択） -->
     <section class="panel story-menu-panel hidden" id="storyMenuPanel" aria-labelledby="story-menu-heading">
       <div class="sub-head">
         <button type="button" class="ghost small back-home-btn" id="backHomeFromStoryBtn">← ホーム</button>
-        <h2 id="story-menu-heading">話モード</h2>
+        <h2 id="story-menu-heading">ごまちゃんももたろうタイピング</h2>
       </div>
-      <p class="muted">お題を<strong>正確に・速く</strong>打つと敵に大ダメージ。ミスや時間切れはごまちゃんがダメージを受けます。章を選んで冒険をはじめましょう。</p>
+      <p class="muted">「ココアの桃太郎タイピング」風の<strong>攻撃／防御</strong>バトルです。お題を打って敵をたおし、敵の攻撃は防御フェーズで打ち返して防ぎます。犬・サル・キジの仲間が旅の途中で加わります。</p>
+      <div class="momo-companion-strip" id="storyCompanionStrip" aria-label="仲間"></div>
       <p class="story-menu-meta muted" id="storyMenuMeta"></p>
-      <ul class="story-chapter-list" id="storyChapterList"></ul>
+      <ul class="story-chapter-list momo-chapter-scroll" id="storyChapterList"></ul>
     </section>
 
     <section class="stage-wrap" id="stageWrap" aria-live="polite">
@@ -282,56 +283,77 @@
       </div>
     </section>
 
-    <!-- 話モード：バトル画面 -->
+    <!-- 話モード：桃太郎風バトル -->
     <section class="story-stage-wrap hidden" id="storyStageWrap" aria-live="polite">
-      <div class="story-scene" id="storyScene">
-        <div class="field-bg" aria-hidden="true"></div>
-        <div class="story-enemy" id="storyEnemy" aria-hidden="true">
-          <span class="story-enemy__sprite" id="storyEnemySprite"></span>
-          <span class="story-enemy__name" id="storyEnemyName"></span>
+      <div class="momo-battle">
+        <div class="momo-battle-head">
+          <span class="momo-chapter-label" id="storyChapterLabel">第1章</span>
+          <span class="momo-phase-badge momo-phase-badge--attack" id="storyPhaseBadge">こうげき！</span>
         </div>
-        <div class="bunny bunny--side bunny--story" id="storyBunny" aria-hidden="true">
-          <div class="bunny-gear" id="storyBunnyGear" aria-hidden="true"></div>
-          <div class="bunny-pose bunny-pose--sit">
-            <span class="bunny-tail"></span>
-            <span class="bunny-haunch"></span>
-            <span class="bunny-hind-thigh"></span>
-            <span class="bunny-hind-paw"></span>
-            <span class="bunny-body"></span>
-            <span class="bunny-belly-highlight"></span>
-            <span class="bunny-neck"></span>
-            <span class="bunny-fore-thigh"></span>
-            <span class="bunny-fore-paw"></span>
-            <span class="bunny-fore-toe"></span>
-            <span class="bunny-head">
-              <span class="bunny-ear bunny-ear--rear"></span>
-              <span class="bunny-ear bunny-ear--front"></span>
-              <span class="bunny-eye"><span class="bunny-eye-highlight"></span></span>
-              <span class="bunny-whiskers"></span>
-              <span class="bunny-nose"></span>
-              <span class="bunny-nose-shine"></span>
-              <span class="bunny-cheeks" aria-hidden="true"></span>
-            </span>
+        <div class="story-scene momo-scene" id="storyScene">
+          <div class="field-bg momo-field-bg" aria-hidden="true"></div>
+          <div class="momo-party" id="storyParty" aria-label="仲間"></div>
+          <div class="story-enemy momo-enemy" id="storyEnemy" aria-hidden="true">
+            <span class="story-enemy__sprite" id="storyEnemySprite"></span>
+            <span class="story-enemy__name" id="storyEnemyName"></span>
+          </div>
+          <div class="bunny bunny--side bunny--story" id="storyBunny" aria-hidden="true">
+            <div class="bunny-gear" id="storyBunnyGear" aria-hidden="true"></div>
+            <div class="bunny-pose bunny-pose--sit">
+              <span class="bunny-tail"></span>
+              <span class="bunny-haunch"></span>
+              <span class="bunny-hind-thigh"></span>
+              <span class="bunny-hind-paw"></span>
+              <span class="bunny-body"></span>
+              <span class="bunny-belly-highlight"></span>
+              <span class="bunny-neck"></span>
+              <span class="bunny-fore-thigh"></span>
+              <span class="bunny-fore-paw"></span>
+              <span class="bunny-fore-toe"></span>
+              <span class="bunny-head">
+                <span class="bunny-ear bunny-ear--rear"></span>
+                <span class="bunny-ear bunny-ear--front"></span>
+                <span class="bunny-eye"><span class="bunny-eye-highlight"></span></span>
+                <span class="bunny-whiskers"></span>
+                <span class="bunny-nose"></span>
+                <span class="bunny-nose-shine"></span>
+                <span class="bunny-cheeks" aria-hidden="true"></span>
+              </span>
+            </div>
+          </div>
+          <div class="story-phrase-card momo-phrase-card" id="storyPhraseCard">
+            <p class="story-phrase-kanji" id="storyPhraseText" lang="ja"></p>
+            <div class="story-phrase-romaji momo-romaji-line">
+              <span id="storyTargetLine"></span><span id="storyCaret" class="caret momo-caret">丨</span>
+            </div>
           </div>
         </div>
-        <div class="story-phrase-card" id="storyPhraseCard">
-          <p class="story-phrase-kanji" id="storyPhraseText" lang="ja"></p>
-          <div class="story-phrase-romaji">
-            <span id="storyTargetLine"></span><span id="storyCaret" class="caret">丨</span>
-          </div>
+        <div class="momo-rpg-window">
+          <p class="momo-rpg-window__speaker" id="storySpeakerName">ごまちゃん</p>
+          <p class="story-dialog momo-dialog" id="storyDialog"></p>
         </div>
+        <section class="momo-hud-panel" aria-label="バトル状態">
+          <div class="momo-hp-row">
+            <div class="momo-hp-block">
+              <span class="momo-hp-label">ごまちゃん</span>
+              <div class="momo-hp-bar" aria-hidden="true"><div class="momo-hp-fill momo-hp-fill--ally" id="storyPlayerHpBar"></div></div>
+              <span class="momo-hp-num"><strong id="storyPlayerHp">100</strong>／100</span>
+            </div>
+            <div class="momo-hp-block">
+              <span class="momo-hp-label" id="storyEnemyNameHud">敵</span>
+              <div class="momo-hp-bar" aria-hidden="true"><div class="momo-hp-fill momo-hp-fill--enemy" id="storyEnemyHpBar"></div></div>
+              <span class="momo-hp-num"><strong id="storyEnemyHp">0</strong></span>
+            </div>
+            <div class="momo-timer-block">
+              <span class="momo-hp-label">残り</span>
+              <span class="momo-hp-num"><strong id="storyPhraseTimer">5.0</strong> 秒</span>
+            </div>
+          </div>
+          <p class="input-hint story-input-hint">ローマ字だけ（IME は英字）。<strong>こうげき</strong>で敵にダメージ、<strong>ぼうぎょ</strong>でダメージを防ぐ。速く正確に打つほど有利です。</p>
+          <input id="storyGhostInput" class="ghost-input" type="text" lang="en" inputmode="latin" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="話モード用キー入力" />
+          <button type="button" class="ghost small" id="quitStoryBtn">旅をやめる</button>
+        </section>
       </div>
-      <section class="story-hud-panel" aria-label="話モードの状態">
-        <p class="story-dialog" id="storyDialog"></p>
-        <div class="story-hud-row">
-          <div><span class="hud-label">ごまちゃん</span> <strong id="storyPlayerHp">100</strong>／100</div>
-          <div><span class="hud-label">敵</span> <strong id="storyEnemyHp">0</strong></div>
-          <div><span class="hud-label">お題</span> <strong id="storyPhraseTimer">5.0</strong> 秒</div>
-        </div>
-        <p class="input-hint story-input-hint">ローマ字だけ打ってください（IME は英字）。<strong>速く打ち終えるほどダメージ大</strong>。ミス・時間切れでごまちゃんがダメージを受けます。</p>
-        <input id="storyGhostInput" class="ghost-input" type="text" lang="en" inputmode="latin" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="話モード用キー入力" />
-        <button type="button" class="ghost small" id="quitStoryBtn">冒険をやめる</button>
-      </section>
     </section>
 
     <section class="panel story-result-panel hidden" id="storyResultPanel">
