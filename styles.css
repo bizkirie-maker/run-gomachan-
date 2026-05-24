@@ -2176,6 +2176,16 @@ body.is-playing .bonus-key-hint {
   animation: story-enemy-shake 0.35s ease;
 }
 
+.story-enemy--attack {
+  animation: story-enemy-lunge 0.55s ease;
+}
+
+@keyframes story-enemy-lunge {
+  0%, 100% { transform: translateX(0) scale(1); }
+  35% { transform: translateX(-14px) scale(1.06); filter: brightness(1.15); }
+  60% { transform: translateX(4px) scale(0.98); }
+}
+
 @keyframes story-enemy-shake {
   0%, 100% { transform: translateX(0); }
   25% { transform: translateX(-8px); }
@@ -2240,6 +2250,26 @@ body.is-playing .bonus-key-hint {
   justify-content: space-between;
   gap: 0.75rem;
   padding: 0 0.15rem;
+}
+
+.momo-battle-head__left {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.momo-player-lv {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #1a5c2e;
+  background: linear-gradient(180deg, #e8f5e9, #c8e6c9);
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 2px 8px rgba(76, 175, 80, 0.2);
 }
 
 .momo-chapter-label {
@@ -2414,6 +2444,148 @@ body.is-playing .bonus-key-hint {
   border: 1px solid rgba(255, 255, 255, 0.55);
 }
 
+.momo-hp-bar--large {
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.65);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.momo-hp-bar--scene {
+  height: 12px;
+  min-width: 72px;
+  flex: 1;
+  border: 2px solid rgba(255, 255, 255, 0.75);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+.momo-hp-bar--hit {
+  animation: momo-hp-hit 0.45s ease;
+}
+
+@keyframes momo-hp-hit {
+  0%, 100% { filter: none; }
+  40% { filter: brightness(1.35) saturate(1.4); transform: scaleY(1.08); }
+}
+
+.momo-scene-hp {
+  position: absolute;
+  z-index: 6;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(255, 252, 248, 0.92);
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.momo-scene-hp--ally {
+  left: 4%;
+  top: 6%;
+  color: #2e7d32;
+}
+
+.momo-scene-hp--enemy {
+  position: relative;
+  left: auto;
+  top: auto;
+  flex-direction: column;
+  align-items: stretch;
+  width: min(140px, 38vw);
+  margin-bottom: 0.25rem;
+  border-radius: 12px;
+  padding: 0.4rem 0.5rem;
+}
+
+.momo-scene-hp__icon {
+  font-size: 1rem;
+  line-height: 1;
+  color: #e53935;
+}
+
+.momo-scene-hp__name {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-align: center;
+  margin-bottom: 0.15rem;
+}
+
+.momo-scene-hp__num {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.momo-enemy-atk {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  text-align: center;
+  color: rgba(61, 58, 54, 0.65);
+}
+
+.momo-enemy-atk.is-active {
+  color: #c62828;
+  animation: momo-atk-blink 0.7s ease-in-out infinite;
+}
+
+@keyframes momo-atk-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.55; }
+}
+
+.momo-combo-hint {
+  margin: 0 0 0.45rem;
+  min-height: 1.2em;
+  font-size: 0.88rem;
+  font-weight: 800;
+  color: #c62828;
+  text-align: center;
+}
+
+.momo-damage-popup {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  z-index: 20;
+  transform: translate(-50%, 0) scale(0.6);
+  opacity: 0;
+  pointer-events: none;
+  font-size: clamp(1.6rem, 6vw, 2.4rem);
+  font-weight: 900;
+  text-shadow: 0 2px 0 rgba(255, 255, 255, 0.9), 0 4px 12px rgba(0, 0, 0, 0.25);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+.momo-damage-popup--player {
+  color: #c62828;
+}
+
+.momo-damage-popup--enemy {
+  color: #ef6c00;
+}
+
+.momo-damage-popup.is-show {
+  opacity: 1;
+  transform: translate(-50%, -18px) scale(1);
+  animation: momo-dmg-float 0.85s ease forwards;
+}
+
+@keyframes momo-dmg-float {
+  0% { transform: translate(-50%, 0) scale(0.7); opacity: 0; }
+  20% { opacity: 1; transform: translate(-50%, -12px) scale(1.08); }
+  100% { transform: translate(-50%, -36px) scale(1); opacity: 0; }
+}
+
+.momo-hp-num--big {
+  font-size: 1.05rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
 .momo-hp-fill {
   height: 100%;
   width: 100%;
@@ -2423,6 +2595,16 @@ body.is-playing .bonus-key-hint {
 
 .momo-hp-fill--ally {
   background: linear-gradient(90deg, #81c784, #43a047);
+}
+
+.momo-hp-fill--ally.momo-hp-fill--low {
+  background: linear-gradient(90deg, #ffb74d, #f57c00);
+  animation: momo-hp-low-pulse 1s ease-in-out infinite;
+}
+
+@keyframes momo-hp-low-pulse {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.2); }
 }
 
 .momo-hp-fill--enemy {

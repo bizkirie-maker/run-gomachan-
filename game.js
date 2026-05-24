@@ -405,10 +405,15 @@ const STORY_CHAPTER_COUNT = 200;
 
 /** 桃太郎の仲間（章クリア数で解放） */
 const STORY_COMPANIONS = [
-  { id: "dog", name: "犬", icon: "🐕", unlockClear: 20, attackBonus: 2, defenseSecBonus: 0 },
-  { id: "monkey", name: "サル", icon: "🐒", unlockClear: 50, attackBonus: 1, defenseSecBonus: 0.8 },
-  { id: "pheasant", name: "キジ", icon: "🐦", unlockClear: 85, attackBonus: 0, defenseSecBonus: 0, healOnPerfect: 8 },
+  { id: "dog", name: "犬", icon: "🐕", unlockClear: 20, attackBonus: 1, defenseSecBonus: 0, hpBonus: 5 },
+  { id: "monkey", name: "サル", icon: "🐒", unlockClear: 50, attackBonus: 1, defenseSecBonus: 0.6, hpBonus: 3 },
+  { id: "pheasant", name: "キジ", icon: "🐦", unlockClear: 85, attackBonus: 0, defenseSecBonus: 0, hpBonus: 6, healOnPerfect: 3 },
 ];
+
+/** ココア風：最初 HP10 前後 → 章クリア・Lv でじわじわ増える */
+const STORY_HP_BASE = 10;
+const STORY_HP_PER_CLEAR = 2;
+const STORY_HP_PER_LEVEL = 4;
 
 const STORY_ENEMY_SPRITES = ["bug", "nut", "carrot", "dandelion", "oni"];
 const STORY_ENEMY_NAMES = [
@@ -472,9 +477,12 @@ function buildStoryChapters(count) {
       enemies.push({
         name: enemyCount > 1 ? `${baseName}${e + 1}` : baseName,
         sprite,
-        hp: 22 + Math.floor(i * 1.1) + e * 12,
-        phraseSec: Math.max(3, 6 - Math.floor(i / 45)),
-        defenseSec: Math.max(2.5, 4.5 - Math.floor(i / 60)),
+        hp: 5 + Math.floor(i * 0.42) + e * 4,
+        attack: 2 + Math.floor(i * 0.14) + e * 2,
+        phraseSec: Math.max(2.4, 5.2 - Math.floor(i / 32)),
+        defenseSec: Math.max(1.6, 3.4 - Math.floor(i / 42)),
+        /** 2以上で連続攻撃（手強さ） */
+        comboHits: i >= 25 && e === 0 ? 1 + (i % 3) : i >= 60 ? 2 : 0,
       });
     }
     const arc = storyArcLabel(i);
@@ -500,8 +508,8 @@ const storyState = {
   enemyIdx: 0,
   enemyHp: 0,
   enemyMaxHp: 0,
-  playerHp: 100,
-  playerMaxHp: 100,
+  playerHp: 10,
+  playerMaxHp: 10,
   phraseEndAt: 0,
   phraseStartedAt: 0,
   currentPhrase: null,
@@ -517,6 +525,10 @@ const storyState = {
   phase: "attack",
   attackCount: 0,
   currentEnemy: null,
+  /** こうげき失敗時、次の敵攻撃が強くなる（ココア風） */
+  enemyAttackMul: 1,
+  /** 残り連続攻撃回数（敵の追い打ち） */
+  enemyComboLeft: 0,
 };
 
 const state = {
@@ -572,6 +584,51 @@ function loadStoryProgress() {
 
 function saveStoryProgress(clearedCount) {
   localStorage.setItem(LS_STORY_PROGRESS, String(Math.max(0, clearedCount)));
+}
+
+function storyCompanionHpBonus() {
+  return getUnlockedCompanions().reduce((s, c) => s + (c.hpBonus || 0), 0);
+}
+
+/** 冒険の進み具合で Lv が上がる（章3クリアごとに+1） */
+function storyPlayerLevel() {
+  const cleared = loadStoryProgress();
+  return Math.max(1, 1 + Math.floor(cleared / 3));
+}
+
+/** ココア風：Lv・クリア章数・仲間で最大HPが伸びる */
+function storyCalcPlayerMaxHp() {
+  const cleared = loadStoryProgress();
+  const lv = storyPlayerLevel();
+  const raw =
+    STORY_HP_BASE +
+    cleared * STORY_HP_PER_CLEAR +
+    (lv - 1) * STORY_HP_PER_LEVEL +
+    storyCompanionHpBonus();
+  return Math.min(120, Math.max(STORY_HP_BASE, raw));
+}
+
+function storyCalcEnemyAttack(enemy, chapterIdx) {
+  const base = enemy?.attack || 10 + Math.floor(chapterIdx * 0.7);
+  return Math.round(base * (storyState.enemyAttackMul || 1));
+}
+
+function storyDefenseTier() {
+  const remain = Math.max(0, (storyState.phraseEndAt - performance.now()) / 1000);
+  const total = Math.max(0.1, storyState.phraseSec);
+  const speedRatio = remain / total;
+  const typos = storyState.typosThisPhrase;
+  if (typos === 0 && speedRatio >= 0.38) return "perfect";
+  if (typos === 0 && speedRatio >= 0.12) return "good";
+  if (typos <= 1) return "partial";
+  return "bad";
+}
+
+function storyDefenseDamageMultiplier(tier) {
+  if (tier === "perfect") return 0;
+  if (tier === "good") return 0.4;
+  if (tier === "partial") return 0.78;
+  return 1;
 }
 
 function refreshHomeCareer() {
@@ -1617,30 +1674,92 @@ function updateStoryPhaseUi() {
 }
 
 function updateStoryHud() {
-  const php = $("storyPlayerHp");
-  const ehp = $("storyEnemyHp");
+  const plv = $("storyPlayerLv");
   const pBar = $("storyPlayerHpBar");
   const eBar = $("storyEnemyHpBar");
+  const pSceneBar = $("storyPlayerSceneHpBar");
+  const eSceneBar = $("storyEnemySceneHpBar");
   const eNameHud = $("storyEnemyNameHud");
-  const pPct = Math.max(0, (storyState.playerHp / storyState.playerMaxHp) * 100);
-  const ePct =
-    storyState.enemyMaxHp > 0 ? Math.max(0, (storyState.enemyHp / storyState.enemyMaxHp) * 100) : 0;
-  if (php) php.textContent = String(Math.max(0, storyState.playerHp));
-  if (ehp) ehp.textContent = String(Math.max(0, storyState.enemyHp));
-  if (pBar) pBar.style.width = `${pPct}%`;
-  if (eBar) eBar.style.width = `${ePct}%`;
+  const curP = Math.max(0, storyState.playerHp);
+  const maxP = storyState.playerMaxHp;
+  const curE = Math.max(0, storyState.enemyHp);
+  const maxE = storyState.enemyMaxHp;
+  const pPct = maxP > 0 ? Math.max(0, (curP / maxP) * 100) : 0;
+  const ePct = maxE > 0 ? Math.max(0, (curE / maxE) * 100) : 0;
+  ["storyPlayerHp", "storyPlayerHpHud"].forEach((id) => {
+    const el = $(id);
+    if (el) el.textContent = String(curP);
+  });
+  ["storyPlayerMaxHp", "storyPlayerMaxHpHud"].forEach((id) => {
+    const el = $(id);
+    if (el) el.textContent = String(maxP);
+  });
+  if (plv) plv.textContent = `Lv.${storyPlayerLevel()}`;
+  ["storyEnemyHp", "storyEnemyHpHud"].forEach((id) => {
+    const el = $(id);
+    if (el) el.textContent = String(curE);
+  });
+  ["storyEnemyMaxHp", "storyEnemyMaxHpHud"].forEach((id) => {
+    const el = $(id);
+    if (el) el.textContent = String(maxE);
+  });
+  [pBar, pSceneBar].forEach((el) => {
+    if (el) {
+      el.style.width = `${pPct}%`;
+      el.classList.toggle("momo-hp-fill--low", pPct > 0 && pPct <= 28);
+    }
+  });
+  [eBar, eSceneBar].forEach((el) => {
+    if (el) el.style.width = `${ePct}%`;
+  });
   if (eNameHud && storyState.currentEnemy) eNameHud.textContent = storyState.currentEnemy.name;
+  const atkHint = $("storyEnemyAtkHint");
+  if (atkHint && storyState.currentEnemy) {
+    const atk = storyCalcEnemyAttack(storyState.currentEnemy, storyState.chapterIdx);
+    if (storyState.phase === "defense") {
+      atkHint.textContent = `⚔ ${atk} dmg`;
+      atkHint.classList.add("is-active");
+    } else {
+      atkHint.textContent = `攻 ${storyState.currentEnemy.attack || atk}`;
+      atkHint.classList.remove("is-active");
+    }
+  }
+  const comboEl = $("storyEnemyComboHint");
+  if (comboEl) {
+    comboEl.textContent =
+      storyState.enemyComboLeft > 0 ? `連続攻撃 ×${storyState.enemyComboLeft + 1}` : "";
+  }
+}
+
+function showStoryDamagePopup(amount, target = "player") {
+  if (amount <= 0) return;
+  const pop = $("storyDamagePopup");
+  if (!pop) return;
+  pop.textContent = `-${amount}`;
+  pop.className = `momo-damage-popup momo-damage-popup--${target} is-show`;
+  window.clearTimeout(showStoryDamagePopup._t);
+  showStoryDamagePopup._t = window.setTimeout(() => pop.classList.remove("is-show"), 850);
+}
+
+function flashStoryHpBar(which) {
+  const bar = which === "player" ? $("storyPlayerHpBar")?.closest(".momo-hp-bar") : $("storyEnemyHpBar")?.closest(".momo-hp-bar");
+  if (!bar) return;
+  bar.classList.remove("momo-hp-bar--hit");
+  void bar.offsetWidth;
+  bar.classList.add("momo-hp-bar--hit");
 }
 
 function renderStoryChapterList() {
   const list = $("storyChapterList");
   const meta = $("storyMenuMeta");
+  const cleared = loadStoryProgress();
   renderStoryCompanionStrip();
   if (meta) {
-    meta.textContent = `旅のしおり — 全 ${STORY_CHAPTER_COUNT} 章。クリア ${loadStoryProgress()} 章。`;
+    const lv = storyPlayerLevel();
+    const maxHp = storyCalcPlayerMaxHp();
+    meta.textContent = `旅のしおり — 全 ${STORY_CHAPTER_COUNT} 章。クリア ${cleared} 章。ごまちゃん Lv.${lv}（HP ${maxHp}）`;
   }
   if (!list) return;
-  const cleared = loadStoryProgress();
   list.innerHTML = "";
   STORY_CHAPTERS.forEach((ch, i) => {
     const locked = i > cleared;
@@ -1679,8 +1798,10 @@ function startStoryChapter(chapterIdx) {
   if (!ch) return;
   storyState.chapterIdx = chapterIdx;
   storyState.enemyIdx = 0;
-  storyState.playerHp = 100;
-  storyState.playerMaxHp = 100;
+  storyState.enemyAttackMul = 1;
+  storyState.enemyComboLeft = 0;
+  storyState.playerMaxHp = storyCalcPlayerMaxHp();
+  storyState.playerHp = storyState.playerMaxHp;
   storyState.attackCount = 0;
   const label = $("storyChapterLabel");
   if (label) label.textContent = ch.title;
@@ -1701,6 +1822,8 @@ function startStoryEnemy() {
   storyState.phraseSec = enemy.phraseSec;
   storyState.defenseSec = enemy.defenseSec || Math.max(2.5, enemy.phraseSec - 1);
   storyState.attackCount = 0;
+  storyState.enemyAttackMul = 1;
+  storyState.enemyComboLeft = enemy.comboHits || 0;
   const nameEl = $("storyEnemyName");
   const spriteEl = $("storyEnemySprite");
   if (nameEl) nameEl.textContent = enemy.name;
@@ -1708,9 +1831,15 @@ function startStoryEnemy() {
     spriteEl.className = "story-enemy__sprite";
     spriteEl.classList.add(`story-enemy__sprite--${enemy.sprite}`);
   }
-  setStoryDialog(`${enemy.name} があらわれた！ ローマ字を打ってこうげき！`, "ナレーション");
   updateStoryHud();
-  storyStartAttackPhrase();
+  /** 中盤以降：たまに敵の先制攻撃 */
+  if (storyState.chapterIdx >= 12 && Math.random() < 0.28) {
+    setStoryDialog(`${enemy.name}の先制攻撃！ まずはぼうぎょ！`, "ナレーション");
+    window.setTimeout(() => storyStartDefensePhrase(1.1), 900);
+  } else {
+    setStoryDialog(`${enemy.name} があらわれた！ ローマ字を打ってこうげき！`, "ナレーション");
+    storyStartAttackPhrase();
+  }
   cancelAnimationFrame(storyState.raf);
   storyState.raf = requestAnimationFrame(storyLoop);
 }
@@ -1740,16 +1869,21 @@ function storyStartAttackPhrase() {
   storySetupPhrase(pickStoryPhrase());
 }
 
-function storyStartDefensePhrase() {
+function storyStartDefensePhrase(boostMul = 1) {
   storyState.phase = "defense";
   storyState.phraseBusy = false;
-  let sec = storyState.currentEnemy?.defenseSec || 4;
+  if (boostMul > 1) storyState.enemyAttackMul = Math.max(storyState.enemyAttackMul, boostMul);
+  let sec = storyState.currentEnemy?.defenseSec || 3.2;
   sec += storyCompanionDefenseSecBonus();
   storyState.phraseSec = sec;
   updateStoryPhaseUi();
+  updateStoryHud();
   const enemy = storyState.currentEnemy;
-  setStoryDialog(`${enemy?.name || "敵"}のこうげき！ 打ってぼうぎょ！`, enemy?.name || "敵");
+  const atk = storyCalcEnemyAttack(enemy, storyState.chapterIdx);
+  const comboNote = storyState.enemyComboLeft > 0 ? "（連続攻撃！）" : "";
+  setStoryDialog(`${enemy?.name || "敵"}のこうげき！${comboNote} ${atk} ダメージ — 打ってぼうぎょ！`, enemy?.name || "敵");
   storySetupPhrase(pickStoryDefensePhrase());
+  flashStoryEnemyAttack();
 }
 
 function storyRenderTypeline() {
@@ -1774,42 +1908,73 @@ function storyOnAttackSuccess() {
   storyState.phraseBusy = true;
   storyState.attackCount += 1;
   const remain = Math.max(0, (storyState.phraseEndAt - performance.now()) / 1000);
-  const speedBonus = Math.floor(remain * 3);
-  const accuracyBonus = storyState.typosThisPhrase === 0 ? 6 : 0;
-  const lenBonus = Math.floor(storyState.targetChars.length / 3);
+  const speedBonus = Math.floor(remain * 0.8);
+  const accuracyBonus = storyState.typosThisPhrase === 0 ? 2 : 0;
+  const lenBonus = Math.floor(storyState.targetChars.length / 4);
   const companion = storyCompanionAttackBonus();
-  const dmg = 8 + speedBonus + accuracyBonus + lenBonus + companion;
+  const dmg = 2 + speedBonus + accuracyBonus + lenBonus + companion;
   storyState.enemyHp = Math.max(0, storyState.enemyHp - dmg);
   const enemy = storyState.currentEnemy;
   let msg = `${enemy?.name || "敵"}に ${dmg} ダメージ！`;
   if (companion > 0) msg += " 仲間の援護！";
-  if (speedBonus >= 6) msg += " 速攻！";
+  if (speedBonus >= 3) msg += " 速攻！";
   setStoryDialog(msg, "ごまちゃん");
   updateStoryHud();
+  showStoryDamagePopup(dmg, "enemy");
   flashStoryEnemyHit();
   if (storyState.enemyHp <= 0) {
     window.setTimeout(() => storyOnEnemyDefeated(), 600);
     return;
   }
-  window.setTimeout(() => storyStartDefensePhrase(), 500);
+  /** こうげき成功のたび敵が反撃（ココア風）。序盤は1回、中盤以降はたまに2連続 */
+  const extraCombo =
+    storyState.enemyComboLeft <= 0 && storyState.chapterIdx >= 8 && storyState.attackCount % 2 === 0 ? 1 : 0;
+  storyState.enemyComboLeft = Math.max(storyState.enemyComboLeft, extraCombo);
+  window.setTimeout(() => storyStartDefensePhrase(), 480);
 }
 
 function storyOnDefenseSuccess() {
   if (storyState.phraseBusy) return;
   storyState.phraseBusy = true;
-  if (storyState.typosThisPhrase === 0) {
+  const tier = storyDefenseTier();
+  const baseAtk = storyCalcEnemyAttack(storyState.currentEnemy, storyState.chapterIdx);
+  const mul = storyDefenseDamageMultiplier(tier);
+  const dmg = Math.max(0, Math.round(baseAtk * mul));
+  if (dmg > 0) {
+    storyState.playerHp = Math.max(0, storyState.playerHp - dmg);
+    const tierMsg =
+      tier === "good" ? "ぼうぎょ成功… でも少し食らった！" : "ぼうぎょしたが 大きく被った！";
+    setStoryDialog(`${tierMsg} ${dmg} ダメージ。`, "ごまちゃん");
+    showStoryDamagePopup(dmg, "player");
+    flashStoryHpBar("player");
+  } else {
     const heal = getUnlockedCompanions().reduce((s, c) => s + (c.healOnPerfect || 0), 0);
     if (heal > 0) {
       storyState.playerHp = Math.min(storyState.playerMaxHp, storyState.playerHp + heal);
-      setStoryDialog(`ぼうぎょ成功！ キジの加護で ${heal} 回復！`, "ごまちゃん");
+      setStoryDialog(`完璧なぼうぎょ！ キジの加護で ${heal} 回復！`, "ごまちゃん");
     } else {
-      setStoryDialog("ぼうぎょ成功！ ダメージを防いだ！", "ごまちゃん");
+      setStoryDialog("完璧なぼうぎょ！ ダメージゼロ！", "ごまちゃん");
     }
-  } else {
-    setStoryDialog("ぼうぎょ成功！ ダメージは小さかった。", "ごまちゃん");
   }
+  storyState.enemyAttackMul = 1;
   updateStoryHud();
-  window.setTimeout(() => storyStartAttackPhrase(), 550);
+  if (storyState.playerHp <= 0) {
+    window.setTimeout(() => storyOnDefeat(), 700);
+    return;
+  }
+  if (storyState.enemyComboLeft > 0) {
+    storyState.enemyComboLeft -= 1;
+    window.setTimeout(() => storyStartDefensePhrase(1.15), 520);
+    return;
+  }
+  /** ぼうぎょ失敗系は追い打ちの可能性 */
+  if (dmg > 0 && tier === "bad" && Math.random() < 0.35) {
+    storyState.enemyComboLeft = 1;
+    setStoryDialog("敵の追い打ち！", storyState.currentEnemy?.name || "敵");
+    window.setTimeout(() => storyStartDefensePhrase(1.2), 650);
+    return;
+  }
+  window.setTimeout(() => storyStartAttackPhrase(), 600);
 }
 
 function storyOnPhraseSuccess() {
@@ -1823,6 +1988,14 @@ function flashStoryEnemyHit() {
   el.classList.remove("story-enemy--hit");
   void el.offsetWidth;
   el.classList.add("story-enemy--hit");
+}
+
+function flashStoryEnemyAttack() {
+  const el = $("storyEnemy");
+  if (!el) return;
+  el.classList.remove("story-enemy--attack");
+  void el.offsetWidth;
+  el.classList.add("story-enemy--attack");
 }
 
 function storyOnEnemyDefeated() {
@@ -1841,6 +2014,8 @@ function storyPlayerHit(dmg, msg, speaker = "ナレーション") {
   storyState.playerHp = Math.max(0, storyState.playerHp - dmg);
   setStoryDialog(`${msg} ごまちゃんは ${dmg} ダメージ。`, speaker);
   updateStoryHud();
+  showStoryDamagePopup(dmg, "player");
+  flashStoryHpBar("player");
   const bunny = $("storyBunny");
   if (bunny) {
     bunny.classList.remove("bunny--hurt");
@@ -1852,32 +2027,46 @@ function storyPlayerHit(dmg, msg, speaker = "ナレーション") {
   }
 }
 
+function storyApplyEnemyAttack(reason) {
+  const base = storyCalcEnemyAttack(storyState.currentEnemy, storyState.chapterIdx);
+  const bonus = reason === "timeout" ? 1.4 : reason === "typo" ? 1.28 : 1;
+  const dmg = Math.max(1, Math.round(base * bonus));
+  const msg =
+    reason === "timeout"
+      ? "ぼうぎょ間に合わず！"
+      : reason === "typo"
+        ? "ぼうぎょしっぱい！"
+        : "敵の強烈な一撃！";
+  storyState.enemyAttackMul = 1;
+  storyPlayerHit(dmg, msg, storyState.currentEnemy?.name || "敵");
+}
+
 function storyOnTypo() {
   storyState.typosThisPhrase += 1;
   if (storyState.phase === "defense") {
-    storyPlayerHit(12, "ぼうぎょしっぱい！");
+    storyApplyEnemyAttack("typo");
     if (storyState.playerHp <= 0) return;
     storyState.typedRomaji = "";
     storyState.romajiCandidates = buildRomajiVariants(storyState.targetChars.join(""));
     storyRenderTypeline();
+    storyState.phraseBusy = false;
     return;
   }
-  setStoryDialog("打ち間違い！ こうげきは外れた…", "ごまちゃん");
-  window.setTimeout(() => storyStartDefensePhrase(), 450);
+  setStoryDialog("打ち間違い！ こうげき外れ — 敵の反撃！", "ごまちゃん");
+  window.setTimeout(() => storyStartDefensePhrase(1.45), 420);
 }
 
 function storyOnTimeout() {
   if (storyState.phraseBusy) return;
   storyState.phraseBusy = true;
   if (storyState.phase === "defense") {
-    storyPlayerHit(14, "ぼうぎょ間に合わず！");
+    storyApplyEnemyAttack("timeout");
     if (storyState.playerHp <= 0) return;
-    window.setTimeout(() => storyStartAttackPhrase(), 500);
+    window.setTimeout(() => storyStartAttackPhrase(), 550);
     return;
   }
-  storyPlayerHit(8, "時間切れ！");
-  if (storyState.playerHp <= 0) return;
-  window.setTimeout(() => storyStartDefensePhrase(), 450);
+  setStoryDialog("時間切れ！ こうげき外れ — 敵の反撃！", "ごまちゃん");
+  window.setTimeout(() => storyStartDefensePhrase(1.38), 420);
 }
 
 function storyOnDefeat() {
@@ -1908,7 +2097,8 @@ function finishStoryChapter() {
   hideAllMainScreens();
   $("storyResultPanel")?.classList.remove("hidden");
   $("storyResultHeading").textContent = `${ch.title} クリア！`;
-  $("storyResultText").textContent = ch.outro;
+  const newMax = storyCalcPlayerMaxHp();
+  $("storyResultText").textContent = `${ch.outro}（Lv.${storyPlayerLevel()} / HP ${newMax}）`;
   const cont = $("storyContinueBtn");
   if (cont) {
     const next = storyState.chapterIdx + 1;

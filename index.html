@@ -287,13 +287,32 @@
     <section class="story-stage-wrap hidden" id="storyStageWrap" aria-live="polite">
       <div class="momo-battle">
         <div class="momo-battle-head">
-          <span class="momo-chapter-label" id="storyChapterLabel">第1章</span>
+          <div class="momo-battle-head__left">
+            <span class="momo-chapter-label" id="storyChapterLabel">第1章</span>
+            <span class="momo-player-lv" id="storyPlayerLv">Lv.1</span>
+          </div>
           <span class="momo-phase-badge momo-phase-badge--attack" id="storyPhaseBadge">こうげき！</span>
         </div>
         <div class="story-scene momo-scene" id="storyScene">
           <div class="field-bg momo-field-bg" aria-hidden="true"></div>
+          <div class="momo-damage-popup" id="storyDamagePopup" aria-live="assertive"></div>
           <div class="momo-party" id="storyParty" aria-label="仲間"></div>
+          <div class="momo-scene-hp momo-scene-hp--ally" aria-label="ごまちゃんのHP">
+            <span class="momo-scene-hp__icon" aria-hidden="true">♥</span>
+            <div class="momo-hp-bar momo-hp-bar--scene">
+              <div class="momo-hp-fill momo-hp-fill--ally" id="storyPlayerSceneHpBar"></div>
+            </div>
+            <span class="momo-scene-hp__num"><strong id="storyPlayerHp">10</strong>/<span id="storyPlayerMaxHp">10</span></span>
+          </div>
           <div class="story-enemy momo-enemy" id="storyEnemy" aria-hidden="true">
+            <div class="momo-scene-hp momo-scene-hp--enemy" aria-label="敵のHP">
+              <span class="momo-scene-hp__name" id="storyEnemyNameHud">敵</span>
+              <div class="momo-hp-bar momo-hp-bar--scene">
+                <div class="momo-hp-fill momo-hp-fill--enemy" id="storyEnemySceneHpBar"></div>
+              </div>
+              <span class="momo-scene-hp__num"><strong id="storyEnemyHp">0</strong>/<span id="storyEnemyMaxHp">0</span></span>
+              <span class="momo-enemy-atk" id="storyEnemyAtkHint"></span>
+            </div>
             <span class="story-enemy__sprite" id="storyEnemySprite"></span>
             <span class="story-enemy__name" id="storyEnemyName"></span>
           </div>
@@ -333,23 +352,28 @@
           <p class="story-dialog momo-dialog" id="storyDialog"></p>
         </div>
         <section class="momo-hud-panel" aria-label="バトル状態">
+          <p class="momo-combo-hint" id="storyEnemyComboHint" aria-live="polite"></p>
           <div class="momo-hp-row">
-            <div class="momo-hp-block">
-              <span class="momo-hp-label">ごまちゃん</span>
-              <div class="momo-hp-bar" aria-hidden="true"><div class="momo-hp-fill momo-hp-fill--ally" id="storyPlayerHpBar"></div></div>
-              <span class="momo-hp-num"><strong id="storyPlayerHp">100</strong>／100</span>
+            <div class="momo-hp-block momo-hp-block--player">
+              <span class="momo-hp-label">ごまちゃん HP</span>
+              <div class="momo-hp-bar momo-hp-bar--large" aria-hidden="true">
+                <div class="momo-hp-fill momo-hp-fill--ally" id="storyPlayerHpBar"></div>
+              </div>
+              <span class="momo-hp-num momo-hp-num--big"><strong id="storyPlayerHpHud">10</strong> / <span id="storyPlayerMaxHpHud">10</span></span>
             </div>
-            <div class="momo-hp-block">
-              <span class="momo-hp-label" id="storyEnemyNameHud">敵</span>
-              <div class="momo-hp-bar" aria-hidden="true"><div class="momo-hp-fill momo-hp-fill--enemy" id="storyEnemyHpBar"></div></div>
-              <span class="momo-hp-num"><strong id="storyEnemyHp">0</strong></span>
+            <div class="momo-hp-block momo-hp-block--enemy">
+              <span class="momo-hp-label">敵 HP</span>
+              <div class="momo-hp-bar momo-hp-bar--large" aria-hidden="true">
+                <div class="momo-hp-fill momo-hp-fill--enemy" id="storyEnemyHpBar"></div>
+              </div>
+              <span class="momo-hp-num momo-hp-num--big"><strong id="storyEnemyHpHud">0</strong> / <span id="storyEnemyMaxHpHud">0</span></span>
             </div>
             <div class="momo-timer-block">
               <span class="momo-hp-label">残り</span>
-              <span class="momo-hp-num"><strong id="storyPhraseTimer">5.0</strong> 秒</span>
+              <span class="momo-hp-num momo-hp-num--big"><strong id="storyPhraseTimer">5.0</strong> 秒</span>
             </div>
           </div>
-          <p class="input-hint story-input-hint">ローマ字だけ（IME は英字）。<strong>こうげき</strong>で敵にダメージ、<strong>ぼうぎょ</strong>でダメージを防ぐ。速く正確に打つほど有利です。</p>
+          <p class="input-hint story-input-hint">ローマ字だけ（IME は英字）。<strong>こうげき</strong>で敵にダメージ、<strong>ぼうぎょ</strong>で敵の攻撃を防ぐ。HPは章を進めると増えます。ミスや時間切れは大ダメージ！</p>
           <input id="storyGhostInput" class="ghost-input" type="text" lang="en" inputmode="latin" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="話モード用キー入力" />
           <button type="button" class="ghost small" id="quitStoryBtn">旅をやめる</button>
         </section>
