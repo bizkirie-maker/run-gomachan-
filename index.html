@@ -151,7 +151,7 @@
         <button type="button" class="ghost small back-home-btn" id="backHomeFromStoryBtn">← ホーム</button>
         <h2 id="story-menu-heading">ごまちゃんももたろうタイピング</h2>
       </div>
-      <p class="muted">桃太郎タイピングと<strong>同じ流れ</strong>。左に味方（ごまちゃん＋犬・サル・キジ）、中央にパネル、右に妖菓子。げんき100で大技。</p>
+      <p class="muted">桃太郎タイピングと<strong>同じ画面</strong>。上にパネル、左にごまちゃん＋犬・サル・キジ、右に妖菓子。①こうげき→②ぼうぎょ。</p>
       <div class="momo-companion-strip" id="storyCompanionStrip" aria-label="仲間"></div>
       <p class="story-menu-meta muted" id="storyMenuMeta"></p>
       <ul class="story-chapter-list momo-chapter-scroll" id="storyChapterList"></ul>
@@ -305,55 +305,58 @@
       </div>
     </section>
 
-    <!-- 話モード：桃太郎タイピング風バトル（本家レイアウト準拠） -->
+    <!-- 話モード：桃太郎タイピング本家レイアウト -->
     <section class="story-stage-wrap hidden" id="storyStageWrap" aria-live="polite">
-      <div class="momo-battle momo-battle--classic">
-        <header class="momo-battle-top" aria-label="章とターン">
-          <div class="momo-battle-top__left">
+      <div class="momo-battle momo-battle--pure">
+        <header class="momo-topbar">
+          <div class="momo-topbar__left">
             <span class="momo-chapter-label" id="storyChapterLabel">第1章</span>
             <span class="momo-player-lv" id="storyPlayerLv">Lv.1</span>
           </div>
-          <div class="momo-turn-banner momo-turn-banner--attack" id="storyTurnBanner" aria-live="polite">こうげきターン</div>
+          <div class="momo-flow" aria-label="ターンの流れ">
+            <span class="momo-flow__step" id="storyFlowAttack">① こうげき</span>
+            <span class="momo-flow__arrow" aria-hidden="true">→</span>
+            <span class="momo-flow__step" id="storyFlowDefense">② ぼうぎょ</span>
+          </div>
+          <button type="button" class="ghost small momo-quit-btn" id="quitStoryBtn">やめる</button>
         </header>
 
-        <div class="momo-battle-field story-scene momo-scene" id="storyScene">
+        <div class="momo-phase-ribbon momo-phase-ribbon--attack" id="storyPhaseRibbon">
+          <p class="momo-phase-ribbon__main" id="storyTurnBanner">こうげき！</p>
+          <p class="momo-phase-ribbon__sub" id="storyMoveName">通常攻撃</p>
+        </div>
+
+        <section class="momo-panel-stage momo-phrase-card momo-phrase-card--attack" id="storyPhraseCard" aria-label="タイピングパネル">
+          <p class="momo-panel-word" id="storyPanelWord" lang="ja">こうげき</p>
+          <p class="momo-next-key" id="storyNextKeyHint">つぎのキーを打て！</p>
+          <div class="momo-panel-board" id="storyPanelBoard"></div>
+          <div class="momo-panel-timer-bar" aria-hidden="true"><div class="momo-panel-timer-fill" id="storyPanelTimerFill"></div></div>
+          <p class="momo-panel-timer-num">のこり <strong id="storyPhraseTimer">5.0</strong> 秒</p>
+          <div class="momo-vkbd" id="storyVirtualKeyboard" aria-hidden="true"></div>
+        </section>
+
+        <div class="momo-arena momo-scene" id="storyScene">
           <div class="field-bg momo-field-bg" aria-hidden="true"></div>
-
-          <div class="momo-enemy-head" aria-label="敵のHP">
-            <span class="momo-enemy-head__badge" id="storyEnemyCategory">妖菓子</span>
-            <strong class="momo-enemy-head__name" id="storyEnemyNameHud">妖団子</strong>
-            <div class="momo-hp-bar momo-hp-bar--enemy-head" aria-hidden="true">
-              <div class="momo-hp-fill momo-hp-fill--enemy" id="storyEnemyHpBar"></div>
+          <aside class="momo-party-column" id="storyPartyColumn" aria-label="味方"></aside>
+          <div class="momo-arena-center">
+            <div class="momo-gauge-wrap momo-gauge-wrap--arena">
+              <span class="momo-gauge-label">げんき</span>
+              <div class="momo-gauge-bar" aria-hidden="true"><div class="momo-gauge-fill" id="storyGaugeBar"></div></div>
+              <span class="momo-gauge-text" id="storyGaugeText">0/100</span>
             </div>
-            <span class="momo-enemy-head__hp"><strong id="storyEnemyHp">0</strong> / <span id="storyEnemyMaxHp">0</span></span>
-            <span class="momo-enemy-atk" id="storyEnemyAtkHint"></span>
+            <p class="momo-battle-msg" id="storyDialog"></p>
+            <span class="visually-hidden" id="storySpeakerName"></span>
           </div>
-
-          <aside class="momo-party-column" id="storyPartyColumn" aria-label="味方パーティ"></aside>
-
-          <div class="momo-panel-column">
-            <p class="momo-skill-name" id="storyMoveName">通常攻撃</p>
-            <p class="momo-panel-guide" id="storyPanelGuide">アルファベットのパネルを順番に打て！</p>
-            <p class="momo-panel-alt-hint" id="storyPanelAltHint" aria-live="polite"></p>
-            <div class="story-phrase-card momo-phrase-card momo-phrase-card--center" id="storyPhraseCard">
-              <p class="momo-panel-word" id="storyPanelWord" lang="ja">こうげき</p>
-              <div class="momo-panel-board" id="storyPanelBoard" aria-label="タイピングパネル"></div>
-              <div class="momo-panel-timer-bar" aria-hidden="true"><div class="momo-panel-timer-fill" id="storyPanelTimerFill"></div></div>
-            </div>
-            <div class="momo-battle-status" aria-label="げんきと残り時間">
-              <div class="momo-gauge-wrap">
-                <span class="momo-gauge-label">げんき</span>
-                <div class="momo-gauge-bar" aria-hidden="true"><div class="momo-gauge-fill" id="storyGaugeBar"></div></div>
-                <span class="momo-gauge-text" id="storyGaugeText">0/100</span>
+          <div class="momo-enemy-zone">
+            <div class="momo-enemy-hpblock" aria-label="敵のHP">
+              <span class="momo-enemy-head__badge" id="storyEnemyCategory">妖菓子</span>
+              <strong class="momo-enemy-head__name" id="storyEnemyNameHud">妖団子</strong>
+              <div class="momo-hp-bar momo-hp-bar--enemy-head" aria-hidden="true">
+                <div class="momo-hp-fill momo-hp-fill--enemy" id="storyEnemyHpBar"></div>
               </div>
-              <div class="momo-timer-pill">
-                <span class="momo-timer-pill__label">残り</span>
-                <strong id="storyPhraseTimer">5.0</strong><span class="momo-timer-pill__unit">秒</span>
-              </div>
+              <span class="momo-enemy-head__hp"><strong id="storyEnemyHp">0</strong> / <span id="storyEnemyMaxHp">0</span></span>
+              <span class="momo-enemy-atk" id="storyEnemyAtkHint"></span>
             </div>
-          </div>
-
-          <div class="momo-enemy-column">
             <div class="momo-enemy-spawn" id="storyEnemySpawnBanner" aria-live="assertive"></div>
             <div class="story-enemy momo-enemy" id="storyEnemy">
               <div class="momo-enemy-card" id="storyEnemyCard">
@@ -362,24 +365,14 @@
                   <span class="momo-enemy-card__icon" id="storyEnemyIcon" aria-hidden="true">🍡</span>
                 </div>
                 <strong class="story-enemy__name" id="storyEnemyName">妖団子</strong>
-                <span class="momo-enemy-card__tagline" id="storyEnemyTagline">三色団子が怒り出した！</span>
+                <span class="momo-enemy-card__tagline" id="storyEnemyTagline"></span>
               </div>
             </div>
           </div>
-
           <div class="momo-damage-popup" id="storyDamagePopup" aria-live="assertive"></div>
         </div>
 
-        <div class="momo-rpg-window">
-          <p class="momo-rpg-window__speaker" id="storySpeakerName">ごまちゃん</p>
-          <p class="story-dialog momo-dialog" id="storyDialog"></p>
-        </div>
-
-        <footer class="momo-battle-foot" aria-label="操作">
-          <p class="momo-battle-foot__hint">桃太郎タイピングと同じ流れ。<strong>こうげき</strong>→敵の<strong>ぼうぎょ</strong>→繰り返し。げんき100で<strong>大技</strong>。</p>
-          <input id="storyGhostInput" class="ghost-input" type="text" lang="en" inputmode="latin" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="話モード用キー入力" />
-          <button type="button" class="ghost small" id="quitStoryBtn">旅をやめる</button>
-        </footer>
+        <input id="storyGhostInput" class="ghost-input" type="text" lang="en" inputmode="latin" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="話モード用キー入力" />
       </div>
     </section>
 

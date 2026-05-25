@@ -3220,7 +3220,11 @@ body.is-playing .bonus-key-hint {
 }
 
 body.is-story {
-  padding: 0.75rem clamp(0.5rem, 2vw, 1.25rem) 1.25rem;
+  padding: 0.5rem clamp(0.35rem, 2vw, 0.75rem) 0.75rem;
+}
+
+body.is-story .shell {
+  max-width: 960px;
 }
 
 body.is-story .story-stage-wrap {
@@ -3750,13 +3754,332 @@ body.is-cutscene {
   margin: 0.5rem 0 1rem;
 }
 
+/* ── 桃太郎タイピング本家レイアウト（pure） ── */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.momo-battle--pure {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  max-width: 920px;
+  margin: 0 auto;
+}
+
+.momo-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.momo-topbar__left {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.momo-flow {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.75);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.momo-flow__step {
+  opacity: 0.45;
+  color: #5d4037;
+}
+
+.momo-flow__step--on {
+  opacity: 1;
+  color: #c62828;
+}
+
+.momo-flow__step--on.momo-flow__step--defense {
+  color: #1565c0;
+}
+
+.momo-flow__arrow {
+  opacity: 0.5;
+  font-size: 0.68rem;
+}
+
+.momo-quit-btn {
+  margin: 0;
+}
+
+.momo-phase-ribbon {
+  text-align: center;
+  padding: 0.55rem 0.75rem 0.65rem;
+  border-radius: 14px;
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+}
+
+.momo-phase-ribbon--attack {
+  background: linear-gradient(180deg, #ffe0b2 0%, #ff9800 100%);
+  color: #4e2600;
+}
+
+.momo-phase-ribbon--defense {
+  background: linear-gradient(180deg, #bbdefb 0%, #42a5f5 100%);
+  color: #0d2f6e;
+}
+
+.momo-phase-ribbon--special {
+  background: linear-gradient(180deg, #fff176 0%, #ff6f00 100%);
+  color: #4e342e;
+}
+
+.momo-phase-ribbon__main {
+  margin: 0;
+  font-size: clamp(1.35rem, 5vw, 1.85rem);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+}
+
+.momo-phase-ribbon__sub {
+  margin: 0.15rem 0 0;
+  font-size: 0.82rem;
+  font-weight: 800;
+  opacity: 0.9;
+}
+
+.momo-panel-stage {
+  position: relative;
+  padding: 0.75rem 0.65rem 0.85rem;
+  border-radius: 16px;
+  background: linear-gradient(180deg, #fffef8 0%, #fff3d6 100%);
+  border: 4px solid #ffb74d;
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.85),
+    0 10px 28px rgba(255, 152, 0, 0.22);
+}
+
+.momo-panel-stage.momo-phrase-card--defense {
+  border-color: #64b5f6;
+  background: linear-gradient(180deg, #f5fbff 0%, #e3f2fd 100%);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.85),
+    0 10px 28px rgba(66, 165, 245, 0.22);
+}
+
+.momo-panel-stage.momo-phrase-card--special {
+  border-color: #ff7043;
+  background: linear-gradient(180deg, #fff8e1 0%, #ffe0b2 100%);
+}
+
+.momo-panel-stage .momo-panel-word {
+  font-size: clamp(1.15rem, 4vw, 1.45rem);
+  margin-bottom: 0.25rem;
+}
+
+.momo-next-key {
+  margin: 0 0 0.45rem;
+  text-align: center;
+  font-size: clamp(0.95rem, 3.2vw, 1.12rem);
+  font-weight: 900;
+  color: #c62828;
+}
+
+.momo-next-key strong {
+  display: inline-block;
+  min-width: 1.5rem;
+  padding: 0.05rem 0.45rem;
+  border-radius: 8px;
+  background: #ffeb3b;
+  color: #4e342e;
+  font-size: 1.15em;
+  box-shadow: 0 2px 0 rgba(0, 0, 0, 0.12);
+}
+
+.momo-panel-stage .momo-panel-board {
+  min-height: 3.2rem;
+  gap: 0.45rem;
+}
+
+.momo-battle--pure .momo-key-panel {
+  min-width: 2.65rem;
+  height: 2.75rem;
+  font-size: 1.25rem;
+  border-radius: 12px;
+}
+
+.momo-panel-timer-num {
+  margin: 0.35rem 0 0.5rem;
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #5d4037;
+}
+
+.momo-vkbd {
+  margin-top: 0.35rem;
+  padding: 0.45rem 0.35rem 0.35rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.momo-vkbd-row {
+  display: flex;
+  justify-content: center;
+  gap: 0.18rem;
+  margin-bottom: 0.18rem;
+}
+
+.momo-vkbd-row:last-child {
+  margin-bottom: 0;
+}
+
+.momo-vkbd-key {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.55rem;
+  height: 1.55rem;
+  padding: 0 0.2rem;
+  border-radius: 6px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: #5d4037;
+  background: #f5f5f5;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.momo-vkbd-key--home {
+  background: #e8f5e9;
+  border-color: rgba(76, 175, 80, 0.35);
+}
+
+.momo-vkbd-key--next {
+  background: #ffeb3b;
+  color: #4e342e;
+  border-color: #f9a825;
+  transform: scale(1.12);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.momo-arena {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(108px, 28%) minmax(0, 1fr) minmax(108px, 30%);
+  gap: 0.5rem;
+  min-height: min(42vw, 240px);
+  padding: 0.55rem;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: linear-gradient(180deg, #b8d9ff 0%, #d8f0c8 55%, #f5e6b8 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45), 0 8px 22px var(--shadow);
+}
+
+.momo-arena-center {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.45rem;
+  z-index: 2;
+  min-width: 0;
+}
+
+.momo-gauge-wrap--arena {
+  max-width: none;
+  width: 100%;
+}
+
+.momo-battle-msg {
+  margin: 0;
+  padding: 0.45rem 0.55rem;
+  border-radius: 10px;
+  background: rgba(255, 252, 248, 0.92);
+  border: 2px solid rgba(232, 168, 124, 0.45);
+  font-size: 0.82rem;
+  font-weight: 700;
+  line-height: 1.5;
+  min-height: 2.8em;
+}
+
+.momo-enemy-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.35rem;
+  z-index: 2;
+}
+
+.momo-enemy-hpblock {
+  width: 100%;
+  padding: 0.4rem 0.5rem;
+  border-radius: 10px;
+  background: rgba(255, 252, 248, 0.92);
+  border: 2px solid rgba(198, 40, 40, 0.35);
+  text-align: center;
+}
+
+.momo-battle--pure .story-enemy {
+  position: relative;
+  right: auto;
+  bottom: auto;
+}
+
+.momo-battle--pure .momo-enemy-card {
+  max-width: 130px;
+}
+
+.momo-battle--pure .momo-party-slot {
+  grid-template-columns: 2.75rem minmax(0, 1fr);
+  padding: 0.4rem 0.5rem;
+}
+
+.momo-battle--pure .momo-party-slot__icon {
+  width: 2.75rem;
+  height: 2.75rem;
+  font-size: 1.5rem;
+}
+
+@media (max-width: 640px) {
+  .momo-arena {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+  }
+
+  .momo-party-column {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .momo-battle--pure .momo-party-slot {
+    flex: 1 1 calc(50% - 0.35rem);
+    min-width: 140px;
+  }
+
+  .momo-vkbd {
+    display: none;
+  }
+}
+
 body.is-story .top-bar,
 body.is-story .foot {
   display: none;
-}
-
-body.is-story .shell {
-  max-width: 980px;
 }
 
 .panel.hidden,

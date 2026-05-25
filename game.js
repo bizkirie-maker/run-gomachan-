@@ -1309,6 +1309,9 @@ function pickStoryPhrase() {
 const MOMO_PANEL_POOL_EARLY = "fjaskldgh";
 const MOMO_PANEL_POOL_MID = "asdfghjklqwertyuiop";
 
+/** 桃太郎タイピング本家：バーチャルキーボード（F/J ホームポジション） */
+const MOMO_VKBD_ROWS = ["qwertyuiop", "asdfghjkl", "zxcvbnm"];
+
 /** 章の進みでパネル数が増える（桃太郎タイピングのステップアップ方式） */
 function buildStoryPanelTask(isDefense, chapterIdx, isSpecial = false) {
   const progress = chapterIdx + loadStoryProgress();
@@ -2181,16 +2184,16 @@ function renderStoryPartyPanel() {
   let html = `<div class="momo-party-slot momo-party-slot--hero" id="storyHeroSlot">
     <span class="momo-party-slot__icon">${STORY_HERO.icon}</span>
     <span class="momo-party-slot__name">${STORY_HERO.name}</span>
-    <span class="momo-party-slot__sub">${STORY_HERO.role}・Lv.${storyPlayerLevel()}</span>
+    <span class="momo-party-slot__sub">主人公</span>
     <div class="momo-party-slot__hpbar" aria-hidden="true"><div class="momo-hp-fill momo-hp-fill--ally" id="storyPlayerHpBar" style="width:${pPct}%"></div></div>
-    <span class="momo-party-slot__hpnum"><strong id="storyPlayerHp">${curP}</strong> / <span id="storyPlayerMaxHp">${maxP}</span></span>
+    <span class="momo-party-slot__hpnum"><strong id="storyPlayerHp">${curP}</strong>/<span id="storyPlayerMaxHp">${maxP}</span></span>
   </div>`;
   STORY_COMPANIONS.forEach((c) => {
     const on = cleared >= c.unlockClear;
-    html += `<div class="momo-party-slot${on ? "" : " momo-party-slot--locked"}" title="${on ? `${c.name}：${c.skillName}` : `第${c.unlockClear}章クリアで仲間`}">
+    html += `<div class="momo-party-slot${on ? "" : " momo-party-slot--locked"}" title="${on ? c.skillName : `第${c.unlockClear}章`}">
       <span class="momo-party-slot__icon">${c.icon}</span>
       <span class="momo-party-slot__name">${c.name}</span>
-      <span class="momo-party-slot__sub">${on ? `援護・${c.skillName}` : `第${c.unlockClear}章で仲間`}</span>
+      <span class="momo-party-slot__sub">${on ? c.skillName : "？？？"}</span>
     </div>`;
   });
   col.innerHTML = html;
@@ -2207,7 +2210,7 @@ function storyCompanionDefenseSecBonus() {
 function setStoryDialog(text, speaker = "ごまちゃん") {
   const el = $("storyDialog");
   const sp = $("storySpeakerName");
-  if (el) el.textContent = text;
+  if (el) el.textContent = `【${speaker}】${text}`;
   if (sp) sp.textContent = speaker;
 }
 
@@ -2339,46 +2342,45 @@ function onCutsceneAdvance(ev) {
 
 function updateStoryPhaseUi() {
   const banner = $("storyTurnBanner");
+  const ribbon = $("storyPhaseRibbon");
   const card = $("storyPhraseCard");
   const moveEl = $("storyMoveName");
-  const guideEl = $("storyPanelGuide");
-  const field = $("storyScene");
+  const flowAtk = $("storyFlowAttack");
+  const flowDef = $("storyFlowDefense");
   if (!banner) return;
   const isDef = storyState.phase === "defense";
+  const isSpecial = !isDef && storyState.moveKind === "special";
   if (isDef) {
-    banner.textContent = "ぼうぎょターン";
-    banner.className = "momo-turn-banner momo-turn-banner--defense";
-  } else if (storyState.moveKind === "special") {
-    banner.textContent = "大技ターン！";
-    banner.className = "momo-turn-banner momo-turn-banner--special";
+    banner.textContent = "ぼうぎょ！";
+    if (ribbon) ribbon.className = "momo-phase-ribbon momo-phase-ribbon--defense";
+  } else if (isSpecial) {
+    banner.textContent = "大技！";
+    if (ribbon) ribbon.className = "momo-phase-ribbon momo-phase-ribbon--special";
   } else {
-    banner.textContent = "こうげきターン";
-    banner.className = "momo-turn-banner momo-turn-banner--attack";
+    banner.textContent = "こうげき！";
+    if (ribbon) ribbon.className = "momo-phase-ribbon momo-phase-ribbon--attack";
   }
   if (moveEl) {
     moveEl.textContent = isDef
-      ? `防御：${storyState.enemyMoveName || "敵の攻撃"}`
-      : storyState.moveKind === "special"
+      ? `敵の技「${storyState.enemyMoveName || "攻撃"}」を防御`
+      : isSpecial
         ? `大技「${storyState.moveName}」`
         : `技「${storyState.moveName || STORY_PLAYER_SKILLS.normal.name}」`;
   }
-  if (guideEl) {
-    guideEl.textContent = isDef
-      ? `敵の「${storyState.enemyMoveName || "攻撃"}」を防御！ パネルを順番に打て！`
-      : storyState.moveKind === "special"
-        ? "げんき MAX！ 長いパネルを全部打て！"
-        : "アルファベットのパネルを順番に打て！";
+  if (flowAtk) {
+    flowAtk.classList.toggle("momo-flow__step--on", !isDef);
+    flowAtk.classList.remove("momo-flow__step--defense");
   }
-  if (field) {
-    field.classList.toggle("momo-battle-field--defense", isDef);
-    field.classList.toggle("momo-battle-field--attack", !isDef && storyState.moveKind !== "special");
-    field.classList.toggle("momo-battle-field--special", !isDef && storyState.moveKind === "special");
+  if (flowDef) {
+    flowDef.classList.toggle("momo-flow__step--on", isDef);
+    flowDef.classList.toggle("momo-flow__step--defense", isDef);
   }
   if (card) {
     card.classList.toggle("momo-phrase-card--defense", isDef);
-    card.classList.toggle("momo-phrase-card--attack", !isDef && storyState.moveKind !== "special");
-    card.classList.toggle("momo-phrase-card--special", !isDef && storyState.moveKind === "special");
+    card.classList.toggle("momo-phrase-card--attack", !isDef && !isSpecial);
+    card.classList.toggle("momo-phrase-card--special", isSpecial);
   }
+  updateStoryNextKeyHint();
 }
 
 function updateStoryHud() {
@@ -2568,6 +2570,41 @@ function storySetupPanels(task) {
   if (inp) inp.value = "";
 }
 
+function updateStoryNextKeyHint() {
+  const el = $("storyNextKeyHint");
+  if (!el) return;
+  if (storyIsPhraseComplete()) {
+    el.textContent = "打ち終わり！";
+    return;
+  }
+  const opts = storyPanelNextKeyOptions();
+  if (opts.length === 0) {
+    el.textContent = "パネルを順番に打て！";
+  } else if (opts.length === 1) {
+    el.innerHTML = `つぎ → <strong>${escapeHtml(opts[0])}</strong> を打て！`;
+  } else {
+    el.innerHTML = `つぎ → <strong>${opts.map((o) => escapeHtml(o)).join(" か ")}</strong> を打て！`;
+  }
+}
+
+function renderStoryVirtualKeyboard() {
+  const el = $("storyVirtualKeyboard");
+  if (!el) return;
+  const opts = storyPanelNextKeyOptions().map((k) => k.toLowerCase());
+  const highlightSet = new Set(opts);
+  el.innerHTML = MOMO_VKBD_ROWS.map(
+    (row) =>
+      `<div class="momo-vkbd-row">${[...row]
+        .map((k) => {
+          let cls = "momo-vkbd-key";
+          if ("fj".includes(k)) cls += " momo-vkbd-key--home";
+          if (highlightSet.has(k)) cls += " momo-vkbd-key--next";
+          return `<span class="${cls}">${k.toUpperCase()}</span>`;
+        })
+        .join("")}</div>`,
+  ).join("");
+}
+
 function renderStoryPanels() {
   const board = $("storyPanelBoard");
   if (!board) return;
@@ -2589,17 +2626,8 @@ function renderStoryPanels() {
       return `<span class="${cls}">${escapeHtml(label)}</span>`;
     })
     .join("");
-  const guideEl = $("storyPanelAltHint");
-  if (guideEl) {
-    guideEl.textContent =
-      !complete && nextOpts.length > 1 ? `打てる例：${nextOpts.join(" ／ ")}（どちらも正解）` : "";
-  }
-  const card = $("storyPhraseCard");
-  if (card) {
-    card.classList.toggle("momo-phrase-card--defense", storyState.phase === "defense");
-    card.classList.toggle("momo-phrase-card--attack", storyState.phase === "attack" && storyState.moveKind !== "special");
-    card.classList.toggle("momo-phrase-card--special", storyState.phase === "attack" && storyState.moveKind === "special");
-  }
+  updateStoryNextKeyHint();
+  renderStoryVirtualKeyboard();
   const remain = Math.max(0, storyState.phraseEndAt - performance.now());
   const total = Math.max(1, storyState.phraseSec * 1000);
   const fill = $("storyPanelTimerFill");
@@ -2624,8 +2652,8 @@ function storyStartAttackPhrase() {
   updateStoryPhaseUi();
   updateStoryHud();
   const msg = useSpecial
-    ? `げんき MAX！ 大技「${moveName}」— 中央のパネルを全部打て！`
-    : "こうげきターン！ 中央のパネルを順番に打て！";
+    ? `げんき MAX！ 大技 — 上のパネルを全部打て！`
+    : "こうげき！ 上のパネルを順番に打て！";
   setStoryDialog(msg, "ごまちゃん");
   storySetupPanels(buildStoryPanelTask(false, storyState.chapterIdx, useSpecial));
 }
