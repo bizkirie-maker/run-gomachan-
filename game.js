@@ -2898,8 +2898,7 @@ function init() {
   });
 
   setSceneDifficultyClass();
-  refreshCareerHud();
-  refreshHomeCareer();
+  showHome();
   refreshBunnyEquipVisual();
 }
 

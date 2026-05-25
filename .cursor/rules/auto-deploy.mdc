@@ -1,0 +1,14 @@
+---
+description: コード変更後は必ず GitHub へ push して Amplify デプロイする
+alwaysApply: true
+---
+
+# 自動デプロイ
+
+このプロジェクトは AWS Amplify + GitHub（`origin/main`）で公開している。
+
+- ユーザーから依頼がなくても、**機能修正・UI修正が完了したら毎回デプロイする**
+- 手順: `git add` → コミット → `git push origin main`
+- push 後、デプロイした旨とコミット ID をユーザーに伝える
+- コミットメッセージは変更の「why」を1〜2文で書く（日本語プロジェクトだがメッセージはリポジトリ既存に合わせて `feat:` / `fix:` 形式可）
+- 変更がない場合は push しない

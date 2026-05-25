@@ -1021,7 +1021,7 @@ body.is-playing .bunny.bunny--side.bunny--running {
 }
 
 .bait {
-  z-index: 4;
+  z-index: 6;
   position: absolute;
   bottom: clamp(14%, 18vh, 26%);
   /* 右向き：左外から入り、右へ抜ける */
@@ -1298,7 +1298,8 @@ body.is-playing .bunny.bunny--side.bunny--running {
 .result-panel.hidden,
 .rank-panel.hidden,
 .career-modal.hidden,
-.setup-hidden {
+.setup-hidden,
+.hidden {
   display: none !important;
 }
 
@@ -1478,7 +1479,7 @@ body.is-playing .bonus-key-hint {
 .bunny-gear {
   position: absolute;
   inset: 0;
-  z-index: 5;
+  z-index: 0;
   pointer-events: none;
 }
 
@@ -3326,6 +3327,7 @@ body.is-story .shell {
 }
 
 .panel.hidden,
-.story-stage-wrap.hidden {
+.story-stage-wrap.hidden,
+.stage-wrap.hidden {
   display: none !important;
 }
