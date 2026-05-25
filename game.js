@@ -408,13 +408,13 @@ const RABBIT_TITLES = [
 /** 話モード：桃太郎タイピング風（全200章） */
 const STORY_CHAPTER_COUNT = 200;
 
-/** 桃太郎の仲間（章クリア数で解放）— それぞれ技あり */
+/** 桃太郎の仲間（章クリア数で解放）— ココア版桃太郎タイピングのキャスト＝ごまちゃん版 */
 const STORY_HERO = {
   id: "gomachan",
   name: "ごまちゃん",
   icon: "🐰",
-  role: "主人公",
-  skillName: "菜の花攻撃",
+  role: "主人公（桃太郎役）",
+  skillName: "菜の花斬り",
 };
 
 const STORY_COMPANIONS = [
@@ -422,6 +422,16 @@ const STORY_COMPANIONS = [
   { id: "monkey", name: "サル", icon: "🐒", unlockClear: 50, attackBonus: 1, defenseSecBonus: 0.6, hpBonus: 3, skillName: "もうふパンチ" },
   { id: "pheasant", name: "キジ", icon: "🐦", unlockClear: 85, attackBonus: 0, defenseSecBonus: 0, hpBonus: 6, skillName: "つつき", defenseReduceBonus: 0.1 },
 ];
+
+/** ココア版桃太郎タイピング風 chibi スプライト（CSS で描画） */
+function cocoaCharSpriteHtml(charId, size = "md") {
+  return `<div class="cocoa-sprite cocoa-sprite--ally cocoa-sprite--${charId} cocoa-sprite--${size}" aria-hidden="true"><span class="cocoa-sprite__shadow"></span></div>`;
+}
+
+function cocoaMonsterSpriteHtml(spriteId, isBoss = false) {
+  const id = spriteId || "slime";
+  return `<div class="cocoa-sprite cocoa-sprite--foe cocoa-sprite--${id}${isBoss ? " cocoa-sprite--boss" : ""}" aria-hidden="true"><span class="cocoa-sprite__shadow"></span></div>`;
+}
 
 /** 桃太郎タイピング風：げんきゲージ（100たまると大技） */
 const STORY_GAUGE_MAX = 100;
@@ -452,124 +462,124 @@ const STORY_HP_BASE = 10;
 const STORY_HP_PER_CLEAR = 2;
 const STORY_HP_PER_LEVEL = 4;
 
-/** 桃太郎タイピング風：妖菓子（敵）カタログ — 種類がひと目で分かる */
+/** 桃太郎タイピング風：モンスター（敵）カタログ — ココア版のモンスター退治 */
 const STORY_ENEMY_TYPES = [
   {
-    id: "dango",
-    name: "妖団子",
-    category: "妖菓子",
-    icon: "🍡",
-    sprite: "dango",
-    tagline: "三色団子が怒り出した！",
-    appearLine: "ふにゃっ… きびだんごを よこせよ…",
-    defeatLine: "団子は 静かに 転がり去った…",
-    normalMove: "団子プレス",
-    specialMove: "三色団子乱打",
+    id: "slime",
+    name: "スライム",
+    category: "モンスター",
+    icon: "💧",
+    sprite: "slime",
+    tagline: "ぷるぷる跳ねる定番モンスター",
+    appearLine: "プルプル… スライムが あらわれた！",
+    defeatLine: "スライムは 水たまりに 溶けていった…",
+    normalMove: "体当たり",
+    specialMove: "大ジャンプ",
   },
   {
-    id: "warabi",
-    name: "わらびもち魔",
-    category: "妖菓子",
-    icon: "🍮",
-    sprite: "warabi",
-    tagline: "ねっとり粘着系のあやかし",
-    appearLine: "とろ〜り… 動くわらびもちじゃ！",
-    defeatLine: "わらびもちは 元の形に 戻った。",
-    normalMove: "わらび粘着",
-    specialMove: "とろとろ大技",
+    id: "bat",
+    name: "こうもり",
+    category: "モンスター",
+    icon: "🦇",
+    sprite: "bat",
+    tagline: "暗がりから襲う空の魔物",
+    appearLine: "キーキー！ こうもりが 飛んできた！",
+    defeatLine: "こうもりは 森の奥へ 逃げた。",
+    normalMove: "かみつき",
+    specialMove: "超音波",
   },
   {
-    id: "kibi",
-    name: "きびだんご邪鬼",
-    category: "妖菓子",
-    icon: "🟡",
-    sprite: "kibi",
-    tagline: "旅人を待ち伏せする小悪魔",
-    appearLine: "きびだんごくれ！ さもないと たたくぞ！",
-    defeatLine: "きびだんごの恨みが 消えた。",
-    normalMove: "きび叩き",
-    specialMove: "邪鬼大技・きび落とし",
+    id: "goblin",
+    name: "ゴブリン",
+    category: "モンスター",
+    icon: "👺",
+    sprite: "goblin",
+    tagline: "小柄だけど素早い緑の魔物",
+    appearLine: "ギャッ！ ゴブリンが 棒を振り回す！",
+    defeatLine: "ゴブリンは 逃げ出していった。",
+    normalMove: "棒殴り",
+    specialMove: "乱れ打ち",
   },
   {
-    id: "amai",
-    name: "あまいあやかし",
-    category: "妖菓子",
-    icon: "🍬",
-    sprite: "amai",
-    tagline: "甘い香りに誘われる魔物",
-    appearLine: "あ〜ま〜い… 一緒に 甘い世界へ…",
-    defeatLine: "甘い霧が 晴れた。",
-    normalMove: "あまい誘惑",
-    specialMove: "妖菓子大技・甘味渦",
+    id: "mushroom",
+    name: "キノコ魔",
+    category: "モンスター",
+    icon: "🍄",
+    sprite: "mushroom",
+    tagline: "胞子をまく森の魔物",
+    appearLine: "モクモク… キノコ魔が 現れた！",
+    defeatLine: "キノコ魔は 地面に 倒れた。",
+    normalMove: "胞子散らし",
+    specialMove: "毒の胞子",
   },
   {
-    id: "senbei",
-    name: "かたいせんべい",
-    category: "妖菓子",
-    icon: "🍘",
-    sprite: "senbei",
-    tagline: "硬さが自慢の盾持ち",
-    appearLine: "カチッ！ この硬さ 見せてやる！",
-    defeatLine: "せんべいは パラパラと 砕け散った。",
-    normalMove: "硬いせんべい盾",
-    specialMove: "せんべイ大技・全壊",
+    id: "skeleton",
+    name: "がいこつ",
+    category: "モンスター",
+    icon: "💀",
+    sprite: "skeleton",
+    tagline: "カチカチ音を立てる亡者",
+    appearLine: "ガタガタ… がいこつが 立ちはだかる！",
+    defeatLine: "骨は バラバラに 崩れた。",
+    normalMove: "骨投げ",
+    specialMove: "骨乱舞",
   },
   {
-    id: "anko",
-    name: "つぶあんぐり",
-    category: "妖菓子",
-    icon: "🫘",
-    sprite: "anko",
-    tagline: "あんこが渦を巻く丸い敵",
-    appearLine: "ぐるぐる… あんこに 包んであげる…",
-    defeatLine: "あんこ玉は ほどけていった。",
-    normalMove: "あんこ巻き",
-    specialMove: "つぶあん大技",
+    id: "orc",
+    name: "オーク",
+    category: "モンスター",
+    icon: "🐗",
+    sprite: "orc",
+    tagline: "力持ちの猪型モンスター",
+    appearLine: "ウォオ！ オークが 突進してくる！",
+    defeatLine: "オークは 地面に 倒れた。",
+    normalMove: "突進",
+    specialMove: "大振り",
   },
   {
-    id: "ninjin",
-    name: "にんじん小鬼",
-    category: "妖野菜",
-    icon: "🥕",
-    sprite: "carrot",
-    tagline: "畑から這い出た根菜の魔",
-    appearLine: "にんじんパワーで ぶっとばす！",
-    defeatLine: "小鬼は 畑へ 帰っていった。",
-    normalMove: "にんじんタックル",
-    specialMove: "根菜大技",
+    id: "ghost",
+    name: "ゆうれい",
+    category: "モンスター",
+    icon: "👻",
+    sprite: "ghost",
+    tagline: "すり抜ける不気味な魔物",
+    appearLine: "ウウウ… ゆうれいが 漂ってきた！",
+    defeatLine: "ゆうれいは 消え去った…",
+    normalMove: "呪いの手",
+    specialMove: "幽霊大技",
   },
   {
-    id: "tanpopo",
-    name: "たんぽぽ妖",
-    category: "妖野菜",
-    icon: "🌼",
-    sprite: "dandelion",
-    tagline: "綿毛のように軽い敵",
-    appearLine: "ふわふわ… 風に 乗って 戦うわ！",
-    defeatLine: "綿毛は 空へ 舞い上がった。",
-    normalMove: "綿毛散らし",
-    specialMove: "たんぽぽ大技",
+    id: "dragon",
+    name: "ドラゴン",
+    category: "モンスター",
+    icon: "🐉",
+    sprite: "dragon",
+    tagline: "火を吐く空の強敵",
+    appearLine: "ゴオオ！ ドラゴンが 空から 降りてきた！",
+    defeatLine: "ドラゴンは 山の向こうへ 飛び去った。",
+    normalMove: "爪攻撃",
+    specialMove: "火炎",
   },
   {
-    id: "goma",
-    name: "ごまだんご王",
-    category: "妖菓子・ボス",
-    icon: "⚫",
-    sprite: "goma",
-    tagline: "ごまの力を持つ中ボス",
-    appearLine: "我が ごまだんご王国に 触れるな！",
-    defeatLine: "ごまだんご王は 降参した。",
-    normalMove: "ごま渦",
-    specialMove: "ごま王大技・黒丸爆",
+    id: "demon",
+    name: "魔人",
+    category: "ボスモンスター",
+    icon: "😈",
+    sprite: "demon",
+    tagline: "鬼ヶ島手前の強敵",
+    appearLine: "ハッハッハ！ 魔人が 立ちはだかる！",
+    defeatLine: "魔人は 消え去った…",
+    normalMove: "魔の一撃",
+    specialMove: "魔人大技",
   },
   {
     id: "oni",
-    name: "鬼ヶ島大将",
-    category: "鬼",
+    name: "鬼",
+    category: "ボスモンスター",
     icon: "👹",
     sprite: "oni",
-    tagline: "最後の壁・鬼の大将",
-    appearLine: "ウオオオ！ 鬼ヶ島は 我らがものだ！",
+    tagline: "最後の壁・鬼ヶ島の大将",
+    appearLine: "ウオオオ！ 鬼が 金棒を 振り上げた！",
     defeatLine: "鬼は 海の向こうへ 逃げ去った…",
     normalMove: "金棒殴り",
     specialMove: "鬼の大技・鉄棒乱舞",
@@ -604,7 +614,7 @@ function storyArcLabel(chapterIdx) {
 }
 
 function buildStoryIntro(n, loc, enemyName) {
-  if (n === 1) return "花畑の村に、大きな菜の花からごまちゃんが生まれました。妖野菜を退治する旅に出ます。";
+  if (n === 1) return "花畑の村に、大きな菜の花からごまちゃんが生まれました。モンスターを退治する旅に出ます。";
   if (n === 20) return "旅の途中、犬がきびだんごをねだってきました。「つれていって」——犬が仲間になりました！";
   if (n === 50) return "猿が木の上から。「きびだんごくれ」——サルが仲間になりました！";
   if (n === 85) return "キジが空から舞い降りて。「ぼくも行く」——キジが仲間になりました！";
@@ -690,7 +700,7 @@ function buildStoryChapters(count) {
     const enemies = [];
     for (let e = 0; e < enemyCount; e += 1) {
       const type = STORY_ENEMY_TYPES[(i + e) % STORY_ENEMY_TYPES.length];
-      const isBoss = type.id === "oni" || (type.id === "goma" && n >= 100);
+      const isBoss = type.id === "oni" || type.id === "demon";
       enemies.push({
         typeId: type.id,
         name: enemyCount > 1 && e > 0 ? `${type.name}${e + 1}` : type.name,
@@ -1372,7 +1382,7 @@ function storyPickEnemyMove(enemy) {
       : storyState.enemyTurnCount >= 3 && (storyState.enemyTurnCount % 3 === 0 || Math.random() < 0.22);
   if (useSpecial) {
     return {
-      name: enemy.specialMove || type.specialMove || "妖菓子大技",
+      name: enemy.specialMove || type.specialMove || "モンスター大技",
       isSpecial: true,
       mul: enemy.isBoss ? 1.65 : 1.45,
     };
@@ -2187,7 +2197,7 @@ function renderStoryCompanionStrip() {
   if (strip) strip.innerHTML = html;
 }
 
-/** バトル左列：ごまちゃん＋犬・サル・キジ（桃太郎タイピング本家レイアウト） */
+/** バトル左列：ごまちゃん＋犬・サル・キジ（ココア版桃太郎タイピング風 chibi） */
 function renderStoryPartyPanel() {
   const col = $("storyPartyColumn");
   if (!col) return;
@@ -2195,19 +2205,23 @@ function renderStoryPartyPanel() {
   const curP = Math.max(0, storyState.playerHp ?? storyCalcPlayerMaxHp());
   const maxP = storyState.playerMaxHp ?? storyCalcPlayerMaxHp();
   const pPct = maxP > 0 ? Math.max(0, (curP / maxP) * 100) : 0;
-  let html = `<div class="momo-party-slot momo-party-slot--hero" id="storyHeroSlot">
-    <span class="momo-party-slot__icon">${STORY_HERO.icon}</span>
-    <span class="momo-party-slot__name">${STORY_HERO.name}</span>
-    <span class="momo-party-slot__sub">主人公</span>
-    <div class="momo-party-slot__hpbar" aria-hidden="true"><div class="momo-hp-fill momo-hp-fill--ally" id="storyPlayerHpBar" style="width:${pPct}%"></div></div>
-    <span class="momo-party-slot__hpnum"><strong id="storyPlayerHp">${curP}</strong>/<span id="storyPlayerMaxHp">${maxP}</span></span>
+  let html = `<div class="cocoa-party-slot cocoa-party-slot--hero" id="storyHeroSlot">
+    <div class="cocoa-party-slot__fig">${cocoaCharSpriteHtml("gomachan", "lg")}</div>
+    <div class="cocoa-party-slot__info">
+      <span class="cocoa-party-slot__name">${STORY_HERO.name}</span>
+      <span class="cocoa-party-slot__sub">${STORY_HERO.role}</span>
+      <div class="cocoa-hp-bar" aria-hidden="true"><div class="cocoa-hp-fill cocoa-hp-fill--ally" id="storyPlayerHpBar" style="width:${pPct}%"></div></div>
+      <span class="cocoa-party-slot__hpnum"><strong id="storyPlayerHp">${curP}</strong>/<span id="storyPlayerMaxHp">${maxP}</span></span>
+    </div>
   </div>`;
   STORY_COMPANIONS.forEach((c) => {
     const on = cleared >= c.unlockClear;
-    html += `<div class="momo-party-slot${on ? "" : " momo-party-slot--locked"}" title="${on ? c.skillName : `第${c.unlockClear}章`}">
-      <span class="momo-party-slot__icon">${c.icon}</span>
-      <span class="momo-party-slot__name">${c.name}</span>
-      <span class="momo-party-slot__sub">${on ? c.skillName : "？？？"}</span>
+    html += `<div class="cocoa-party-slot${on ? "" : " cocoa-party-slot--locked"}" title="${on ? c.skillName : `第${c.unlockClear}章`}">
+      <div class="cocoa-party-slot__fig">${cocoaCharSpriteHtml(c.id, on ? "md" : "sm")}</div>
+      <div class="cocoa-party-slot__info">
+        <span class="cocoa-party-slot__name">${c.name}</span>
+        <span class="cocoa-party-slot__sub">${on ? c.skillName : "？？？"}</span>
+      </div>
     </div>`;
   });
   col.innerHTML = html;
@@ -2246,18 +2260,16 @@ function renderStoryEnemyVisual(enemy) {
   if (tagEl) tagEl.textContent = enemy.tagline || type.tagline;
   if (nameHud) nameHud.textContent = enemy.name;
   if (spriteEl) {
-    spriteEl.className = "story-enemy__sprite";
-    spriteEl.classList.add(`story-enemy__sprite--${enemy.sprite || type.sprite}`);
-    if (enemy.isBoss) spriteEl.classList.add("story-enemy__sprite--boss");
+    spriteEl.innerHTML = cocoaMonsterSpriteHtml(enemy.sprite || type.sprite, enemy.isBoss);
   }
   if (card) {
-    card.classList.toggle("momo-enemy-card--boss", !!enemy.isBoss);
+    card.classList.toggle("cocoa-enemy-card--boss", !!enemy.isBoss);
     card.dataset.enemyType = type.id;
   }
   if (banner) {
     banner.classList.remove("is-show");
     void banner.offsetWidth;
-    banner.innerHTML = `<span class="momo-enemy-spawn__badge">${escapeHtml(enemy.category || type.category)}</span><strong>${escapeHtml(enemy.icon || type.icon)} ${escapeHtml(enemy.name)}</strong><span class="momo-enemy-spawn__sub">${escapeHtml(enemy.tagline || type.tagline)}</span>`;
+    banner.innerHTML = `<span class="cocoa-enemy-spawn__badge">${escapeHtml(enemy.category || type.category)}</span><strong>${escapeHtml(enemy.icon || type.icon)} ${escapeHtml(enemy.name)}</strong><span class="cocoa-enemy-spawn__sub">${escapeHtml(enemy.tagline || type.tagline)}</span>`;
     banner.classList.add("is-show");
   }
 }
@@ -2436,7 +2448,7 @@ function updateStoryHud() {
         : `⚠ 攻撃力 ${atk}`;
       atkHint.classList.add("is-active");
     } else {
-      atkHint.textContent = `${storyState.currentEnemy.icon || ""} ${storyState.currentEnemy.category || "妖菓子"} — こうげきターン`;
+      atkHint.textContent = `${storyState.currentEnemy.icon || ""} ${storyState.currentEnemy.category || "モンスター"} — こうげきターン`;
       atkHint.classList.remove("is-active");
     }
   }
@@ -2465,7 +2477,7 @@ function showStoryDamagePopup(amount, target = "player") {
 function flashStoryHpBar(which) {
   if (which === "player") {
     const slot = $("storyHeroSlot");
-    const bar = $("storyPlayerHpBar")?.closest(".momo-party-slot__hpbar");
+    const bar = $("storyPlayerHpBar")?.closest(".cocoa-hp-bar");
     [slot, bar].forEach((el) => {
       if (!el) return;
       el.classList.remove("momo-hp-bar--hit");
@@ -2474,7 +2486,7 @@ function flashStoryHpBar(which) {
     });
     return;
   }
-  const bar = $("storyEnemyHpBar")?.closest(".momo-hp-bar");
+  const bar = $("storyEnemyHpBar")?.closest(".cocoa-hp-bar");
   if (!bar) return;
   bar.classList.remove("momo-hp-bar--hit");
   void bar.offsetWidth;
@@ -2839,7 +2851,7 @@ function flashStoryPlayerBlock(tier) {
 function flashStoryCompanions() {
   const col = $("storyPartyColumn");
   if (!col) return;
-  col.querySelectorAll(".momo-party-slot:not(.momo-party-slot--locked):not(.momo-party-slot--hero)").forEach((slot) => {
+  col.querySelectorAll(".cocoa-party-slot:not(.cocoa-party-slot--locked):not(.cocoa-party-slot--hero)").forEach((slot) => {
     slot.classList.remove("is-assist");
     void slot.offsetWidth;
     slot.classList.add("is-assist");
