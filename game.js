@@ -1089,28 +1089,28 @@ function saveEquippedIds(ids) {
   localStorage.setItem(LS_EQUIPPED_IDS, JSON.stringify(uniq));
 }
 
-/** 累計ptで育つ装備レベル（解放後のみ。最大20） */
+/** 累計ptで育つ装備レベル（解放後のみ。最大10） */
 function getEquipLevel(id, careerPts) {
   const d = EQUIP_BY_ID[id];
   if (!d || careerPts < d.unlockPts) return 0;
-  return Math.min(20, 1 + Math.floor((careerPts - d.unlockPts) / 500));
+  return Math.min(10, 1 + Math.floor((careerPts - d.unlockPts) / 1000));
 }
 
-/** 装備解放段階（2000ptごと）。段階が上がるほど効果が跳ね上がる */
+/** 装備解放段階（2000ptごと） */
 function getEquipTier(def) {
   if (!def) return 0;
   return Math.floor((def.unlockPts || 0) / EQUIP_UNLOCK_STEP);
 }
 
-/** Lvが上がるほど効果が加速（Lv20で約85相当） */
+/** Lvに応じた効果（ゆるやかに上がる。Lv10で約4.6） */
 function equipLevelPower(lv) {
   if (lv <= 0) return 0;
-  return lv + Math.floor((lv * lv) / 4);
+  return 1 + (lv - 1) * 0.4;
 }
 
 function equipEffectPower(def, lv) {
   const tier = getEquipTier(def);
-  return equipLevelPower(lv) * (1 + tier * 0.55);
+  return equipLevelPower(lv) * (1 + tier * 0.12);
 }
 
 function aggregateEquipBonus(careerPts) {
@@ -1142,55 +1142,52 @@ function aggregateEquipBonus(careerPts) {
     }
   }
   return {
-    phraseSecAdd: Math.min(8, phraseSecAdd),
-    scoreMult: Math.min(5.5, 1 + mulAdd),
+    phraseSecAdd: Math.min(3.5, phraseSecAdd),
+    /** 話モード用：制限時間の延長はごくわずか（装備が増えても長くなりすぎない） */
+    storyPhraseSecAdd: Math.min(0.8, phraseSecAdd * 0.15),
+    scoreMult: Math.min(3.5, 1 + mulAdd),
     startStock,
     startBonusMs: Math.min(12000, startBonusMs),
-    storyAtkBonus: Math.min(48, storyAtkBonus),
-    storyHpBonus: Math.min(55, storyHpBonus),
-    storyDefReduce: Math.min(0.45, storyDefReduce),
-    storyGaugeBonus: Math.min(22, storyGaugeBonus),
+    storyAtkBonus: Math.min(24, storyAtkBonus),
+    storyHpBonus: Math.min(30, storyHpBonus),
+    storyDefReduce: Math.min(0.35, storyDefReduce),
+    storyGaugeBonus: Math.min(14, storyGaugeBonus),
   };
 }
 
-/** 装備1個の効果説明（UI用） */
+/** 装備1個の効果説明（UI用・短く固定） */
 function formatEquipEffectLines(def, lv, equipped) {
   if (!def || lv <= 0) return [];
-  const lines = [];
   const power = equipEffectPower(def, lv);
-  const tier = getEquipTier(def);
   const scorePct = Math.round((def.mulPerLevel || 0) * power * 100);
-  const sec = ((def.secPerLevel || 0) * power).toFixed(2);
-  if (tier > 0) lines.push(`解放段階 ${tier + 1} — 効果ブースト`);
-  if (scorePct > 0) lines.push(`練習：得点 +${scorePct}%`);
-  if (Number(sec) > 0) lines.push(`練習：お題 +${sec}秒`);
-  if (def.startStock) lines.push(`練習：開始ストック +${def.startStock}`);
-  if (def.startBonusMs) lines.push(`練習：開始 +${(def.startBonusMs / 1000).toFixed(1)}秒`);
-  if (def.kind === "剣" && equipped) lines.push(`話：攻撃 +${Math.round(power * 0.85)}`);
-  if (def.kind === "冠" && equipped) lines.push(`話：最大HP +${Math.max(1, Math.floor(power * 0.9))}`);
-  if (def.kind === "衣" && equipped) lines.push(`話：被ダメ軽減 +${Math.round(power * 2.2)}%`);
-  if (def.kind === "靴" && equipped) lines.push(`話：攻撃 +${Math.round(power * 0.15)}`);
-  if (def.kind === "指輪" && equipped) {
-    lines.push(`話：げんき +${Math.floor(power * 0.55)}/攻撃`);
-    lines.push(`話：HP +${Math.floor(power * 0.35)}`);
-  }
-  return lines;
+  const sec = (def.secPerLevel || 0) * power;
+  const lines = [];
+  const practice = [];
+  if (scorePct > 0) practice.push(`練習 +${scorePct}%`);
+  if (sec >= 0.05) practice.push(`お題 +${sec.toFixed(1)}秒`);
+  if (practice.length) lines.push(practice.join(" "));
+  if (!equipped) return lines;
+  const story = [];
+  if (def.kind === "剣") story.push(`話 攻+${Math.round(power * 0.85)}`);
+  else if (def.kind === "冠") story.push(`話 HP+${Math.max(1, Math.floor(power * 0.9))}`);
+  else if (def.kind === "衣") story.push(`話 防御+${Math.round(power * 2.2)}%`);
+  else if (def.kind === "靴") story.push(`話 攻+${Math.round(power * 0.15)}`);
+  else if (def.kind === "指輪") story.push(`話 げんき+${Math.floor(power * 0.55)}`);
+  if (story.length) lines.push(story[0]);
+  return lines.slice(0, 2);
 }
 
 function formatAggregateEquipSummary(careerPts) {
   const b = aggregateEquipBonus(careerPts);
   const ids = getEquippedIds();
-  if (ids.length === 0) return "装備なし — 効果は付きません";
+  if (ids.length === 0) return "装備なし";
   const parts = [];
-  if (b.scoreMult > 1) parts.push(`練習得点 ×${b.scoreMult.toFixed(2)}`);
+  if (b.scoreMult > 1) parts.push(`練習 ×${b.scoreMult.toFixed(1)}`);
   if (b.phraseSecAdd > 0) parts.push(`お題 +${b.phraseSecAdd.toFixed(1)}秒`);
-  if (b.startStock > 0) parts.push(`開始ストック +${b.startStock}`);
-  if (b.startBonusMs > 0) parts.push(`開始 +${(b.startBonusMs / 1000).toFixed(1)}秒`);
-  if (b.storyAtkBonus > 0) parts.push(`話・攻撃 +${Math.round(b.storyAtkBonus)}`);
-  if (b.storyHpBonus > 0) parts.push(`話・HP +${b.storyHpBonus}`);
-  if (b.storyDefReduce > 0) parts.push(`話・防御 +${Math.round(b.storyDefReduce * 100)}%`);
-  if (b.storyGaugeBonus > 0) parts.push(`話・げんき +${b.storyGaugeBonus}`);
-  return parts.join(" ／ ");
+  if (b.storyAtkBonus > 0) parts.push(`話 攻+${Math.round(b.storyAtkBonus)}`);
+  if (b.storyHpBonus > 0) parts.push(`話 HP+${b.storyHpBonus}`);
+  if (b.storyDefReduce > 0) parts.push(`話 防御+${Math.round(b.storyDefReduce * 100)}%`);
+  return parts.slice(0, 4).join(" ／ ");
 }
 
 /** 称号の段階数（0＝未獲得）。60秒プレイの自己ベストが TITLE_FROM_BEST_PER ごと */
@@ -1342,64 +1339,47 @@ function randomInt(min, max) {
   return min + Math.floor(Math.random() * (max - min + 1));
 }
 
-function pickStoryDefensePhrase() {
-  const candidates = PHRASES.filter((p) => {
+function pickStoryPhraseForChapter(chapterIdx, isDefense) {
+  const minYomi = 2;
+  const maxYomi = isDefense
+    ? Math.min(6, 2 + Math.floor(chapterIdx / 4))
+    : Math.min(11, 3 + Math.floor(chapterIdx / 2));
+  let candidates = PHRASES.filter((p) => {
     const n = yomiCharCount(p.yomi);
-    return n >= 2 && n <= 5;
+    return n >= minYomi && n <= maxYomi;
   });
-  if (candidates.length > 0) return candidates[randomInt(0, candidates.length - 1)];
-  return PHRASES[randomInt(0, Math.min(20, PHRASES.length - 1))];
+  if (candidates.length === 0) {
+    candidates = PHRASES.filter((p) => yomiCharCount(p.yomi) <= maxYomi + 2);
+  }
+  if (candidates.length === 0) candidates = PHRASES;
+  return candidates[randomInt(0, candidates.length - 1)];
 }
 
-function pickStoryPhrase() {
-  const candidates = PHRASES.filter((p) => {
-    const n = yomiCharCount(p.yomi);
-    return n >= 2 && n <= 10;
-  });
-  if (candidates.length > 0) return candidates[randomInt(0, candidates.length - 1)];
-  return PHRASES[randomInt(0, PHRASES.length - 1)];
-}
-
-/** 桃太郎タイピング風：ホームポジション中心のキー（序盤は j→f→…） */
+/** 桃太郎タイピング風：ホームポジション中心のキー（練習用） */
 const MOMO_PANEL_POOL_EARLY = "fjaskldgh";
 const MOMO_PANEL_POOL_MID = "asdfghjklqwertyuiop";
 
 /** 桃太郎タイピング本家：バーチャルキーボード（F/J ホームポジション） */
 const MOMO_VKBD_ROWS = ["qwertyuiop", "asdfghjkl", "zxcvbnm"];
 
-/** 桃太郎タイピング本家：序盤は F/J ホームポジションの1文字パネル */
+/** 話バトル：日本語の文を表示し、その読みをローマ字パネルで打つ（桃太郎タイピング本家） */
 function buildStoryPanelTask(isDefense, chapterIdx, isSpecial = false) {
-  const useMomoKeys = chapterIdx < 12 || loadStoryProgress() < 8;
-  const pool = useMomoKeys ? MOMO_PANEL_POOL_EARLY : MOMO_PANEL_POOL_MID;
-  const baseLen = isDefense ? 3 : 4;
-  let len = Math.min(isDefense ? 5 : 8, baseLen + Math.floor(chapterIdx / 4) + (isDefense ? 0 : 1));
-  if (isSpecial) len = Math.min(isDefense ? 7 : 10, len + 3);
-
-  if (useMomoKeys) {
-    const keys = [];
-    for (let i = 0; i < len; i += 1) {
-      keys.push(pool[i % pool.length] || pool[randomInt(0, pool.length - 1)]);
-    }
-    const text = isDefense
-      ? isSpecial
-        ? "大技防御"
-        : "ぼうぎょ"
-      : isSpecial
-        ? STORY_PLAYER_SKILLS.special.name
-        : "こうげき";
-    return { text, yomi: keys.join(""), panelKeys: keys };
-  }
-
-  const phrase = isDefense ? pickStoryDefensePhrase() : pickStoryPhrase();
+  const phrase = pickStoryPhraseForChapter(chapterIdx, isDefense);
   const romaji = yomiToRomaji(phrase.yomi);
-  const maxLen = isDefense ? (isSpecial ? 10 : 8) : isSpecial ? 16 : 14;
+  const maxLen = isDefense
+    ? isSpecial
+      ? Math.min(12, romaji.length)
+      : Math.min(8, romaji.length)
+    : isSpecial
+      ? Math.min(18, romaji.length)
+      : Math.min(14, romaji.length);
   const keys = [...romaji].slice(0, maxLen);
   const text = isDefense
     ? isSpecial
-      ? "大技ぼうぎょ"
+      ? `大技ぼうぎょ「${phrase.text}」`
       : phrase.text
     : isSpecial
-      ? STORY_PLAYER_SKILLS.special.name
+      ? `${STORY_PLAYER_SKILLS.special.name}「${phrase.text}」`
       : phrase.text;
   return { text, yomi: phrase.yomi, panelKeys: keys };
 }
@@ -2791,7 +2771,10 @@ function storyStartAttackPhrase() {
   }
   storyState.moveName = moveName;
   const equip = storyEquipBonus();
-  storyState.phraseSec = (storyState.currentEnemy?.phraseSec || 5) + (useSpecial ? STORY_BATTLE_PACE.specialPhraseBonus : 0) + equip.phraseSecAdd;
+  storyState.phraseSec =
+    (storyState.currentEnemy?.phraseSec || 5) +
+    (useSpecial ? STORY_BATTLE_PACE.specialPhraseBonus : 0) +
+    equip.storyPhraseSecAdd;
   updateStoryPhaseUi();
   updateStoryHud();
   if (useSpecial) {
@@ -2802,7 +2785,7 @@ function storyStartAttackPhrase() {
     });
     return;
   }
-  setStoryDialog("こうげき！ パネルを順番に打て！", "ごまちゃん");
+  setStoryDialog("こうげき！ 表示の文をローマ字で打て！", "ごまちゃん");
   storySetupPanels(buildStoryPanelTask(false, storyState.chapterIdx, false));
 }
 
@@ -2821,7 +2804,7 @@ function storyStartDefensePhrase(boostMul = 1) {
   storyState.enemyAttackMul = Math.max(storyState.enemyAttackMul, boostMul) * move.mul;
   let sec = storyState.currentEnemy?.defenseSec || 3.2;
   sec += storyCompanionDefenseSecBonus();
-  sec += storyEquipBonus().phraseSecAdd;
+  sec += storyEquipBonus().storyPhraseSecAdd;
   if (move.isSpecial) sec += 0.5;
   storyState.phraseSec = sec;
   updateStoryPhaseUi();
