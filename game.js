@@ -458,20 +458,20 @@ function momoMonsterSpriteHtml(spriteId, isBoss = false) {
 const STORY_GAUGE_MAX = 100;
 const STORY_GAUGE_PER_NORMAL = 34;
 
-/** 話バトルのテンポ（桃太郎タイピング本家準拠：①こうげき→②ぼうぎょ） */
+/** 話バトルのテンポ（桃太郎タイピング本家準拠） */
 const STORY_BATTLE_PACE = {
-  phraseSecBase: 5.5,
-  phraseSecMin: 4.2,
-  defenseSecBase: 4.0,
-  defenseSecMin: 3.0,
-  specialPhraseBonus: 1.5,
-  specialIntroMs: 1200,
-  actionPauseMs: 650,
-  phaseGapMs: 400,
-  turnFinishMs: 550,
-  missGapMs: 650,
-  spawnGapMs: 1000,
-  defeatGapMs: 800,
+  phraseSecBase: 6.0,
+  phraseSecMin: 4.5,
+  defenseSecBase: 4.5,
+  defenseSecMin: 3.2,
+  specialPhraseBonus: 1.2,
+  specialIntroMs: 900,
+  actionPauseMs: 500,
+  phaseGapMs: 300,
+  turnFinishMs: 400,
+  missGapMs: 500,
+  spawnGapMs: 600,
+  defeatGapMs: 650,
 };
 
 /** ごまちゃんの技 */
@@ -736,8 +736,8 @@ function buildStoryChapters(count) {
         isBoss,
         normalMove: type.normalMove,
         specialMove: type.specialMove,
-        hp: 5 + Math.floor(i * 0.42) + e * 4 + (isBoss ? 8 : 0),
-        attack: 2 + Math.floor(i * 0.14) + e * 2 + (isBoss ? 3 : 0),
+        hp: Math.max(3, 3 + Math.floor(i * 0.28) + e * 2 + (isBoss ? 5 : 0)),
+        attack: 2 + Math.floor(i * 0.12) + e + (isBoss ? 2 : 0),
         phraseSec: Math.max(STORY_BATTLE_PACE.phraseSecMin, STORY_BATTLE_PACE.phraseSecBase - Math.floor(i / 55)),
         defenseSec: Math.max(STORY_BATTLE_PACE.defenseSecMin, STORY_BATTLE_PACE.defenseSecBase - Math.floor(i / 70)),
       });
@@ -808,6 +808,9 @@ const storyState = {
   _nextTimer: 0,
   _phraseCompleteAt: 0,
   _pendingTurnFn: null,
+  _defeatLock: false,
+  /** typing | enemy-defeat | ended */
+  battlePhase: "typing",
   /** 章内の全敵（HP・撃破状態つき） */
   battleEnemies: [],
 };
@@ -1364,15 +1367,15 @@ const MOMO_PANEL_POOL_MID = "asdfghjklqwertyuiop";
 /** 桃太郎タイピング本家：バーチャルキーボード（F/J ホームポジション） */
 const MOMO_VKBD_ROWS = ["qwertyuiop", "asdfghjkl", "zxcvbnm"];
 
-/** 章の進みでパネル数が増える（桃太郎タイピングのステップアップ方式） */
+/** 桃太郎タイピング本家：序盤は F/J ホームポジションの1文字パネル */
 function buildStoryPanelTask(isDefense, chapterIdx, isSpecial = false) {
-  const progress = chapterIdx + loadStoryProgress();
-  const pool = progress < 12 ? MOMO_PANEL_POOL_EARLY : MOMO_PANEL_POOL_MID;
+  const useMomoKeys = chapterIdx < 12 || loadStoryProgress() < 8;
+  const pool = useMomoKeys ? MOMO_PANEL_POOL_EARLY : MOMO_PANEL_POOL_MID;
   const baseLen = isDefense ? 3 : 4;
-  let len = Math.min(isDefense ? 6 : 10, baseLen + Math.floor(progress / 6) + (isDefense ? 0 : 1));
-  if (isSpecial) len = Math.min(isDefense ? 8 : 14, len + 4);
+  let len = Math.min(isDefense ? 5 : 8, baseLen + Math.floor(chapterIdx / 4) + (isDefense ? 0 : 1));
+  if (isSpecial) len = Math.min(isDefense ? 7 : 10, len + 3);
 
-  if (progress < 10) {
+  if (useMomoKeys) {
     const keys = [];
     for (let i = 0; i < len; i += 1) {
       keys.push(pool[i % pool.length] || pool[randomInt(0, pool.length - 1)]);
@@ -2232,8 +2235,8 @@ function renderStoryCompanionStrip() {
   const html = [
     `<span class="momo-companion is-on" title="${STORY_HERO.name}（主人公）">${STORY_HERO.icon} ${STORY_HERO.name}</span>`,
     ...STORY_COMPANIONS.map((c) => {
-      const on = cleared >= c.unlockClear;
-      return `<span class="momo-companion${on ? " is-on" : ""}" title="${on ? `${c.name}（仲間）` : `第${c.unlockClear}章クリアで仲間`}">${c.icon} ${c.name}</span>`;
+    const on = cleared >= c.unlockClear;
+    return `<span class="momo-companion${on ? " is-on" : ""}" title="${on ? `${c.name}（仲間）` : `第${c.unlockClear}章クリアで仲間`}">${c.icon} ${c.name}</span>`;
     }),
   ].join("");
   if (strip) strip.innerHTML = html;
@@ -2314,6 +2317,39 @@ function renderStoryEnemyVisual(enemy) {
     banner.innerHTML = `<span class="momo-enemy-spawn__badge">${escapeHtml(enemy.category || type.category)}</span><strong>${escapeHtml(enemy.icon || type.icon)} ${escapeHtml(enemy.name)}</strong><span class="momo-enemy-spawn__sub">${escapeHtml(enemy.tagline || type.tagline)}</span>`;
     banner.classList.add("is-show");
   }
+}
+
+function storyResetEnemyVisual() {
+  const enemyEl = $("storyEnemy");
+  const card = $("storyEnemyCard");
+  if (enemyEl) {
+    enemyEl.classList.remove(
+      "story-enemy--defeated",
+      "story-enemy--hidden",
+      "story-enemy--hit",
+      "story-enemy--attack",
+      "is-spawn",
+    );
+    enemyEl.style.opacity = "";
+    enemyEl.style.pointerEvents = "";
+  }
+  if (card) card.classList.remove("is-defeated");
+}
+
+function storyPlayEnemyDefeat(onDone) {
+  const enemyEl = $("storyEnemy");
+  if (!enemyEl) {
+    if (onDone) onDone();
+    return;
+  }
+  enemyEl.classList.remove("story-enemy--hit", "story-enemy--attack", "is-spawn");
+  void enemyEl.offsetWidth;
+  enemyEl.classList.add("story-enemy--defeated");
+  window.clearTimeout(storyPlayEnemyDefeat._t);
+  storyPlayEnemyDefeat._t = window.setTimeout(() => {
+    enemyEl.classList.add("story-enemy--hidden");
+    if (onDone) onDone();
+  }, STORY_BATTLE_PACE.defeatGapMs);
 }
 
 function showCutsceneScene(scene) {
@@ -2567,6 +2603,8 @@ function renderStoryChapterList() {
 
 function beginStoryBattle() {
   storyState.active = true;
+  storyState.battlePhase = "typing";
+  storyState._defeatLock = false;
   storyState.phraseBusy = false;
   storyState.phase = "attack";
   hideAllMainScreens();
@@ -2580,6 +2618,18 @@ function beginStoryBattle() {
   startGomaStoryBattleBgm();
   setStoryBattleLive(true);
   $("storyGhostInput")?.focus({ preventScroll: true });
+}
+
+function storyStopBattleTimers() {
+  window.clearTimeout(storyState._nextTimer);
+  window.clearTimeout(storyPlayEnemyDefeat._t);
+  window.clearTimeout(storyShowSpecialIntro._t);
+  storyState._nextTimer = 0;
+  storyState._pendingTurnFn = null;
+  if (storyState.raf) {
+    cancelAnimationFrame(storyState.raf);
+    storyState.raf = 0;
+  }
 }
 
 function startStoryChapter(chapterIdx) {
@@ -2601,7 +2651,7 @@ function startStoryChapter(chapterIdx) {
   const label = $("storyChapterLabel");
   if (label) label.textContent = ch.title;
   playStoryCutscene(ch.cutscene || buildChapterCutscene(ch, chapterIdx), () => {
-    beginStoryBattle();
+  beginStoryBattle();
     startStoryEnemy();
   });
 }
@@ -2609,7 +2659,11 @@ function startStoryChapter(chapterIdx) {
 function startStoryEnemy() {
   const ch = STORY_CHAPTERS[storyState.chapterIdx];
   const enemy = ch.enemies[storyState.enemyIdx];
-  if (!enemy) return;
+  if (!enemy || !storyState.active) return;
+  storyStopBattleTimers();
+  storyResetEnemyVisual();
+  storyState.battlePhase = "typing";
+  storyState._defeatLock = false;
   storyState.currentEnemy = enemy;
   storyState.enemyMaxHp = enemy.hp;
   storyState.enemyHp = enemy.hp;
@@ -2718,6 +2772,11 @@ function renderStoryPanels() {
 }
 
 function storyStartAttackPhrase() {
+  if (!storyState.active || storyState.battlePhase !== "typing") return;
+  if (storyState.enemyHp <= 0) {
+    storyOnEnemyDefeated();
+    return;
+  }
   storyState.phase = "attack";
   storyState.phraseBusy = false;
   storyState.phraseInputLocked = false;
@@ -2748,6 +2807,11 @@ function storyStartAttackPhrase() {
 }
 
 function storyStartDefensePhrase(boostMul = 1) {
+  if (!storyState.active || storyState.battlePhase !== "typing") return;
+  if (storyState.enemyHp <= 0) {
+    storyOnEnemyDefeated();
+    return;
+  }
   storyState.phase = "defense";
   storyState.phraseBusy = false;
   storyState.phraseInputLocked = false;
@@ -2786,10 +2850,13 @@ function storyOnAttackSuccess() {
   const companion = storyCompanionAttackBonus();
   const equip = storyEquipBonus();
   const isSpecial = storyState.moveKind === "special";
-  let dmg = Math.max(1, Math.round((2 + storyState.panelKeys.length * 0.35) * speedRatio) + companion);
+  let dmg = 1 + Math.ceil(storyState.panelKeys.length * 0.55);
+  if (speedRatio >= 0.35) dmg += 1;
+  if (speedRatio >= 0.6 && storyState.typosThisPhrase === 0) dmg += 1;
+  dmg += companion;
   dmg += Math.round(equip.storyAtkBonus);
-  if (isSpecial) dmg = Math.round(dmg * 2.35);
-  if (storyState.typosThisPhrase > 0) dmg = Math.max(1, dmg - storyState.typosThisPhrase * 2);
+  if (isSpecial) dmg = Math.round(dmg * 2.2);
+  if (storyState.typosThisPhrase > 0) dmg = Math.max(1, dmg - storyState.typosThisPhrase);
   if (speedRatio >= 0.55 && storyState.typosThisPhrase === 0) dmg += isSpecial ? 4 : 2;
   if (!isSpecial) {
     storyState.gauge = Math.min(
@@ -2812,6 +2879,13 @@ function storyOnAttackSuccess() {
   flashStoryHpBar("enemy");
   playStoryBattleFx("attack", { isSpecial, companion: companion > 0 });
   if (storyState.enemyHp <= 0) {
+    storyState.battlePhase = "enemy-defeat";
+    const enemyEl = $("storyEnemy");
+    if (enemyEl) {
+      enemyEl.classList.remove("story-enemy--hit", "story-enemy--attack");
+      void enemyEl.offsetWidth;
+      enemyEl.classList.add("story-enemy--defeated");
+    }
     storyFinishTurn(() => storyOnEnemyDefeated());
     return;
   }
@@ -2823,14 +2897,14 @@ function storyOnDefenseSuccess() {
   const baseAtk = storyCalcEnemyAttack(storyState.currentEnemy, storyState.chapterIdx);
   const dmg = storyCalcDefenseDamage(baseAtk, tier);
   const reduced = Math.max(0, baseAtk - dmg);
-  storyState.playerHp = Math.max(0, storyState.playerHp - dmg);
+    storyState.playerHp = Math.max(0, storyState.playerHp - dmg);
   const label = storyDefenseTierLabel(tier);
   setStoryDialog(
     `${label}！ ${storyState.enemyMoveName || "攻撃"} ${baseAtk}→${dmg}（${reduced} 軽減）`,
     "ごまちゃん",
   );
-  showStoryDamagePopup(dmg, "player");
-  flashStoryHpBar("player");
+    showStoryDamagePopup(dmg, "player");
+    flashStoryHpBar("player");
   playStoryBattleFx("defense", { tier });
   storyState.enemyAttackMul = 1;
   updateStoryHud();
@@ -2925,18 +2999,32 @@ function flashStoryEnemyAttack() {
 }
 
 function storyOnEnemyDefeated() {
-  storyState.phraseBusy = false;
-  storyState.phraseInputLocked = false;
+  if (storyState._defeatLock || storyState.battlePhase === "ended") return;
+  storyState._defeatLock = true;
+  storyState.battlePhase = "enemy-defeat";
+  storyStopBattleTimers();
+  storyState.phraseBusy = true;
+  storyState.phraseInputLocked = true;
+
   const ch = STORY_CHAPTERS[storyState.chapterIdx];
   const defeated = ch.enemies[storyState.enemyIdx];
   storyState.enemyIdx += 1;
-  if (storyState.enemyIdx >= ch.enemies.length) {
-    finishStoryChapter();
-    return;
-  }
-  const line = defeated.defeatLine || `${defeated.name} をたおした！`;
-  setStoryDialog(`${line} つぎの敵が現れた…`, "ナレーション");
-  window.setTimeout(() => startStoryEnemy(), STORY_BATTLE_PACE.spawnGapMs);
+  const isLast = storyState.enemyIdx >= ch.enemies.length;
+  const line = defeated?.defeatLine || `${defeated?.name || "敵"}をたおした！`;
+  setStoryDialog(isLast ? `${line} 章クリア！` : `${line}`, "ナレーション");
+
+  storyPlayEnemyDefeat(() => {
+    storyState._defeatLock = false;
+    if (!storyState.active || storyState.battlePhase === "ended") return;
+    if (isLast) {
+      finishStoryChapter();
+      return;
+    }
+    setStoryDialog("次の敵が あらわれた！", "ナレーション");
+    window.setTimeout(() => {
+      if (storyState.active && storyState.battlePhase !== "ended") startStoryEnemy();
+    }, STORY_BATTLE_PACE.spawnGapMs);
+  });
 }
 
 function storyPlayerHit(dmg, msg, speaker = "ナレーション") {
@@ -2998,6 +3086,7 @@ function storyOnTypo() {
 function storyOnTimeout() {
   if (storyState.phraseBusy || storyState.phraseInputLocked) return;
   if (storyIsPhraseComplete()) return;
+  if (storyState.enemyHp <= 0 || storyState.battlePhase !== "typing") return;
   storyState.phraseBusy = true;
   storyState.phraseInputLocked = true;
   if (storyState.phase === "defense") {
@@ -3005,8 +3094,8 @@ function storyOnTimeout() {
     if (storyState.playerHp <= 0) {
       storyState.phraseBusy = false;
       storyState.phraseInputLocked = false;
-      return;
-    }
+    return;
+  }
     storyFinishTurn(() => storyStartAttackPhrase());
     return;
   }
@@ -3017,10 +3106,10 @@ function storyOnTimeout() {
 function storyOnDefeat() {
   storyResultVictory = false;
   storyState.active = false;
+  storyState.battlePhase = "ended";
+  storyStopBattleTimers();
   setStoryBattleLive(false);
   stopGomaBgm();
-  detachStoryKeyCapture();
-  cancelAnimationFrame(storyState.raf);
   document.body.classList.remove("is-story");
   hideAllMainScreens();
   $("storyResultPanel")?.classList.remove("hidden");
@@ -3033,9 +3122,14 @@ function storyOnDefeat() {
 
 function finishStoryChapter() {
   storyResultVictory = true;
+  storyState.active = false;
+  storyState.battlePhase = "ended";
+  storyState.phraseBusy = false;
+  storyState.phraseInputLocked = false;
+  storyStopBattleTimers();
+  setStoryBattleLive(false);
   stopGomaBgm();
   detachStoryKeyCapture();
-  cancelAnimationFrame(storyState.raf);
   document.body.classList.remove("is-story");
   const ch = STORY_CHAPTERS[storyState.chapterIdx];
   const prog = loadStoryProgress();
@@ -3057,11 +3151,12 @@ function quitStory() {
   if (storyState.active && !cutsceneState.active && !window.confirm("冒険をやめてホームにもどりますか？")) return;
   if (cutsceneState.active && !window.confirm("ストーリーを中断してホームにもどりますか？")) return;
   storyState.active = false;
+  storyState.battlePhase = "ended";
+  storyStopBattleTimers();
   setStoryBattleLive(false);
   closeStoryCutscene();
   stopGomaBgm();
   detachStoryKeyCapture();
-  cancelAnimationFrame(storyState.raf);
   document.body.classList.remove("is-story");
   showHome();
 }
@@ -3099,7 +3194,12 @@ function storyFinishTurn(nextFn) {
 }
 
 function storyRecoverStuckTurn(now) {
+  if (storyState.battlePhase !== "typing") return;
   if (!storyState.phraseBusy || !storyIsPhraseComplete() || storyState._nextTimer) return;
+  if (storyState.enemyHp <= 0) {
+    storyOnEnemyDefeated();
+    return;
+  }
   const since = now - (storyState._phraseCompleteAt || 0);
   if (since < 700 || since > 8000) return;
   const fn = storyState._pendingTurnFn;
@@ -3228,7 +3328,8 @@ function detachStoryKeyCapture() {
 }
 
 function storyLoop(now) {
-  if (!storyState.active) return;
+  if (!storyState.active || storyState.battlePhase === "ended") return;
+  if (storyState.battlePhase === "enemy-defeat") return;
   const remain = (storyState.phraseEndAt - now) / 1000;
   const pt = $("storyPhraseTimer");
   if (pt) pt.textContent = Math.max(0, remain).toFixed(1);
