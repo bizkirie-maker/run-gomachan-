@@ -57,7 +57,7 @@
         <button type="button" class="mode-card mode-card--story" id="goStoryBtn">
           <span class="mode-card__icon" aria-hidden="true">📖</span>
           <span class="mode-card__title">話</span>
-          <span class="mode-card__desc">桃太郎タイピング風。攻撃と防御のローマ字で妖野菜を退治</span>
+          <span class="mode-card__desc">桃太郎タイピング方式。げんき・大技・妖菓子バトル</span>
         </button>
       </div>
       <p class="home-career muted">
@@ -121,6 +121,7 @@
               <span class="career-inline">いまは <strong id="careerTitle">（まだなし）</strong></span>
             </span><br />
             <span class="career-sub" id="careerNextTitle"></span><br />
+            <span class="career-sub career-equip-effects" id="careerEquipEffects"></span><br />
             <span class="career-line-equip career-equip--hint">装備の変更はホームの「装備」から</span>
           </p>
         </div>
@@ -139,8 +140,9 @@
       <p class="equip-hub-career">
         累計ポイント：<strong id="equipHubPoints">0</strong> pt（<strong>2000</strong> pt ごとに解放）　／　装着 <strong id="equipHubCount">0</strong>／3
       </p>
+      <p class="equip-hub-active-effects muted" id="equipHubActiveEffects"></p>
       <div class="equip-hub-body career-modal__panel career-modal__panel--ff5" id="equipHubBody"></div>
-      <p class="muted equip-hub-note">ボタンを押すと装着 ON／OFF。同時に付けられるのは<strong>3つまで</strong>です。最初の「にんじんリボン冠」は最初から使えます。</p>
+      <p class="muted equip-hub-note">ボタンを押すと装着 ON／OFF。同時に付けられるのは<strong>3つまで</strong>です。装備は<strong>練習モード</strong>（得点・お題秒数）と<strong>話モード</strong>（攻撃・HP・防御・げんき）の両方に効きます。</p>
     </section>
 
     <!-- 話モード：旅のしおり（章選択） -->
@@ -149,7 +151,7 @@
         <button type="button" class="ghost small back-home-btn" id="backHomeFromStoryBtn">← ホーム</button>
         <h2 id="story-menu-heading">ごまちゃんももたろうタイピング</h2>
       </div>
-      <p class="muted">「ココアの桃太郎たいぴんぐ」と同じ<strong>パネル入力</strong>バトル。アルファベットのパネルを打って攻撃し、敵のターンではパネルで防御します。</p>
+      <p class="muted">桃太郎タイピング方式。<strong>通常攻撃</strong>でげんきがたまり<strong>100で大技</strong>。敵も通常技・大技を使う。防御は完全無効ではなく<strong>ダメージ軽減</strong>。</p>
       <div class="momo-companion-strip" id="storyCompanionStrip" aria-label="仲間"></div>
       <p class="story-menu-meta muted" id="storyMenuMeta"></p>
       <ul class="story-chapter-list momo-chapter-scroll" id="storyChapterList"></ul>
@@ -255,7 +257,7 @@
           <div><span class="hud-label">スコア</span> <strong id="score">0</strong> pt</div>
           <div><span class="hud-label" id="stockLabel">エサストック</span> <strong id="stockCount">0</strong> こ</div>
         </div>
-        <p class="input-hint">正解は<strong>ローマ字だけ</strong>（ひらがな・漢字の変換は使いません）。IME は英字（半角）にして a〜z を打ってください。お題の下のローマ字を、エサが通りすぎる前に打ち終えましょう。正しく打ち始めるとごまちゃんがエサの方へ近づきます。<strong>時間切れ</strong>はどちらのモードでもストックが減ります。<strong>しっかり</strong>は打ち間違いでもストックが減ります。<strong>やさしい</strong>は打ち間違いのキーは無視です。<strong>正しく打った文字が 40 文字ごと</strong>に、この60秒に<strong>＋1秒</strong>が入ります（80文字目、120文字目…でも同様）。。プレイ中はブラウザ内で<strong>草原風のBGM</strong>が鳴り、時間プラスでは別の効果音が鳴ります（著作楽曲の転載ではありません）。</p>
+        <p class="input-hint">正解は<strong>ローマ字だけ</strong>（ひらがな・漢字の変換は使いません）。IME は英字（半角）にして a〜z を打ってください。お題の下のローマ字を、エサが通りすぎる前に打ち終えましょう。正しく打ち始めるとごまちゃんがエサの方へ近づきます。<strong>時間切れ</strong>はどちらのモードでもストックが減ります。<strong>しっかり</strong>は打ち間違いでもストックが減ります。<strong>やさしい</strong>は打ち間違いのキーは無視です。<strong>正しく打った文字が 30 文字ごと</strong>に、この60秒に<strong>＋1秒</strong>が入ります（60文字目、90文字目…でも同様）。。プレイ中はブラウザ内で<strong>草原風のBGM</strong>が鳴り、時間プラスでは別の効果音が鳴ります（著作楽曲の転載ではありません）。</p>
         <input
           id="ghostInput"
           class="ghost-input"
@@ -283,6 +285,23 @@
       </div>
     </section>
 
+    <!-- 話モード：動画風カットシーン（クリック／Enterで進む） -->
+    <section class="momo-cutscene hidden" id="storyCutsceneWrap" aria-live="polite">
+      <div class="momo-cutscene__bg" id="storyCutsceneBg"></div>
+      <div class="momo-cutscene__vignette" aria-hidden="true"></div>
+      <div class="momo-cutscene__scanlines" aria-hidden="true"></div>
+      <div class="momo-cutscene__enemy-reveal hidden" id="storyCutEnemyReveal"></div>
+      <div class="momo-cutscene__portraits">
+        <div class="momo-cutscene__portrait momo-cutscene__portrait--left hidden" id="storyCutPortraitLeft"></div>
+        <div class="momo-cutscene__portrait momo-cutscene__portrait--right hidden" id="storyCutPortraitRight"></div>
+      </div>
+      <div class="momo-cutscene__dialog" role="button" tabindex="0">
+        <p class="momo-cutscene__speaker" id="storyCutSpeaker">ナレーション</p>
+        <p class="momo-cutscene__text" id="storyCutText"></p>
+        <p class="momo-cutscene__hint">クリック / Enter でつづく ▶</p>
+      </div>
+    </section>
+
     <!-- 話モード：桃太郎風バトル -->
     <section class="story-stage-wrap hidden" id="storyStageWrap" aria-live="polite">
       <div class="momo-battle">
@@ -292,6 +311,15 @@
             <span class="momo-player-lv" id="storyPlayerLv">Lv.1</span>
           </div>
           <span class="momo-phase-badge momo-phase-badge--attack" id="storyPhaseBadge">こうげき！</span>
+        </div>
+        <div class="momo-skill-row" aria-label="技とげんき">
+          <span class="momo-skill-name" id="storyMoveName">通常攻撃</span>
+          <span class="momo-equip-hint" id="storyEquipHint"></span>
+          <div class="momo-gauge-wrap">
+            <span class="momo-gauge-label">げんき</span>
+            <div class="momo-gauge-bar" aria-hidden="true"><div class="momo-gauge-fill" id="storyGaugeBar"></div></div>
+            <span class="momo-gauge-text" id="storyGaugeText">0/100</span>
+          </div>
         </div>
         <div class="story-scene momo-scene" id="storyScene">
           <div class="field-bg momo-field-bg" aria-hidden="true"></div>
@@ -309,17 +337,26 @@
             </div>
             <span class="momo-scene-hp__num"><strong id="storyPlayerHp">10</strong>/<span id="storyPlayerMaxHp">10</span></span>
           </div>
+          <div class="momo-enemy-spawn" id="storyEnemySpawnBanner" aria-live="assertive"></div>
           <div class="story-enemy momo-enemy" id="storyEnemy" aria-hidden="true">
             <div class="momo-scene-hp momo-scene-hp--enemy" aria-label="敵のHP">
               <span class="momo-scene-hp__name" id="storyEnemyNameHud">敵</span>
+              <span class="momo-enemy-label" id="storyEnemyLabelHud">🍡 妖菓子</span>
               <div class="momo-hp-bar momo-hp-bar--scene">
                 <div class="momo-hp-fill momo-hp-fill--enemy" id="storyEnemySceneHpBar"></div>
               </div>
               <span class="momo-scene-hp__num"><strong id="storyEnemyHp">0</strong>/<span id="storyEnemyMaxHp">0</span></span>
               <span class="momo-enemy-atk" id="storyEnemyAtkHint"></span>
             </div>
-            <span class="story-enemy__sprite" id="storyEnemySprite"></span>
-            <span class="story-enemy__name" id="storyEnemyName"></span>
+            <div class="momo-enemy-card" id="storyEnemyCard">
+              <span class="momo-enemy-card__badge" id="storyEnemyCategory">妖菓子</span>
+              <div class="momo-enemy-card__body">
+                <span class="story-enemy__sprite" id="storyEnemySprite"></span>
+                <span class="momo-enemy-card__icon" id="storyEnemyIcon" aria-hidden="true">🍡</span>
+              </div>
+              <strong class="story-enemy__name" id="storyEnemyName">妖団子</strong>
+              <span class="momo-enemy-card__tagline" id="storyEnemyTagline">三色団子が怒り出した！</span>
+            </div>
           </div>
           <div class="bunny bunny--side bunny--story" id="storyBunny" aria-hidden="true">
             <div class="bunny-gear" id="storyBunnyGear" aria-hidden="true"></div>
@@ -361,7 +398,7 @@
               <span class="momo-hp-num momo-hp-num--big"><strong id="storyPlayerHpHud">10</strong> / <span id="storyPlayerMaxHpHud">10</span></span>
             </div>
             <div class="momo-hp-block momo-hp-block--enemy">
-              <span class="momo-hp-label">敵 HP</span>
+              <span class="momo-hp-label" id="storyEnemyHudLabel">🍡 妖団子</span>
               <div class="momo-hp-bar momo-hp-bar--large" aria-hidden="true">
                 <div class="momo-hp-fill momo-hp-fill--enemy" id="storyEnemyHpBar"></div>
               </div>
@@ -372,7 +409,7 @@
               <span class="momo-hp-num momo-hp-num--big"><strong id="storyPhraseTimer">5.0</strong> 秒</span>
             </div>
           </div>
-          <p class="input-hint story-input-hint">桃太郎タイピングと同じ操作。<strong>パネルのアルファベット</strong>を順番に打つ。攻撃ターンは速く正確に、防御ターンは敵のダメージを抑える。HPは章を進めると増えます。</p>
+          <p class="input-hint story-input-hint">桃太郎タイピング準拠。<strong>通常攻撃</strong>でげんきUP → <strong>100で大技</strong>。敵の技名を見て<strong>防御パネル</strong>を打つとダメージ軽減（完全防御なし）。大技は長いパネル・高ダメージ。</p>
           <input id="storyGhostInput" class="ghost-input" type="text" lang="en" inputmode="latin" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="話モード用キー入力" />
           <button type="button" class="ghost small" id="quitStoryBtn">旅をやめる</button>
         </section>
