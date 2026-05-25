@@ -326,15 +326,6 @@
           <p class="momo-phase-ribbon__sub" id="storyMoveName">通常攻撃</p>
         </div>
 
-        <section class="momo-panel-stage momo-phrase-card momo-phrase-card--attack" id="storyPhraseCard" aria-label="タイピングパネル">
-          <p class="momo-panel-word" id="storyPanelWord" lang="ja">こうげき</p>
-          <p class="momo-next-key" id="storyNextKeyHint">つぎのキーを打て！</p>
-          <div class="momo-panel-board" id="storyPanelBoard"></div>
-          <div class="momo-panel-timer-bar" aria-hidden="true"><div class="momo-panel-timer-fill" id="storyPanelTimerFill"></div></div>
-          <p class="momo-panel-timer-num">のこり <strong id="storyPhraseTimer">5.0</strong> 秒</p>
-          <div class="momo-vkbd" id="storyVirtualKeyboard" aria-hidden="true"></div>
-        </section>
-
         <div class="momo-arena momo-scene cocoa-battle-scene" id="storyScene">
           <div class="cocoa-scene-bg" aria-hidden="true">
             <span class="cocoa-cloud cocoa-cloud--1"></span>
@@ -342,6 +333,14 @@
             <span class="cocoa-cloud cocoa-cloud--3"></span>
             <span class="cocoa-ground"></span>
           </div>
+          <section class="cocoa-panel-overlay momo-panel-stage momo-phrase-card momo-phrase-card--attack" id="storyPhraseCard" aria-label="タイピングパネル">
+            <p class="momo-panel-word" id="storyPanelWord" lang="ja">こうげき</p>
+            <p class="momo-next-key" id="storyNextKeyHint">つぎのキーを打て！</p>
+            <div class="momo-panel-board" id="storyPanelBoard"></div>
+            <div class="momo-panel-timer-bar" aria-hidden="true"><div class="momo-panel-timer-fill" id="storyPanelTimerFill"></div></div>
+            <p class="momo-panel-timer-num">のこり <strong id="storyPhraseTimer">5.0</strong> 秒</p>
+            <div class="momo-vkbd" id="storyVirtualKeyboard" aria-hidden="true"></div>
+          </section>
           <aside class="cocoa-party-column" id="storyPartyColumn" aria-label="味方パーティ"></aside>
           <div class="cocoa-arena-center">
             <div class="momo-gauge-wrap momo-gauge-wrap--arena cocoa-gauge">

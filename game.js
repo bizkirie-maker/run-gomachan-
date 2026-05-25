@@ -1500,11 +1500,18 @@ function refreshPhrasePointsPreview() {
   }
 }
 
-function showScoreGainPopup(pts) {
+function showScoreGainPopup(pts, breakdown) {
   if (!pts || pts <= 0) return;
   const pop = $("scoreGainPopup");
   if (!pop) return;
-  pop.textContent = `+${pts} pt`;
+  if (breakdown) {
+    let detail = `難易度+${breakdown.diffPts}`;
+    if (breakdown.lenPts > 0) detail += ` 野菜+${breakdown.lenPts}`;
+    if (breakdown.mult > 1) detail += ` ×${breakdown.mult.toFixed(2)}`;
+    pop.textContent = `+${pts} pt（${detail}）`;
+  } else {
+    pop.textContent = `+${pts} pt`;
+  }
   pop.classList.remove("is-show");
   void pop.offsetWidth;
   pop.classList.add("is-show");
@@ -1768,6 +1775,7 @@ function updateHud(gameRemain, phraseRemain) {
   if (cp) cp.textContent = pStr;
   $("score").textContent = String(state.score);
   $("stockCount").textContent = String(state.baitStock);
+  if (state.playing) refreshPhrasePointsPreview();
   updateBonusKeyHint();
 }
 
@@ -1825,11 +1833,14 @@ function bumpBunny() {
 }
 
 function onSuccessPhrase() {
-  const pts = phrasePoints();
+  syncPracticeSettingsFromUi();
+  const breakdown = phrasePointsBreakdown();
+  const pts = breakdown.total;
   const oldP = loadCareerPoints();
   state.score += pts;
   saveCareerPoints(oldP + pts);
-  showScoreGainPopup(pts);
+  $("score").textContent = String(state.score);
+  showScoreGainPopup(pts, breakdown);
 
   state.baitStock += 1;
   bumpBunny();
@@ -1997,7 +2008,10 @@ function processTypedChar(ch) {
   updateBonusKeyHint();
   renderTypeline();
 
-  const done = state.typedRomaji.length > 0 && state.romajiCandidates.includes(state.typedRomaji);
+  const done =
+    state.typedRomaji.length > 0 &&
+    (state.romajiCandidates.includes(state.typedRomaji) ||
+      state.typedRomaji === state.targetChars.join(""));
   if (done) onSuccessPhrase();
 }
 
@@ -2609,8 +2623,8 @@ function storySetupPanels(task) {
 function updateStoryNextKeyHint() {
   const el = $("storyNextKeyHint");
   if (!el) return;
-  if (storyIsPhraseComplete()) {
-    el.textContent = "打ち終わり！";
+  if (storyState.phraseBusy || storyIsPhraseComplete()) {
+    el.innerHTML = `よくできた！ <strong>つぎのターンへ…</strong>`;
     return;
   }
   const opts = storyPanelNextKeyOptions();
@@ -2722,6 +2736,8 @@ function storyStartDefensePhrase(boostMul = 1) {
 function storyOnAttackSuccess() {
   if (storyState.phraseBusy) return;
   storyState.phraseBusy = true;
+  const gapMs = STORY_BATTLE_PACE.phaseGapMs + STORY_BATTLE_PACE.actionPauseMs;
+  storyHoldPhraseTransition(gapMs + 400);
   storyState.attackCount += 1;
   const remain = Math.max(0, (storyState.phraseEndAt - performance.now()) / 1000);
   const total = Math.max(0.1, storyState.phraseSec);
@@ -2764,6 +2780,8 @@ function storyOnAttackSuccess() {
 function storyOnDefenseSuccess() {
   if (storyState.phraseBusy) return;
   storyState.phraseBusy = true;
+  const gapMs = STORY_BATTLE_PACE.phaseGapMs + STORY_BATTLE_PACE.actionPauseMs;
+  storyHoldPhraseTransition(gapMs + 400);
   const tier = storyDefenseTier();
   const baseAtk = storyCalcEnemyAttack(storyState.currentEnemy, storyState.chapterIdx);
   const dmg = storyCalcDefenseDamage(baseAtk, tier);
@@ -2784,11 +2802,6 @@ function storyOnDefenseSuccess() {
     return;
   }
   window.setTimeout(() => storyStartAttackPhrase(), STORY_BATTLE_PACE.phaseGapMs + STORY_BATTLE_PACE.actionPauseMs);
-}
-
-function storyOnPhraseSuccess() {
-  if (storyState.phase === "defense") storyOnDefenseSuccess();
-  else storyOnAttackSuccess();
 }
 
 function setStoryArenaMode(mode) {
@@ -2944,10 +2957,12 @@ function storyOnTimeout() {
   if (storyState.phase === "defense") {
     storyApplyEnemyAttack("timeout");
     if (storyState.playerHp <= 0) return;
+    storyHoldPhraseTransition(STORY_BATTLE_PACE.missGapMs + STORY_BATTLE_PACE.actionPauseMs + 400);
     window.setTimeout(() => storyStartAttackPhrase(), STORY_BATTLE_PACE.missGapMs + STORY_BATTLE_PACE.actionPauseMs);
     return;
   }
   setStoryDialog("時間切れ！ こうげきはずれ — 敵のターン！", "ごまちゃん");
+  storyHoldPhraseTransition(STORY_BATTLE_PACE.missGapMs + 400);
   window.setTimeout(() => storyStartDefensePhrase(1.2), STORY_BATTLE_PACE.missGapMs);
 }
 
@@ -3013,9 +3028,24 @@ function storyPanelNextKeyOptions() {
   return [...opts].sort();
 }
 
+function storyHoldPhraseTransition(ms = 1200) {
+  storyState.phraseEndAt = performance.now() + ms;
+}
+
 function storyIsPhraseComplete() {
+  const keys = storyState.panelKeys || [];
+  if (!keys.length) return false;
   const typed = storyState.typedRomaji || "";
-  return typed.length > 0 && (storyState.romajiCandidates || []).some((r) => r === typed);
+  if (typed.length < keys.length) return false;
+  const base = storyState.panelBaseRomaji || keys.join("");
+  if (typed === base) return true;
+  return (storyState.romajiCandidates || []).some((r) => r === typed);
+}
+
+function storyOnPhraseSuccess() {
+  if (storyState.phraseBusy) return;
+  if (storyState.phase === "defense") storyOnDefenseSuccess();
+  else storyOnAttackSuccess();
 }
 
 function storyResetPanelTyping() {

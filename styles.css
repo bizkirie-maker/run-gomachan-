@@ -4351,12 +4351,52 @@ body.is-story .foot {
 }
 
 .momo-battle--cocoa .momo-panel-stage {
-  border-color: #ffd54f;
-  background: linear-gradient(180deg, #fffde7 0%, #fff9c4 100%);
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+
+.cocoa-panel-overlay {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  transform: translate(-50%, -50%);
+  z-index: 22;
+  width: min(94%, 340px);
+  padding: 0.55rem 0.5rem 0.65rem;
+  border-radius: 14px;
+  background: rgba(255, 253, 247, 0.62);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  border: 3px solid rgba(255, 213, 79, 0.88);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.55),
+    0 8px 24px rgba(0, 0, 0, 0.14);
+  pointer-events: none;
+}
+
+.cocoa-panel-overlay.momo-phrase-card--defense {
+  border-color: rgba(100, 181, 246, 0.92);
+  background: rgba(245, 251, 255, 0.62);
+}
+
+.cocoa-panel-overlay.momo-phrase-card--special {
+  border-color: rgba(255, 112, 67, 0.92);
+  background: rgba(255, 248, 225, 0.65);
+}
+
+.cocoa-panel-overlay .momo-panel-word,
+.cocoa-panel-overlay .momo-next-key,
+.cocoa-panel-overlay .momo-panel-timer-num {
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.85);
+}
+
+.cocoa-panel-overlay .momo-vkbd {
+  background: rgba(255, 255, 255, 0.45);
 }
 
 .cocoa-battle-scene {
-  min-height: min(48vw, 260px);
+  min-height: min(58vw, 320px);
   border: 4px solid #3949ab;
   border-radius: 12px;
   background: #87ceeb;
@@ -4506,6 +4546,11 @@ body.is-story .foot {
   z-index: 2;
   min-width: 0;
   padding-bottom: 0.25rem;
+  pointer-events: none;
+}
+
+.cocoa-gauge {
+  opacity: 0.92;
 }
 
 .cocoa-gauge .momo-gauge-bar {
@@ -4513,13 +4558,13 @@ body.is-story .foot {
 }
 
 .cocoa-msg-window {
-  padding: 0.4rem 0.55rem;
+  padding: 0.35rem 0.45rem;
   border-radius: 8px;
-  background: linear-gradient(180deg, #fff8e1 0%, #ffe0b2 100%);
-  border: 3px solid #8d6e63;
-  box-shadow:
-    inset 0 0 0 2px #fff,
-    0 3px 0 rgba(0, 0, 0, 0.12);
+  background: rgba(255, 248, 225, 0.72);
+  backdrop-filter: blur(2px);
+  border: 2px solid rgba(141, 110, 99, 0.75);
+  max-height: 3.2em;
+  overflow: hidden;
 }
 
 .cocoa-battle-msg {
@@ -4703,37 +4748,52 @@ body.is-story .foot {
   height: 96px;
 }
 
+.cocoa-sprite--gomachan {
+  position: relative;
+  z-index: 1;
+}
+
 .cocoa-sprite--gomachan::before {
   content: "";
   position: absolute;
   left: 50%;
-  top: 22%;
+  top: 30%;
   transform: translateX(-50%);
-  width: 58%;
-  height: 52%;
-  background: #fafafa;
-  border-radius: 48% 52% 50% 50%;
-  box-shadow: -7px 8px 0 -2px #212121, 7px 8px 0 -2px #212121, 0 14px 0 -4px #f48fb1;
-  z-index: 2;
+  width: 54%;
+  height: 48%;
+  background: #fff;
+  border-radius: 50% 50% 46% 46%;
+  box-shadow:
+    -6px 7px 0 -2px #3e2723,
+    6px 7px 0 -2px #3e2723,
+    0 12px 0 -3px #f48fb1;
+  z-index: 3;
 }
 
 .cocoa-sprite--gomachan::after {
   content: "";
   position: absolute;
   left: 50%;
-  top: 6%;
+  top: 2%;
   transform: translateX(-50%);
-  width: 78%;
-  height: 32%;
+  width: 72%;
+  height: 36%;
   background:
-    radial-gradient(circle at 20% 75%, #f8bbd9 0 32%, transparent 33%),
-    radial-gradient(circle at 80% 75%, #f8bbd9 0 32%, transparent 33%);
-  z-index: 1;
+    radial-gradient(circle at 18% 82%, #f8bbd9 0 34%, transparent 35%),
+    radial-gradient(circle at 82% 82%, #f8bbd9 0 34%, transparent 35%);
+  border-radius: 50% 50% 0 0;
+  z-index: 2;
 }
 
-.cocoa-sprite--gomachan {
-  background: linear-gradient(#e53935, #c62828) 50% 12% / 52% 14% no-repeat;
-  z-index: 1;
+/* うさぎの耳（ごまちゃん専用・ピンクの内側） */
+.cocoa-sprite--gomachan .cocoa-sprite__shadow {
+  bottom: 2%;
+}
+
+.cocoa-sprite--ally.cocoa-sprite--gomachan {
+  background:
+    radial-gradient(circle at 22% 10%, #fce4ec 0 14%, transparent 15%),
+    radial-gradient(circle at 78% 10%, #fce4ec 0 14%, transparent 15%);
 }
 
 .cocoa-sprite--dog::before {
