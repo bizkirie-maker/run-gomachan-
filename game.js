@@ -923,6 +923,8 @@ function showPracticePanel() {
   cancelAnimationFrame(state.raf);
   hideAllMainScreens();
   $("practicePanel")?.classList.remove("hidden");
+  syncPracticeSettingsFromUi();
+  refreshPhrasePointsPreview();
   refreshCareerHud();
 }
 
@@ -1039,6 +1041,23 @@ function getEquipLevel(id, careerPts) {
   return Math.min(20, 1 + Math.floor((careerPts - d.unlockPts) / 500));
 }
 
+/** 装備解放段階（2000ptごと）。段階が上がるほど効果が跳ね上がる */
+function getEquipTier(def) {
+  if (!def) return 0;
+  return Math.floor((def.unlockPts || 0) / EQUIP_UNLOCK_STEP);
+}
+
+/** Lvが上がるほど効果が加速（Lv20で約85相当） */
+function equipLevelPower(lv) {
+  if (lv <= 0) return 0;
+  return lv + Math.floor((lv * lv) / 4);
+}
+
+function equipEffectPower(def, lv) {
+  const tier = getEquipTier(def);
+  return equipLevelPower(lv) * (1 + tier * 0.55);
+}
+
 function aggregateEquipBonus(careerPts) {
   const ids = getEquippedIds();
   let phraseSecAdd = 0;
@@ -1053,28 +1072,29 @@ function aggregateEquipBonus(careerPts) {
     const d = EQUIP_BY_ID[id];
     if (!d) continue;
     const lv = getEquipLevel(id, careerPts);
-    phraseSecAdd += (d.secPerLevel || 0) * lv;
-    mulAdd += (d.mulPerLevel || 0) * lv;
+    const power = equipEffectPower(d, lv);
+    phraseSecAdd += (d.secPerLevel || 0) * power;
+    mulAdd += (d.mulPerLevel || 0) * power;
     startStock += d.startStock || 0;
     startBonusMs += d.startBonusMs || 0;
-    if (d.kind === "剣") storyAtkBonus += lv * 0.45;
-    if (d.kind === "冠") storyHpBonus += Math.max(1, Math.floor(lv * 0.55));
-    if (d.kind === "衣") storyDefReduce += lv * 0.014;
-    if (d.kind === "靴") storyAtkBonus += lv * 0.08;
+    if (d.kind === "剣") storyAtkBonus += power * 0.85;
+    if (d.kind === "冠") storyHpBonus += Math.max(1, Math.floor(power * 0.9));
+    if (d.kind === "衣") storyDefReduce += power * 0.022;
+    if (d.kind === "靴") storyAtkBonus += power * 0.15;
     if (d.kind === "指輪") {
-      storyGaugeBonus += Math.floor(lv * 0.35);
-      storyHpBonus += Math.floor(lv * 0.25);
+      storyGaugeBonus += Math.floor(power * 0.55);
+      storyHpBonus += Math.floor(power * 0.35);
     }
   }
   return {
-    phraseSecAdd: Math.min(2.5, phraseSecAdd),
-    scoreMult: Math.min(2.35, 1 + mulAdd),
+    phraseSecAdd: Math.min(8, phraseSecAdd),
+    scoreMult: Math.min(5.5, 1 + mulAdd),
     startStock,
-    startBonusMs: Math.min(5000, startBonusMs),
-    storyAtkBonus: Math.min(12, storyAtkBonus),
-    storyHpBonus: Math.min(18, storyHpBonus),
-    storyDefReduce: Math.min(0.28, storyDefReduce),
-    storyGaugeBonus: Math.min(8, storyGaugeBonus),
+    startBonusMs: Math.min(12000, startBonusMs),
+    storyAtkBonus: Math.min(48, storyAtkBonus),
+    storyHpBonus: Math.min(55, storyHpBonus),
+    storyDefReduce: Math.min(0.45, storyDefReduce),
+    storyGaugeBonus: Math.min(22, storyGaugeBonus),
   };
 }
 
@@ -1082,19 +1102,22 @@ function aggregateEquipBonus(careerPts) {
 function formatEquipEffectLines(def, lv, equipped) {
   if (!def || lv <= 0) return [];
   const lines = [];
-  const scorePct = Math.round((def.mulPerLevel || 0) * lv * 100);
-  const sec = ((def.secPerLevel || 0) * lv).toFixed(2);
+  const power = equipEffectPower(def, lv);
+  const tier = getEquipTier(def);
+  const scorePct = Math.round((def.mulPerLevel || 0) * power * 100);
+  const sec = ((def.secPerLevel || 0) * power).toFixed(2);
+  if (tier > 0) lines.push(`解放段階 ${tier + 1} — 効果ブースト`);
   if (scorePct > 0) lines.push(`練習：得点 +${scorePct}%`);
   if (Number(sec) > 0) lines.push(`練習：お題 +${sec}秒`);
   if (def.startStock) lines.push(`練習：開始ストック +${def.startStock}`);
   if (def.startBonusMs) lines.push(`練習：開始 +${(def.startBonusMs / 1000).toFixed(1)}秒`);
-  if (def.kind === "剣" && equipped) lines.push(`話：攻撃 +${Math.round(lv * 0.45)}`);
-  if (def.kind === "冠" && equipped) lines.push(`話：最大HP +${Math.max(1, Math.floor(lv * 0.55))}`);
-  if (def.kind === "衣" && equipped) lines.push(`話：被ダメ軽減 +${Math.round(lv * 1.4)}%`);
-  if (def.kind === "靴" && equipped) lines.push(`話：攻撃 +${Math.round(lv * 0.08)}`);
+  if (def.kind === "剣" && equipped) lines.push(`話：攻撃 +${Math.round(power * 0.85)}`);
+  if (def.kind === "冠" && equipped) lines.push(`話：最大HP +${Math.max(1, Math.floor(power * 0.9))}`);
+  if (def.kind === "衣" && equipped) lines.push(`話：被ダメ軽減 +${Math.round(power * 2.2)}%`);
+  if (def.kind === "靴" && equipped) lines.push(`話：攻撃 +${Math.round(power * 0.15)}`);
   if (def.kind === "指輪" && equipped) {
-    lines.push(`話：げんき +${Math.floor(lv * 0.35)}/攻撃`);
-    lines.push(`話：HP +${Math.floor(lv * 0.25)}`);
+    lines.push(`話：げんき +${Math.floor(power * 0.55)}/攻撃`);
+    lines.push(`話：HP +${Math.floor(power * 0.35)}`);
   }
   return lines;
 }
@@ -1405,9 +1428,7 @@ function renderRankList() {
 }
 
 function openRanking() {
-  state.diff = DIFFICULTY[$("difficulty").value];
-  state.lenMode = LENGTH_MODE[$("lengthMode").value];
-  state.mistakeMode = MISTAKE_MODE[$("mistakeMode").value];
+  syncPracticeSettingsFromUi();
   $("rankContext").textContent = `${state.diff.label} × ${state.lenMode.label} × ${state.mistakeMode.label}（1プレイのスコア）`;
   renderRankList();
   $("rankPanel").classList.remove("hidden");
@@ -1419,10 +1440,49 @@ function closeRanking() {
   $("rankPanel").classList.remove("rank-overlay");
 }
 
+function syncPracticeSettingsFromUi() {
+  const diffEl = $("difficulty");
+  const lenEl = $("lengthMode");
+  const misEl = $("mistakeMode");
+  if (diffEl?.value && DIFFICULTY[diffEl.value]) state.diff = DIFFICULTY[diffEl.value];
+  if (lenEl?.value && LENGTH_MODE[lenEl.value]) state.lenMode = LENGTH_MODE[lenEl.value];
+  if (misEl?.value && MISTAKE_MODE[misEl.value]) state.mistakeMode = MISTAKE_MODE[misEl.value];
+}
+
+function phrasePointsBreakdown() {
+  syncPracticeSettingsFromUi();
+  const diffPts = state.diff?.points ?? 1;
+  const lenPts = state.lenMode?.bonus ?? 0;
+  const mult = aggregateEquipBonus(loadCareerPoints()).scoreMult;
+  const total = Math.max(1, Math.floor((diffPts + lenPts) * mult));
+  return { diffPts, lenPts, mult, total };
+}
+
 function phrasePoints() {
-  const base = state.diff.points + state.lenMode.bonus;
-  const { scoreMult } = aggregateEquipBonus(loadCareerPoints());
-  return Math.floor(base * scoreMult);
+  return phrasePointsBreakdown().total;
+}
+
+function refreshPhrasePointsPreview() {
+  const el = $("pointsPerPhrase");
+  const hint = $("pointsBreakdownHint");
+  if (!el && !hint) return;
+  const b = phrasePointsBreakdown();
+  if (el) el.textContent = String(b.total);
+  if (hint) {
+    hint.textContent = `内訳：難易度 +${b.diffPts} ／ 野菜 +${b.lenPts}${b.mult > 1 ? ` ／ 装備 ×${b.mult.toFixed(2)}` : ""}`;
+  }
+}
+
+function showScoreGainPopup(pts) {
+  if (!pts || pts <= 0) return;
+  const pop = $("scoreGainPopup");
+  if (!pop) return;
+  pop.textContent = `+${pts} pt`;
+  pop.classList.remove("is-show");
+  void pop.offsetWidth;
+  pop.classList.add("is-show");
+  window.clearTimeout(showScoreGainPopup._t);
+  showScoreGainPopup._t = window.setTimeout(() => pop.classList.remove("is-show"), 900);
 }
 
 function setSceneDifficultyClass() {
@@ -1742,6 +1802,7 @@ function onSuccessPhrase() {
   const oldP = loadCareerPoints();
   state.score += pts;
   saveCareerPoints(oldP + pts);
+  showScoreGainPopup(pts);
 
   state.baitStock += 1;
   bumpBunny();
@@ -1856,11 +1917,10 @@ function updateStockHudLabel() {
 
 function startGame() {
   state.gameMode = "practice";
-  state.diff = DIFFICULTY[$("difficulty").value];
-  state.lenMode = LENGTH_MODE[$("lengthMode").value];
-  state.mistakeMode = MISTAKE_MODE[$("mistakeMode").value];
+  syncPracticeSettingsFromUi();
   setSceneDifficultyClass();
   updateStockHudLabel();
+  refreshPhrasePointsPreview();
   migrateEquippedStorageIfNeeded();
   state.score = 0;
   const b = aggregateEquipBonus(loadCareerPoints());
@@ -1910,7 +1970,7 @@ function processTypedChar(ch) {
   updateBonusKeyHint();
   renderTypeline();
 
-  const done = narrowed.length === 1 && narrowed[0] === state.typedRomaji;
+  const done = state.typedRomaji.length > 0 && state.romajiCandidates.includes(state.typedRomaji);
   if (done) onSuccessPhrase();
 }
 
@@ -2496,11 +2556,8 @@ function startStoryEnemy() {
 function storySetupPanels(task) {
   storyState.currentPhrase = { text: task.text, yomi: task.yomi };
   storyState.panelKeys = task.panelKeys.map((k) => k.toLowerCase());
-  storyState.panelIndex = 0;
-  storyState.targetChars = [...storyState.panelKeys];
-  storyState.romajiCandidates = buildRomajiVariants(storyState.panelKeys.join(""));
-  storyState.typedRomaji = "";
   storyState.typosThisPhrase = 0;
+  storyResetPanelTyping();
   const now = performance.now();
   storyState.phraseStartedAt = now;
   storyState.phraseEndAt = now + storyState.phraseSec * 1000;
@@ -2516,15 +2573,27 @@ function renderStoryPanels() {
   if (!board) return;
   const keys = storyState.panelKeys;
   const idx = storyState.panelIndex;
+  const complete = storyIsPhraseComplete();
+  const nextOpts = storyPanelNextKeyOptions();
   board.innerHTML = keys
     .map((k, i) => {
       let cls = "momo-key-panel";
-      if (i < idx) cls += " momo-key-panel--done";
-      else if (i === idx) cls += " momo-key-panel--current";
-      if (i === idx && storyState.panelTypoFlash) cls += " momo-key-panel--miss";
-      return `<span class="${cls}">${escapeHtml(k.toUpperCase())}</span>`;
+      const isDone = complete || i < idx;
+      const isCurrent = !complete && i === idx;
+      if (isDone) cls += " momo-key-panel--done";
+      else if (isCurrent) cls += " momo-key-panel--current";
+      if (isCurrent && storyState.panelTypoFlash) cls += " momo-key-panel--miss";
+      let label = k.toUpperCase();
+      if (isCurrent && nextOpts.length > 1) label = nextOpts.join("・");
+      else if (isCurrent && nextOpts.length === 1) label = nextOpts[0];
+      return `<span class="${cls}">${escapeHtml(label)}</span>`;
     })
     .join("");
+  const guideEl = $("storyPanelAltHint");
+  if (guideEl) {
+    guideEl.textContent =
+      !complete && nextOpts.length > 1 ? `打てる例：${nextOpts.join(" ／ ")}（どちらも正解）` : "";
+  }
   const card = $("storyPhraseCard");
   if (card) {
     card.classList.toggle("momo-phrase-card--defense", storyState.phase === "defense");
@@ -2719,7 +2788,7 @@ function storyOnTypo() {
   if (storyState.phase === "defense") {
     storyApplyEnemyAttack("typo");
     if (storyState.playerHp <= 0) return;
-    storyState.panelIndex = 0;
+    storyResetPanelTyping();
     storyState.panelTypoFlash = false;
     renderStoryPanels();
     storyState.phraseBusy = false;
@@ -2796,18 +2865,44 @@ function quitStory() {
   showHome();
 }
 
+function storyPanelNextKeyOptions() {
+  const typed = storyState.typedRomaji || "";
+  const opts = new Set();
+  for (const r of storyState.romajiCandidates || []) {
+    const rest = r.slice(typed.length);
+    if (rest) opts.add(rest[0].toUpperCase());
+  }
+  return [...opts].sort();
+}
+
+function storyIsPhraseComplete() {
+  const typed = storyState.typedRomaji || "";
+  return typed.length > 0 && (storyState.romajiCandidates || []).some((r) => r === typed);
+}
+
+function storyResetPanelTyping() {
+  storyState.panelIndex = 0;
+  storyState.typedRomaji = "";
+  storyState.panelBaseRomaji = storyState.panelKeys.join("");
+  storyState.romajiCandidates = buildRomajiVariants(storyState.panelBaseRomaji);
+}
+
 function storyProcessTypedChar(ch) {
   if (!storyState.active || storyState.phraseBusy || storyState.playerHp <= 0) return;
-  const expected = storyState.panelKeys[storyState.panelIndex];
-  if (!expected) return;
-  if (ch.toLowerCase() !== expected) {
+  if (!storyState.panelKeys?.length) return;
+
+  const nextPrefix = `${storyState.typedRomaji || ""}${ch}`.toLowerCase();
+  const narrowed = (storyState.romajiCandidates || []).filter((r) => r.startsWith(nextPrefix));
+  if (narrowed.length === 0) {
     storyOnTypo();
     return;
   }
-  storyState.panelIndex += 1;
+  storyState.romajiCandidates = narrowed;
+  storyState.typedRomaji = nextPrefix;
+  storyState.panelIndex = nextPrefix.length;
   saveCareerRomaji(loadCareerRomaji() + 1);
   renderStoryPanels();
-  if (storyState.panelIndex >= storyState.panelKeys.length) storyOnPhraseSuccess();
+  if (storyIsPhraseComplete()) storyOnPhraseSuccess();
 }
 
 function onStoryKeydown(ev) {
@@ -2915,13 +3010,20 @@ function init() {
     if (cutsceneState.active) onCutsceneAdvance(ev);
   });
   $("difficulty").addEventListener("change", () => {
+    syncPracticeSettingsFromUi();
     if (!state.playing) {
-      state.diff = DIFFICULTY[$("difficulty").value];
       setSceneDifficultyClass();
+      refreshPhrasePointsPreview();
     }
+  });
+  $("lengthMode").addEventListener("change", () => {
+    syncPracticeSettingsFromUi();
+    if (!state.playing) refreshPhrasePointsPreview();
   });
 
   setSceneDifficultyClass();
+  syncPracticeSettingsFromUi();
+  refreshPhrasePointsPreview();
   showHome();
   refreshBunnyEquipVisual();
 }

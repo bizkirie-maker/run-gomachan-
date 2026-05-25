@@ -88,7 +88,7 @@
             <option value="intermediate">中級 — エサが横に通る 4秒</option>
             <option value="advanced">上級 — エサが横に通る 3秒</option>
           </select>
-          <span class="hint">初級は<strong>1</strong>pt、中級<strong>2</strong>pt、上級<strong>3</strong>pt を一文ごと（エサごと）につけます。</span>
+          <span class="hint">初級<strong>+1</strong>pt、中級<strong>+2</strong>pt、上級<strong>+3</strong>pt（野菜モードのボーナスと足し算）。下の「1文あたり」で確認できます。</span>
         </div>
         <div class="field">
           <span class="label">文の長さ（野菜モード）</span>
@@ -175,6 +175,7 @@
           </div>
         </div>
         <p class="bonus-key-hint" id="bonusKeyHint" aria-live="polite"></p>
+        <p class="score-gain-popup" id="scoreGainPopup" aria-live="polite"></p>
         <div class="nanohana-layer" aria-hidden="true">
           <div class="nanohana" style="--x: 3%; --d: 0s; --s: 0.82"></div>
           <div class="nanohana" style="--x: 9%; --d: -0.4s; --s: 0.95"></div>
@@ -255,8 +256,10 @@
         </div>
         <div class="hud-row">
           <div><span class="hud-label">スコア</span> <strong id="score">0</strong> pt</div>
+          <div><span class="hud-label">1文あたり</span> <strong id="pointsPerPhrase">1</strong> pt</div>
           <div><span class="hud-label" id="stockLabel">エサストック</span> <strong id="stockCount">0</strong> こ</div>
         </div>
+        <p class="points-breakdown-hint muted" id="pointsBreakdownHint"></p>
         <p class="input-hint">正解は<strong>ローマ字だけ</strong>（ひらがな・漢字の変換は使いません）。IME は英字（半角）にして a〜z を打ってください。お題の下のローマ字を、エサが通りすぎる前に打ち終えましょう。正しく打ち始めるとごまちゃんがエサの方へ近づきます。<strong>時間切れ</strong>はどちらのモードでもストックが減ります。<strong>しっかり</strong>は打ち間違いでもストックが減ります。<strong>やさしい</strong>は打ち間違いのキーは無視です。<strong>正しく打った文字が 30 文字ごと</strong>に、この60秒に<strong>＋1秒</strong>が入ります（60文字目、90文字目…でも同様）。。プレイ中はブラウザ内で<strong>草原風のBGM</strong>が鳴り、時間プラスでは別の効果音が鳴ります（著作楽曲の転載ではありません）。</p>
         <input
           id="ghostInput"
@@ -331,6 +334,7 @@
           <div class="momo-panel-column">
             <p class="momo-skill-name" id="storyMoveName">通常攻撃</p>
             <p class="momo-panel-guide" id="storyPanelGuide">アルファベットのパネルを順番に打て！</p>
+            <p class="momo-panel-alt-hint" id="storyPanelAltHint" aria-live="polite"></p>
             <div class="story-phrase-card momo-phrase-card momo-phrase-card--center" id="storyPhraseCard">
               <p class="momo-panel-word" id="storyPanelWord" lang="ja">こうげき</p>
               <div class="momo-panel-board" id="storyPanelBoard" aria-label="タイピングパネル"></div>

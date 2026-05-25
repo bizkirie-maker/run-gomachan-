@@ -1457,6 +1457,46 @@ body.is-playing .bonus-key-hint {
   display: block;
 }
 
+.score-gain-popup {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  transform: translateX(-50%) translateY(8px);
+  z-index: 25;
+  margin: 0;
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  font-size: 1.35rem;
+  font-weight: 900;
+  color: #e65100;
+  background: rgba(255, 248, 225, 0.96);
+  border: 2px solid rgba(255, 152, 0, 0.55);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.14);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.score-gain-popup.is-show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.points-breakdown-hint {
+  margin: 0.15rem 0 0.35rem;
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.momo-panel-alt-hint {
+  margin: 0;
+  text-align: center;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #1565c0;
+  min-height: 1.1em;
+}
+
 .bunny-title-badge {
   position: absolute;
   left: 50%;
