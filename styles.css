@@ -2329,12 +2329,405 @@ body.is-playing .bonus-key-hint {
   gap: 0.65rem;
 }
 
-.momo-battle-head {
+/* 本家準拠：味方左・パネル中央・敵右 */
+.momo-battle--classic {
+  gap: 0.55rem;
+}
+
+.momo-battle-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem;
-  padding: 0 0.15rem;
+  padding: 0 0.1rem;
+}
+
+.momo-battle-top__left {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+}
+
+.momo-turn-banner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 8.5rem;
+  padding: 0.45rem 1rem;
+  border-radius: 12px;
+  font-weight: 900;
+  font-size: clamp(0.88rem, 2.8vw, 1.02rem);
+  letter-spacing: 0.06em;
+  border: 3px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.12);
+}
+
+.momo-turn-banner--attack {
+  background: linear-gradient(180deg, #ffe0b2, #ff9800);
+  color: #4e2600;
+}
+
+.momo-turn-banner--defense {
+  background: linear-gradient(180deg, #bbdefb, #42a5f5);
+  color: #0d2f6e;
+  animation: momo-defense-pulse 1.2s ease-in-out infinite;
+}
+
+.momo-turn-banner--special {
+  background: linear-gradient(180deg, #fff176, #ff6f00);
+  color: #4e342e;
+  animation: momo-special-pulse 0.9s ease-in-out infinite;
+}
+
+.momo-battle-field {
+  position: relative;
+  display: grid;
+  grid-template-areas:
+    "enemy-hp enemy-hp enemy-hp"
+    "party panel enemy"
+    "party panel enemy";
+  grid-template-columns: minmax(96px, 24%) minmax(0, 1fr) minmax(100px, 26%);
+  grid-template-rows: auto 1fr;
+  gap: 0.45rem 0.55rem;
+  min-height: min(58vw, 380px);
+  max-height: min(72vh, 440px);
+  padding: 0.55rem 0.55rem 0.65rem;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: linear-gradient(180deg, #b8d9ff 0%, #d8f0c8 55%, #f5e6b8 100%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.45), 0 12px 30px var(--shadow);
+}
+
+.momo-battle-field.momo-scene {
+  height: auto;
+  max-height: none;
+}
+
+.momo-enemy-head {
+  grid-area: enemy-hp;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  grid-template-rows: auto auto;
+  gap: 0.2rem 0.55rem;
+  align-items: center;
+  padding: 0.45rem 0.65rem;
+  border-radius: 12px;
+  background: rgba(255, 252, 248, 0.92);
+  border: 2px solid rgba(198, 40, 40, 0.35);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+}
+
+.momo-enemy-head__badge {
+  grid-row: span 2;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: #c62828;
+  color: #fff;
+  align-self: center;
+}
+
+.momo-enemy-head__name {
+  font-size: 0.95rem;
+  font-weight: 900;
+  color: #4e342e;
+}
+
+.momo-enemy-head__hp {
+  font-size: 0.78rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #5d4037;
+}
+
+.momo-hp-bar--enemy-head {
+  grid-column: 2 / 4;
+  height: 12px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  overflow: hidden;
+}
+
+.momo-enemy-head .momo-enemy-atk {
+  grid-column: 1 / -1;
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #1565c0;
+}
+
+.momo-enemy-head .momo-enemy-atk.is-active {
+  color: #c62828;
+}
+
+.momo-party-column {
+  grid-area: party;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  z-index: 2;
+  min-width: 0;
+}
+
+.momo-party-slot {
+  display: grid;
+  grid-template-columns: 2.4rem minmax(0, 1fr);
+  gap: 0.3rem 0.4rem;
+  align-items: center;
+  padding: 0.35rem 0.45rem;
+  border-radius: 12px;
+  background: rgba(255, 252, 248, 0.9);
+  border: 2px solid rgba(255, 255, 255, 0.75);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+}
+
+.momo-party-slot--hero {
+  border-color: rgba(255, 152, 0, 0.55);
+  background: linear-gradient(180deg, rgba(255, 248, 240, 0.98), rgba(255, 224, 178, 0.92));
+}
+
+.momo-party-slot--hero.is-hit {
+  animation: momo-party-hit 0.45s ease;
+}
+
+@keyframes momo-party-hit {
+  0%, 100% { filter: none; }
+  40% { filter: brightness(1.15) saturate(0.65); }
+}
+
+.momo-party-slot--locked {
+  opacity: 0.48;
+  filter: grayscale(0.7);
+  border-style: dashed;
+}
+
+.momo-party-slot__icon {
+  grid-row: span 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 10px;
+  font-size: 1.35rem;
+  background: rgba(255, 255, 255, 0.75);
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.06);
+}
+
+.momo-party-slot__name {
+  font-size: 0.72rem;
+  font-weight: 900;
+  color: #4e342e;
+  line-height: 1.2;
+}
+
+.momo-party-slot__sub {
+  grid-column: 2;
+  font-size: 0.62rem;
+  font-weight: 700;
+  color: rgba(61, 58, 54, 0.72);
+}
+
+.momo-party-slot__hpbar {
+  grid-column: 2;
+  height: 8px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.momo-party-slot__hpbar .momo-hp-fill {
+  height: 100%;
+  border-radius: inherit;
+}
+
+.momo-party-slot__hpnum {
+  grid-column: 2;
+  font-size: 0.62rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #2e7d32;
+}
+
+.momo-panel-column {
+  grid-area: panel;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 0.35rem;
+  z-index: 3;
+  min-width: 0;
+}
+
+.momo-panel-guide {
+  margin: 0;
+  text-align: center;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: #5d4037;
+  line-height: 1.4;
+}
+
+.momo-battle--classic .momo-skill-name {
+  margin: 0;
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 900;
+  color: #bf360c;
+}
+
+.momo-phrase-card--center {
+  position: relative;
+  left: auto;
+  top: auto;
+  transform: none;
+  min-width: 0;
+  width: 100%;
+  padding: 0.55rem 0.5rem 0.6rem;
+  border-radius: 14px;
+  background: rgba(255, 252, 248, 0.96);
+  border: 3px solid rgba(255, 193, 7, 0.55);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.momo-battle-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem 0.65rem;
+  padding: 0.25rem 0.15rem 0;
+}
+
+.momo-battle-status .momo-gauge-wrap {
+  flex: 1;
+  min-width: 120px;
+  max-width: none;
+}
+
+.momo-timer-pill {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.25rem;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.88);
+  border: 2px solid rgba(66, 165, 245, 0.45);
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.momo-timer-pill__label,
+.momo-timer-pill__unit {
+  font-size: 0.68rem;
+  opacity: 0.82;
+}
+
+.momo-timer-pill strong {
+  font-size: 1.05rem;
+  color: #1565c0;
+}
+
+.momo-enemy-column {
+  grid-area: enemy;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  z-index: 2;
+  min-height: 0;
+}
+
+.momo-battle--classic .story-enemy {
+  position: relative;
+  right: auto;
+  bottom: auto;
+  width: 100%;
+}
+
+.momo-battle--classic .momo-enemy-card {
+  width: 100%;
+  max-width: 140px;
+}
+
+.momo-battle--classic .momo-enemy-spawn {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  z-index: 12;
+}
+
+.momo-battle-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.45rem 0.75rem;
+  padding: 0.55rem 0.75rem 0.65rem;
+  border-radius: var(--radius);
+  background: linear-gradient(180deg, rgba(255, 252, 248, 0.96), rgba(255, 245, 235, 0.92));
+  border: 2px solid rgba(232, 168, 124, 0.35);
+  box-shadow: 0 6px 18px var(--shadow);
+}
+
+.momo-battle-foot__hint {
+  flex: 1 1 200px;
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.45;
+  opacity: 0.88;
+}
+
+.momo-battle--classic .momo-key-panel {
+  min-width: 2.35rem;
+  height: 2.45rem;
+  font-size: 1.12rem;
+}
+
+@media (max-width: 640px) {
+  .momo-battle-field {
+    grid-template-areas:
+      "enemy-hp"
+      "panel"
+      "party"
+      "enemy";
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto auto;
+    min-height: auto;
+    max-height: none;
+  }
+
+  .momo-party-column {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .momo-party-slot {
+    flex: 1 1 calc(50% - 0.4rem);
+    min-width: 130px;
+  }
+
+  .momo-enemy-column {
+    min-height: 120px;
+  }
+}
+
+.momo-party-slot__hpbar.momo-hp-bar--hit {
+  animation: momo-hp-bar-hit 0.45s ease;
+}
+
+.momo-battle-field--defense {
+  box-shadow: inset 0 0 0 2px rgba(66, 165, 245, 0.35), inset 0 0 0 1px rgba(255, 255, 255, 0.45), 0 12px 30px var(--shadow);
+}
+
+.momo-battle-field--special {
+  box-shadow: inset 0 0 0 2px rgba(255, 111, 0, 0.45), inset 0 0 0 1px rgba(255, 255, 255, 0.45), 0 12px 30px var(--shadow);
 }
 
 .momo-battle-head__left {
