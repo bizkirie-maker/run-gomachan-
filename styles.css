@@ -3252,7 +3252,8 @@ body.is-story .momo-panel-top {
 }
 
 body.is-story .momo-battle-field,
-body.is-story .cocoa-battle-scene {
+body.is-story .cocoa-battle-scene,
+body.is-story .momo-arena.momo-battle-field {
   flex: 1;
   min-height: min(62vh, 520px);
 }

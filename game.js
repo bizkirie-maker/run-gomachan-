@@ -428,43 +428,43 @@ const STORY_COMPANIONS = [
   { id: "pheasant", name: "キジ", icon: "🐦", unlockClear: 85, attackBonus: 0, defenseSecBonus: 0, hpBonus: 6, skillName: "つつき", defenseReduceBonus: 0.1 },
 ];
 
-/** ごまちゃん（練習モードと同じうさぎCSS）＋仲間はポップなステッカー風 */
+/** ごまちゃん（練習モードと同じうさぎCSS）＋仲間は大きな絵文字 */
 function storyGomachanFigureHtml() {
-  return `<div class="momo-pop-sticker momo-pop-sticker--hero" aria-hidden="true"><div class="bunny bunny--side bunny--story-mini bunny--pop"><div class="bunny-pose bunny-pose--sit">
+  return `<div class="bunny bunny--side bunny--story-mini" aria-hidden="true"><div class="bunny-pose bunny-pose--sit">
     <span class="bunny-tail"></span><span class="bunny-haunch"></span><span class="bunny-hind-thigh"></span><span class="bunny-hind-paw"></span>
     <span class="bunny-body"></span><span class="bunny-belly-highlight"></span><span class="bunny-neck"></span>
     <span class="bunny-fore-thigh"></span><span class="bunny-fore-paw"></span><span class="bunny-fore-toe"></span>
     <span class="bunny-head"><span class="bunny-ear bunny-ear--rear"></span><span class="bunny-ear bunny-ear--front"></span>
     <span class="bunny-eye"><span class="bunny-eye-highlight"></span></span><span class="bunny-whiskers"></span>
     <span class="bunny-nose"></span><span class="bunny-nose-shine"></span><span class="bunny-cheeks"></span></span>
-  </div></div></div>`;
+  </div></div>`;
 }
 
 function storyAllyEmojiHtml(icon, size = "md") {
-  return `<span class="momo-pop-sticker momo-pop-sticker--ally momo-pop-sticker--${size}" aria-hidden="true"><span class="momo-ally-emoji">${icon}</span></span>`;
+  return `<span class="momo-ally-emoji momo-ally-emoji--${size}" aria-hidden="true">${icon}</span>`;
 }
 
 function storyEnemyEmojiHtml(icon, isBoss = false) {
-  return `<div class="momo-pop-sticker momo-pop-sticker--foe${isBoss ? " momo-pop-sticker--boss" : ""}"><span class="momo-enemy-emoji">${icon}</span></div>`;
+  return `<span class="momo-enemy-emoji${isBoss ? " momo-enemy-emoji--boss" : ""}" aria-hidden="true">${icon}</span>`;
 }
 
 /** 桃太郎タイピング風：げんきゲージ（100たまると大技） */
 const STORY_GAUGE_MAX = 100;
 const STORY_GAUGE_PER_NORMAL = 34;
 
-/** 話バトルのテンポ（ゆっくり＋攻撃演出の待ち時間） */
+/** 話バトルのテンポ（桃太郎タイピング本家準拠：①こうげき→②ぼうぎょ） */
 const STORY_BATTLE_PACE = {
-  phraseSecBase: 8.5,
-  phraseSecMin: 6.2,
-  defenseSecBase: 6.2,
-  defenseSecMin: 4.5,
-  specialPhraseBonus: 1.8,
-  specialIntroMs: 1300,
+  phraseSecBase: 5.5,
+  phraseSecMin: 4.2,
+  defenseSecBase: 4.0,
+  defenseSecMin: 3.0,
+  specialPhraseBonus: 1.5,
+  specialIntroMs: 1200,
   actionPauseMs: 650,
   phaseGapMs: 400,
-  turnFinishMs: 420,
+  turnFinishMs: 550,
   missGapMs: 650,
-  spawnGapMs: 1200,
+  spawnGapMs: 1000,
   defeatGapMs: 800,
 };
 
@@ -800,6 +800,7 @@ const storyState = {
   /** 大技イントロ中は入力不可 */
   phraseInputLocked: false,
   _nextTimer: 0,
+  _turnSeq: 0,
   /** 章内の全敵（HP・撃破状態つき） */
   battleEnemies: [],
 };
@@ -2303,7 +2304,7 @@ function renderStoryEnemyVisual(enemy) {
   if (banner) {
     banner.classList.remove("is-show");
     void banner.offsetWidth;
-    banner.innerHTML = `<span class="cocoa-enemy-spawn__badge">${escapeHtml(enemy.category || type.category)}</span><strong>${escapeHtml(enemy.icon || type.icon)} ${escapeHtml(enemy.name)}</strong><span class="cocoa-enemy-spawn__sub">${escapeHtml(enemy.tagline || type.tagline)}</span>`;
+    banner.innerHTML = `<span class="momo-enemy-spawn__badge">${escapeHtml(enemy.category || type.category)}</span><strong>${escapeHtml(enemy.icon || type.icon)} ${escapeHtml(enemy.name)}</strong><span class="momo-enemy-spawn__sub">${escapeHtml(enemy.tagline || type.tagline)}</span>`;
     banner.classList.add("is-show");
   }
 }
@@ -2638,6 +2639,7 @@ function storySetupPanels(task) {
   renderStoryPanels();
   const inp = $("storyGhostInput");
   if (inp) inp.value = "";
+  requestAnimationFrame(() => $("storyGhostInput")?.focus({ preventScroll: true }));
 }
 
 function updateStoryNextKeyHint() {
@@ -2962,11 +2964,16 @@ function storyOnTypo() {
   storyState.typosThisPhrase += 1;
   if (storyState.phase === "defense") {
     storyApplyEnemyAttack("typo");
-    if (storyState.playerHp <= 0) return;
+    if (storyState.playerHp <= 0) {
+      storyState.phraseBusy = false;
+      storyState.phraseInputLocked = false;
+      return;
+    }
     storyResetPanelTyping();
     storyState.panelTypoFlash = false;
     renderStoryPanels();
     storyState.phraseBusy = false;
+    storyState.phraseInputLocked = false;
     return;
   }
   storyState.panelTypoFlash = true;
@@ -2984,7 +2991,11 @@ function storyOnTimeout() {
   storyState.phraseInputLocked = true;
   if (storyState.phase === "defense") {
     storyApplyEnemyAttack("timeout");
-    if (storyState.playerHp <= 0) return;
+    if (storyState.playerHp <= 0) {
+      storyState.phraseBusy = false;
+      storyState.phraseInputLocked = false;
+      return;
+    }
     storyFinishTurn(() => storyStartAttackPhrase());
     return;
   }
@@ -3063,15 +3074,14 @@ function storyFinishTurn(nextFn) {
   const delay = STORY_BATTLE_PACE.turnFinishMs;
   storyState.phraseEndAt = performance.now() + delay + 500;
   updateStoryNextKeyHint();
+  storyState._turnSeq = (storyState._turnSeq || 0) + 1;
+  const seq = storyState._turnSeq;
   storyState._nextTimer = window.setTimeout(() => {
+    if (seq !== storyState._turnSeq) return;
     storyState._nextTimer = 0;
-    if (!storyState.active) {
-      storyState.phraseBusy = false;
-      storyState.phraseInputLocked = false;
-      return;
-    }
     storyState.phraseBusy = false;
     storyState.phraseInputLocked = false;
+    if (!storyState.active) return;
     nextFn();
   }, delay);
 }
@@ -3108,14 +3118,26 @@ function storyShowSpecialIntro(isEnemy, onReady) {
 
 function storyIsPhraseComplete() {
   const keys = storyState.panelKeys || [];
-  return keys.length > 0 && storyState.panelIndex >= keys.length;
+  if (!keys.length) return false;
+  if (storyState.panelIndex >= keys.length) return true;
+  const typed = storyState.typedRomaji || "";
+  if (!typed) return false;
+  const cands = storyState.romajiCandidates || [];
+  return cands.length > 0 && cands.every((r) => r.length === typed.length);
+}
+
+function storyMarkPhraseComplete() {
+  const keys = storyState.panelKeys || [];
+  if (keys.length) storyState.panelIndex = keys.length;
 }
 
 function storyOnPhraseSuccess() {
   if (storyState.phraseBusy) return;
   storyState.phraseBusy = true;
   storyState.phraseInputLocked = true;
+  storyMarkPhraseComplete();
   window.clearTimeout(storyState._nextTimer);
+  renderStoryPanels();
   if (storyState.phase === "defense") storyOnDefenseSuccess();
   else storyOnAttackSuccess();
 }
