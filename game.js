@@ -428,24 +428,24 @@ const STORY_COMPANIONS = [
   { id: "pheasant", name: "キジ", icon: "🐦", unlockClear: 85, attackBonus: 0, defenseSecBonus: 0, hpBonus: 6, skillName: "つつき", defenseReduceBonus: 0.1 },
 ];
 
-/** ごまちゃん（練習モードと同じうさぎCSS）＋仲間は大きな絵文字 */
+/** ごまちゃん（練習モードと同じうさぎCSS）＋仲間はポップなステッカー風 */
 function storyGomachanFigureHtml() {
-  return `<div class="bunny bunny--story-mini" aria-hidden="true"><div class="bunny-pose bunny-pose--sit">
+  return `<div class="momo-pop-sticker momo-pop-sticker--hero" aria-hidden="true"><div class="bunny bunny--side bunny--story-mini bunny--pop"><div class="bunny-pose bunny-pose--sit">
     <span class="bunny-tail"></span><span class="bunny-haunch"></span><span class="bunny-hind-thigh"></span><span class="bunny-hind-paw"></span>
     <span class="bunny-body"></span><span class="bunny-belly-highlight"></span><span class="bunny-neck"></span>
     <span class="bunny-fore-thigh"></span><span class="bunny-fore-paw"></span><span class="bunny-fore-toe"></span>
     <span class="bunny-head"><span class="bunny-ear bunny-ear--rear"></span><span class="bunny-ear bunny-ear--front"></span>
     <span class="bunny-eye"><span class="bunny-eye-highlight"></span></span><span class="bunny-whiskers"></span>
     <span class="bunny-nose"></span><span class="bunny-nose-shine"></span><span class="bunny-cheeks"></span></span>
-  </div></div>`;
+  </div></div></div>`;
 }
 
 function storyAllyEmojiHtml(icon, size = "md") {
-  return `<span class="momo-ally-emoji momo-ally-emoji--${size}" aria-hidden="true">${icon}</span>`;
+  return `<span class="momo-pop-sticker momo-pop-sticker--ally momo-pop-sticker--${size}" aria-hidden="true"><span class="momo-ally-emoji">${icon}</span></span>`;
 }
 
 function storyEnemyEmojiHtml(icon, isBoss = false) {
-  return `<span class="momo-enemy-emoji${isBoss ? " momo-enemy-emoji--boss" : ""}" aria-hidden="true">${icon}</span>`;
+  return `<div class="momo-pop-sticker momo-pop-sticker--foe${isBoss ? " momo-pop-sticker--boss" : ""}"><span class="momo-enemy-emoji">${icon}</span></div>`;
 }
 
 /** 桃太郎タイピング風：げんきゲージ（100たまると大技） */

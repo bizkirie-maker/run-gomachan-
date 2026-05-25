@@ -5376,3 +5376,208 @@ body.is-story .foot {
     font-size: 2.6rem;
   }
 }
+
+/* ── ポップなステッカー風イラスト ── */
+@keyframes pop-sticker-bounce {
+  0%, 100% { transform: translateY(0) rotate(-1deg); }
+  50% { transform: translateY(-4px) rotate(1deg); }
+}
+
+@keyframes pop-spark-twinkle {
+  0%, 100% { opacity: 0.35; transform: scale(0.85) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1.1) rotate(12deg); }
+}
+
+@keyframes pop-boss-wiggle {
+  0%, 100% { transform: scale(1) rotate(-2deg); }
+  50% { transform: scale(1.06) rotate(2deg); }
+}
+
+.momo-pop-sticker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  border: 3px solid #fff;
+  box-shadow:
+    0 4px 0 rgba(0, 0, 0, 0.1),
+    0 8px 18px rgba(0, 0, 0, 0.14);
+}
+
+.momo-pop-sticker--hero {
+  padding: 0.2rem 0.35rem 0.15rem;
+  border-radius: 50% 48% 52% 46% / 55% 50% 50% 45%;
+  background: radial-gradient(circle at 32% 28%, #fffde7 0%, #ffeb3b 52%, #ffc107 100%);
+  animation: pop-sticker-bounce 2.4s ease-in-out infinite;
+}
+
+.momo-pop-sticker--hero .bunny--story-mini {
+  margin: 0;
+  transform: scaleX(-1) scale(0.5);
+}
+
+.momo-pop-sticker--ally {
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 50%;
+  background: linear-gradient(145deg, #e8f5e9 0%, #81c784 55%, #43a047 100%);
+  animation: pop-sticker-bounce 2.6s ease-in-out infinite;
+  animation-delay: 0.3s;
+}
+
+.momo-pop-sticker--ally.momo-pop-sticker--sm {
+  width: 1.75rem;
+  height: 1.75rem;
+  border-width: 2px;
+}
+
+.momo-pop-sticker--foe {
+  padding: 0.45rem 0.55rem;
+  border-radius: 48% 52% 50% 50% / 52% 48% 52% 48%;
+  background: linear-gradient(145deg, #ffebee 0%, #ef5350 48%, #c62828 100%);
+  border-width: 4px;
+  animation: pop-sticker-bounce 2.2s ease-in-out infinite;
+}
+
+.momo-pop-sticker--boss {
+  background: linear-gradient(145deg, #fff8e1 0%, #ff9800 45%, #e65100 100%);
+  box-shadow:
+    0 4px 0 rgba(0, 0, 0, 0.12),
+    0 0 0 3px rgba(255, 235, 59, 0.75),
+    0 10px 24px rgba(230, 81, 0, 0.35);
+  animation: pop-boss-wiggle 1.1s ease-in-out infinite;
+}
+
+.momo-pop-sticker .momo-ally-emoji {
+  font-size: 1.35rem;
+  filter: drop-shadow(0 2px 0 rgba(0, 0, 0, 0.12));
+}
+
+.momo-pop-sticker--ally.momo-pop-sticker--md .momo-ally-emoji {
+  font-size: 1.55rem;
+}
+
+.momo-pop-sticker .momo-enemy-emoji {
+  font-size: clamp(3rem, 14vw, 4.5rem);
+  filter: drop-shadow(0 3px 0 rgba(0, 0, 0, 0.15));
+}
+
+.momo-pop-sticker--boss .momo-enemy-emoji {
+  font-size: clamp(3.4rem, 16vw, 5.2rem);
+}
+
+body.is-story .momo-pop-sticker .momo-enemy-emoji {
+  font-size: clamp(3.5rem, 18vw, 6rem);
+}
+
+body.is-story .momo-pop-sticker--boss .momo-enemy-emoji {
+  font-size: clamp(4rem, 22vw, 7rem);
+}
+
+.momo-pop-spark {
+  position: absolute;
+  font-size: 1.1rem;
+  line-height: 1;
+  pointer-events: none;
+  z-index: 1;
+  animation: pop-spark-twinkle 2.8s ease-in-out infinite;
+  filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.8));
+}
+
+.momo-pop-spark--1 { top: 10%; left: 8%; animation-delay: 0s; }
+.momo-pop-spark--2 { top: 18%; right: 12%; animation-delay: 0.9s; font-size: 0.95rem; }
+.momo-pop-spark--3 { top: 6%; left: 42%; animation-delay: 1.6s; font-size: 0.85rem; }
+
+.momo-battle--cocoa .cocoa-battle-scene {
+  border-color: #ff7043;
+  background: #81d4fa;
+  box-shadow:
+    inset 0 0 0 3px #fff,
+    0 10px 28px rgba(255, 112, 67, 0.28);
+}
+
+.momo-battle--cocoa .cocoa-scene-bg {
+  background: linear-gradient(180deg, #4fc3f7 0%, #b3e5fc 38%, #c5e1a5 68%, #aed581 100%);
+}
+
+.momo-battle--cocoa .cocoa-cloud {
+  opacity: 1;
+  box-shadow:
+    12px 0 0 -2px #fff,
+    -10px 4px 0 -3px #fff,
+    24px 6px 0 -4px #fff,
+    0 2px 8px rgba(255, 255, 255, 0.6);
+}
+
+.momo-battle--cocoa .cocoa-ground {
+  height: 30%;
+  background:
+    radial-gradient(circle at 12% 40%, #fff59d 0 6px, transparent 7px),
+    radial-gradient(circle at 28% 55%, #f48fb1 0 5px, transparent 6px),
+    radial-gradient(circle at 72% 45%, #fff59d 0 5px, transparent 6px),
+    radial-gradient(circle at 88% 60%, #ce93d8 0 4px, transparent 5px),
+    repeating-linear-gradient(90deg, #9ccc65 0 10px, #7cb342 10px 20px);
+  border-top: 4px solid #558b2f;
+}
+
+.momo-battle--cocoa .momo-party-row {
+  border-radius: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.06);
+}
+
+.momo-battle--cocoa .momo-party-row--hero {
+  background: linear-gradient(135deg, rgba(255, 253, 231, 0.95), rgba(255, 224, 130, 0.75));
+  border-color: #ffb300;
+}
+
+/* ポップうさぎ：白×ピンクの明るい毛色 */
+.bunny--pop.bunny--side .bunny-pose--sit::before,
+.bunny--pop.bunny--side .bunny-pose--leap::before,
+.bunny--pop.bunny--story-mini .bunny-pose--sit::before,
+.bunny--pop .bunny-pose .bunny-body,
+.bunny--pop .bunny-pose .bunny-haunch,
+.bunny--pop .bunny-pose .bunny-hind-thigh,
+.bunny--pop .bunny-pose .bunny-hind-paw,
+.bunny--pop .bunny-pose .bunny-neck,
+.bunny--pop .bunny-pose .bunny-fore-thigh,
+.bunny--pop .bunny-pose .bunny-fore-paw {
+  background: linear-gradient(164deg, #fffafc 0%, #fce4ec 52%, #f8bbd0 100%) !important;
+}
+
+.bunny--pop.bunny--side .bunny-pose .bunny-ear.bunny-ear--rear,
+.bunny--pop.bunny--side .bunny-pose .bunny-ear.bunny-ear--front,
+.bunny--pop .bunny-pose .bunny-ear.bunny-ear--rear,
+.bunny--pop .bunny-pose .bunny-ear.bunny-ear--front {
+  background: linear-gradient(165deg, #fff0f5 0%, #f48fb1 55%, #ec407a 100%) !important;
+}
+
+.bunny--pop.bunny--side .bunny-pose .bunny-tail,
+.bunny--pop .bunny-pose .bunny-tail {
+  background: radial-gradient(circle at 34% 34%, #fff, #f8bbd0 84%) !important;
+}
+
+.bunny--pop.bunny--side .bunny-pose .bunny-cheeks,
+.bunny--pop .bunny-pose .bunny-cheeks {
+  opacity: 1;
+  background: radial-gradient(circle, rgba(255, 138, 180, 0.55) 0%, transparent 72%) !important;
+}
+
+.bunny--pop.bunny--side {
+  filter: drop-shadow(0 6px 0 rgba(236, 64, 122, 0.22));
+}
+
+.bunny--pop.bunny--story-mini {
+  filter: saturate(1.2) brightness(1.06) drop-shadow(0 3px 0 rgba(236, 64, 122, 0.25));
+}
+
+@media (max-width: 520px) {
+  .momo-pop-sticker--hero .bunny--story-mini {
+    transform: scaleX(-1) scale(0.42);
+  }
+
+  .momo-pop-sticker--ally {
+    width: 2rem;
+    height: 2rem;
+  }
+}
