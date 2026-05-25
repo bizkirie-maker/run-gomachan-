@@ -5145,19 +5145,188 @@ body.is-story .foot {
   grid-template-columns: minmax(100px, 30%) minmax(0, 1fr) minmax(100px, 32%);
 }
 
+/* ── 桃太郎タイピング本家：上パネル＋下戦場 ── */
+.momo-panel-top {
+  border: 4px solid #ffb300;
+  border-radius: 14px;
+  background: linear-gradient(180deg, #fffde7 0%, #fff9c4 55%, #ffe082 100%);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.9),
+    0 8px 20px rgba(255, 152, 0, 0.22);
+}
+
+.momo-panel-top.momo-phrase-card--special-intro {
+  background: linear-gradient(180deg, #fff8e1 0%, #ffcc80 100%);
+  border-color: #ff6f00;
+}
+
+.momo-special-splash {
+  text-align: center;
+  font-size: clamp(2rem, 8vw, 3rem);
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  color: #e65100;
+  text-shadow: 0 2px 0 #fff, 0 4px 12px rgba(255, 111, 0, 0.45);
+  padding: 0.35rem;
+  animation: momo-special-pop 0.55s ease;
+}
+
+.momo-special-splash.hidden {
+  display: none !important;
+}
+
+@keyframes momo-special-pop {
+  0% { transform: scale(0.5); opacity: 0; }
+  60% { transform: scale(1.08); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.momo-battle-field {
+  min-height: min(52vw, 280px);
+}
+
+.momo-party-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.35rem;
+  padding: 0.25rem 0.35rem;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.42);
+}
+
+.momo-party-row--hero {
+  background: rgba(255, 248, 225, 0.72);
+  border: 2px solid rgba(255, 193, 7, 0.55);
+}
+
+.momo-party-row--locked {
+  opacity: 0.45;
+  filter: grayscale(0.85);
+}
+
+.momo-party-row__fig {
+  flex-shrink: 0;
+  line-height: 0;
+}
+
+.momo-party-row__info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.momo-party-row__name {
+  font-size: 0.68rem;
+  font-weight: 900;
+  color: #1b5e20;
+}
+
+.momo-party-row__sub {
+  font-size: 0.58rem;
+  font-weight: 700;
+  color: #33691e;
+}
+
+.momo-party-row__hpnum {
+  font-size: 0.62rem;
+  font-weight: 800;
+  color: #2e7d32;
+}
+
+.momo-hp-bar--ally {
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.12);
+  overflow: hidden;
+}
+
+.momo-ally-emoji {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+}
+
+.momo-ally-emoji--sm { font-size: 1.35rem; }
+.momo-ally-emoji--md { font-size: 2rem; }
+
+.momo-enemy-emoji {
+  display: block;
+  font-size: clamp(3rem, 14vw, 4.5rem);
+  line-height: 1;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2));
+  animation: momo-idle-bob-enemy 2.4s ease-in-out infinite;
+}
+
+.momo-enemy-emoji--boss {
+  font-size: clamp(3.4rem, 16vw, 5.2rem);
+}
+
+.momo-enemy-fig {
+  line-height: 0;
+  text-align: center;
+}
+
+/* 話バトル用ミニごまちゃん（練習モードと同じうさぎ） */
+.bunny--story-mini {
+  position: relative;
+  width: 56px;
+  height: 52px;
+  transform: scaleX(-1) scale(0.42);
+  transform-origin: left bottom;
+  margin: 0 0 -8px -4px;
+  pointer-events: none;
+}
+
+.bunny--story-mini .bunny-pose--leap {
+  display: none;
+}
+
+.bunny--story-mini .bunny-pose--sit {
+  display: block;
+}
+
+.momo-party-row--hero.is-hit {
+  animation: momo-party-hit 0.45s ease;
+}
+
+.momo-party-row--hero.is-attacking,
+.cocoa-party-slot--hero.is-attacking {
+  animation: momo-hero-attack 0.75s ease;
+}
+
+.momo-party-row--hero.is-attacking--special {
+  animation: momo-hero-attack-special 0.95s ease;
+}
+
+.momo-party-row--hero.is-blocking {
+  animation: momo-hero-block 0.85s ease;
+}
+
+.momo-party-row.is-assist .momo-party-row__fig {
+  animation: momo-companion-assist 0.7s ease;
+}
+
+.momo-arena--fighting .momo-party-row--hero .momo-party-row__fig {
+  animation: momo-idle-bob 2.2s ease-in-out infinite;
+}
+
 @media (max-width: 520px) {
   .cocoa-party-slot__sub,
-  .cocoa-enemy-tagline {
+  .cocoa-enemy-tagline,
+  .momo-party-row__sub {
     display: none;
   }
 
-  .cocoa-sprite--lg {
-    width: 58px;
-    height: 66px;
+  .bunny--story-mini {
+    transform: scaleX(-1) scale(0.36);
+    margin-bottom: -10px;
   }
 
-  .cocoa-sprite--foe {
-    width: 64px;
-    height: 64px;
+  .momo-enemy-emoji {
+    font-size: 2.6rem;
   }
 }

@@ -300,9 +300,14 @@ const BUNNY_HOME_X = 4;
 
 /** 文正解後はすぐ次のお題へ（待ちなし） */
 
-/** 累計の正解打鍵で全体秒ボーナス（30文字ごとに＋1秒） */
-const TIME_BONUS_WAVE_STEP = 30;
-const TIME_BONUS_MILESTONES = [{ off: 30, sec: 1 }];
+/** 累計の正解打鍵で全体秒ボーナス（30→+1, 60→+2, 90→+3, 120→+4秒、以降120文字ごとに繰り返し） */
+const TIME_BONUS_WAVE_STEP = 120;
+const TIME_BONUS_MILESTONES = [
+  { off: 30, sec: 1 },
+  { off: 60, sec: 2 },
+  { off: 90, sec: 3 },
+  { off: 120, sec: 4 },
+];
 
 /** 称号：60秒1プレイの最高スコアがこの値ごとに次の段階（50, 100, …） */
 const TITLE_FROM_BEST_PER = 50;
@@ -423,14 +428,24 @@ const STORY_COMPANIONS = [
   { id: "pheasant", name: "キジ", icon: "🐦", unlockClear: 85, attackBonus: 0, defenseSecBonus: 0, hpBonus: 6, skillName: "つつき", defenseReduceBonus: 0.1 },
 ];
 
-/** ココア版桃太郎タイピング風 chibi スプライト（CSS で描画） */
-function cocoaCharSpriteHtml(charId, size = "md") {
-  return `<div class="cocoa-sprite cocoa-sprite--ally cocoa-sprite--${charId} cocoa-sprite--${size}" aria-hidden="true"><span class="cocoa-sprite__shadow"></span></div>`;
+/** ごまちゃん（練習モードと同じうさぎCSS）＋仲間は大きな絵文字 */
+function storyGomachanFigureHtml() {
+  return `<div class="bunny bunny--story-mini" aria-hidden="true"><div class="bunny-pose bunny-pose--sit">
+    <span class="bunny-tail"></span><span class="bunny-haunch"></span><span class="bunny-hind-thigh"></span><span class="bunny-hind-paw"></span>
+    <span class="bunny-body"></span><span class="bunny-belly-highlight"></span><span class="bunny-neck"></span>
+    <span class="bunny-fore-thigh"></span><span class="bunny-fore-paw"></span><span class="bunny-fore-toe"></span>
+    <span class="bunny-head"><span class="bunny-ear bunny-ear--rear"></span><span class="bunny-ear bunny-ear--front"></span>
+    <span class="bunny-eye"><span class="bunny-eye-highlight"></span></span><span class="bunny-whiskers"></span>
+    <span class="bunny-nose"></span><span class="bunny-nose-shine"></span><span class="bunny-cheeks"></span></span>
+  </div></div>`;
 }
 
-function cocoaMonsterSpriteHtml(spriteId, isBoss = false) {
-  const id = spriteId || "slime";
-  return `<div class="cocoa-sprite cocoa-sprite--foe cocoa-sprite--${id}${isBoss ? " cocoa-sprite--boss" : ""}" aria-hidden="true"><span class="cocoa-sprite__shadow"></span></div>`;
+function storyAllyEmojiHtml(icon, size = "md") {
+  return `<span class="momo-ally-emoji momo-ally-emoji--${size}" aria-hidden="true">${icon}</span>`;
+}
+
+function storyEnemyEmojiHtml(icon, isBoss = false) {
+  return `<span class="momo-enemy-emoji${isBoss ? " momo-enemy-emoji--boss" : ""}" aria-hidden="true">${icon}</span>`;
 }
 
 /** 桃太郎タイピング風：げんきゲージ（100たまると大技） */
@@ -444,11 +459,12 @@ const STORY_BATTLE_PACE = {
   defenseSecBase: 6.2,
   defenseSecMin: 4.5,
   specialPhraseBonus: 1.8,
-  actionPauseMs: 1100,
-  phaseGapMs: 1300,
-  missGapMs: 850,
-  spawnGapMs: 1500,
-  defeatGapMs: 900,
+  specialIntroMs: 1300,
+  actionPauseMs: 650,
+  phaseGapMs: 750,
+  missGapMs: 650,
+  spawnGapMs: 1200,
+  defeatGapMs: 800,
 };
 
 /** ごまちゃんの技 */
@@ -780,6 +796,9 @@ const storyState = {
   panelTypoFlash: false,
   /** 防御時のみ：こうげき失敗で次の被ダメが増える */
   enemyAttackMul: 1,
+  /** 大技イントロ中は入力不可 */
+  phraseInputLocked: false,
+  _nextTimer: 0,
   /** 章内の全敵（HP・撃破状態つき） */
   battleEnemies: [],
 };
@@ -1742,7 +1761,7 @@ function playGomaTimeBonusSting() {
   });
 }
 
-/** 累計の正解打鍵が 30 文字ごとに ＋1 秒 */
+/** 累計の正解打鍵が 30/60/90/120 文字ごとに ＋1〜＋4 秒 */
 function maybeGrantTimeBonus() {
   if (!state.playing) return;
   const bonusSec = timeBonusSecAtKeyCount(state.correctKeyCount);
@@ -2219,22 +2238,22 @@ function renderStoryPartyPanel() {
   const curP = Math.max(0, storyState.playerHp ?? storyCalcPlayerMaxHp());
   const maxP = storyState.playerMaxHp ?? storyCalcPlayerMaxHp();
   const pPct = maxP > 0 ? Math.max(0, (curP / maxP) * 100) : 0;
-  let html = `<div class="cocoa-party-slot cocoa-party-slot--hero" id="storyHeroSlot">
-    <div class="cocoa-party-slot__fig">${cocoaCharSpriteHtml("gomachan", "lg")}</div>
-    <div class="cocoa-party-slot__info">
-      <span class="cocoa-party-slot__name">${STORY_HERO.name}</span>
-      <span class="cocoa-party-slot__sub">${STORY_HERO.role}</span>
-      <div class="cocoa-hp-bar" aria-hidden="true"><div class="cocoa-hp-fill cocoa-hp-fill--ally" id="storyPlayerHpBar" style="width:${pPct}%"></div></div>
-      <span class="cocoa-party-slot__hpnum"><strong id="storyPlayerHp">${curP}</strong>/<span id="storyPlayerMaxHp">${maxP}</span></span>
+  let html = `<div class="momo-party-row momo-party-row--hero" id="storyHeroSlot">
+    <div class="momo-party-row__fig">${storyGomachanFigureHtml()}</div>
+    <div class="momo-party-row__info">
+      <span class="momo-party-row__name">${STORY_HERO.name}</span>
+      <span class="momo-party-row__sub">${STORY_HERO.role}</span>
+      <div class="momo-hp-bar momo-hp-bar--ally" aria-hidden="true"><div class="momo-hp-fill momo-hp-fill--ally" id="storyPlayerHpBar" style="width:${pPct}%"></div></div>
+      <span class="momo-party-row__hpnum"><strong id="storyPlayerHp">${curP}</strong>/<span id="storyPlayerMaxHp">${maxP}</span></span>
     </div>
   </div>`;
   STORY_COMPANIONS.forEach((c) => {
     const on = cleared >= c.unlockClear;
-    html += `<div class="cocoa-party-slot${on ? "" : " cocoa-party-slot--locked"}" title="${on ? c.skillName : `第${c.unlockClear}章`}">
-      <div class="cocoa-party-slot__fig">${cocoaCharSpriteHtml(c.id, on ? "md" : "sm")}</div>
-      <div class="cocoa-party-slot__info">
-        <span class="cocoa-party-slot__name">${c.name}</span>
-        <span class="cocoa-party-slot__sub">${on ? c.skillName : "？？？"}</span>
+    html += `<div class="momo-party-row${on ? "" : " momo-party-row--locked"}" title="${on ? c.skillName : `第${c.unlockClear}章`}">
+      <div class="momo-party-row__fig">${storyAllyEmojiHtml(c.icon, on ? "md" : "sm")}</div>
+      <div class="momo-party-row__info">
+        <span class="momo-party-row__name">${c.name}</span>
+        <span class="momo-party-row__sub">${on ? c.skillName : "？？？"}</span>
       </div>
     </div>`;
   });
@@ -2274,10 +2293,10 @@ function renderStoryEnemyVisual(enemy) {
   if (tagEl) tagEl.textContent = enemy.tagline || type.tagline;
   if (nameHud) nameHud.textContent = enemy.name;
   if (spriteEl) {
-    spriteEl.innerHTML = cocoaMonsterSpriteHtml(enemy.sprite || type.sprite, enemy.isBoss);
+    spriteEl.innerHTML = storyEnemyEmojiHtml(enemy.icon || type.icon, enemy.isBoss);
   }
   if (card) {
-    card.classList.toggle("cocoa-enemy-card--boss", !!enemy.isBoss);
+    card.classList.toggle("momo-enemy-card--boss", !!enemy.isBoss);
     card.dataset.enemyType = type.id;
   }
   if (banner) {
@@ -2491,7 +2510,7 @@ function showStoryDamagePopup(amount, target = "player") {
 function flashStoryHpBar(which) {
   if (which === "player") {
     const slot = $("storyHeroSlot");
-    const bar = $("storyPlayerHpBar")?.closest(".cocoa-hp-bar");
+    const bar = $("storyPlayerHpBar")?.closest(".momo-hp-bar");
     [slot, bar].forEach((el) => {
       if (!el) return;
       el.classList.remove("momo-hp-bar--hit");
@@ -2500,7 +2519,7 @@ function flashStoryHpBar(which) {
     });
     return;
   }
-  const bar = $("storyEnemyHpBar")?.closest(".cocoa-hp-bar");
+  const bar = $("storyEnemyHpBar")?.closest(".momo-hp-bar");
   if (!bar) return;
   bar.classList.remove("momo-hp-bar--hit");
   void bar.offsetWidth;
@@ -2687,6 +2706,7 @@ function renderStoryPanels() {
 function storyStartAttackPhrase() {
   storyState.phase = "attack";
   storyState.phraseBusy = false;
+  storyState.phraseInputLocked = false;
   storyState.enemyAttackMul = 1;
   const useSpecial = storyState.gauge >= STORY_GAUGE_MAX;
   storyState.moveKind = useSpecial ? "special" : "normal";
@@ -2701,16 +2721,22 @@ function storyStartAttackPhrase() {
   storyState.phraseSec = (storyState.currentEnemy?.phraseSec || 5) + (useSpecial ? STORY_BATTLE_PACE.specialPhraseBonus : 0) + equip.phraseSecAdd;
   updateStoryPhaseUi();
   updateStoryHud();
-  const msg = useSpecial
-    ? `げんき MAX！ 大技 — 上のパネルを全部打て！`
-    : "こうげき！ 上のパネルを順番に打て！";
-  setStoryDialog(msg, "ごまちゃん");
-  storySetupPanels(buildStoryPanelTask(false, storyState.chapterIdx, useSpecial));
+  if (useSpecial) {
+    storyShowSpecialIntro(false, () => {
+      const task = buildStoryPanelTask(false, storyState.chapterIdx, true);
+      storySetupPanels(task);
+      setStoryDialog(`「${task.text}」を打て！`, "ごまちゃん");
+    });
+    return;
+  }
+  setStoryDialog("こうげき！ パネルを順番に打て！", "ごまちゃん");
+  storySetupPanels(buildStoryPanelTask(false, storyState.chapterIdx, false));
 }
 
 function storyStartDefensePhrase(boostMul = 1) {
   storyState.phase = "defense";
   storyState.phraseBusy = false;
+  storyState.phraseInputLocked = false;
   const enemy = storyState.currentEnemy;
   const move = storyPickEnemyMove(enemy);
   storyState.enemyMoveName = move.name;
@@ -2724,13 +2750,18 @@ function storyStartDefensePhrase(boostMul = 1) {
   updateStoryHud();
   const atk = storyCalcEnemyAttack(enemy, storyState.chapterIdx);
   const hintReduced = storyCalcDefenseDamage(atk, "perfect");
-  const intro = move.isSpecial
-    ? `${enemy?.name}の大技「${move.name}」！ ${atk}ダメージ — 打てば軽減（最小${hintReduced}）`
-    : `${enemy?.name}の「${move.name}」！ ${atk}ダメージ — 防御で軽減`;
-  setStoryDialog(intro, enemy?.name || "敵");
-  storySetupPanels(buildStoryPanelTask(true, storyState.chapterIdx, move.isSpecial));
   flashStoryEnemyAttack();
   playStoryBattleFx("enemy-attack");
+  if (move.isSpecial) {
+    storyShowSpecialIntro(true, () => {
+      const task = buildStoryPanelTask(true, storyState.chapterIdx, true);
+      storySetupPanels(task);
+      setStoryDialog(`${enemy?.name}の大技「${move.name}」！ ${atk}ダメ — 「${task.text}」を打て！`, enemy?.name || "敵");
+    });
+    return;
+  }
+  setStoryDialog(`${enemy?.name}の「${move.name}」！ ${atk}ダメ — 防御で軽減（最小${hintReduced}）`, enemy?.name || "敵");
+  storySetupPanels(buildStoryPanelTask(true, storyState.chapterIdx, false));
 }
 
 function storyOnAttackSuccess() {
@@ -2771,10 +2802,10 @@ function storyOnAttackSuccess() {
   flashStoryHpBar("enemy");
   playStoryBattleFx("attack", { isSpecial, companion: companion > 0 });
   if (storyState.enemyHp <= 0) {
-    window.setTimeout(() => storyOnEnemyDefeated(), STORY_BATTLE_PACE.defeatGapMs + STORY_BATTLE_PACE.actionPauseMs);
+    storyScheduleNext(() => storyOnEnemyDefeated(), STORY_BATTLE_PACE.defeatGapMs + STORY_BATTLE_PACE.actionPauseMs);
     return;
   }
-  window.setTimeout(() => storyStartDefensePhrase(), STORY_BATTLE_PACE.phaseGapMs + STORY_BATTLE_PACE.actionPauseMs);
+  storyScheduleNext(() => storyStartDefensePhrase(), STORY_BATTLE_PACE.phaseGapMs + STORY_BATTLE_PACE.actionPauseMs);
 }
 
 function storyOnDefenseSuccess() {
@@ -2798,10 +2829,10 @@ function storyOnDefenseSuccess() {
   storyState.enemyAttackMul = 1;
   updateStoryHud();
   if (storyState.playerHp <= 0) {
-    window.setTimeout(() => storyOnDefeat(), STORY_BATTLE_PACE.defeatGapMs + STORY_BATTLE_PACE.actionPauseMs);
+    storyScheduleNext(() => storyOnDefeat(), STORY_BATTLE_PACE.defeatGapMs + STORY_BATTLE_PACE.actionPauseMs);
     return;
   }
-  window.setTimeout(() => storyStartAttackPhrase(), STORY_BATTLE_PACE.phaseGapMs + STORY_BATTLE_PACE.actionPauseMs);
+  storyScheduleNext(() => storyStartAttackPhrase(), STORY_BATTLE_PACE.phaseGapMs + STORY_BATTLE_PACE.actionPauseMs);
 }
 
 function setStoryArenaMode(mode) {
@@ -2864,7 +2895,7 @@ function flashStoryPlayerBlock(tier) {
 function flashStoryCompanions() {
   const col = $("storyPartyColumn");
   if (!col) return;
-  col.querySelectorAll(".cocoa-party-slot:not(.cocoa-party-slot--locked):not(.cocoa-party-slot--hero)").forEach((slot) => {
+  col.querySelectorAll(".momo-party-row:not(.momo-party-row--locked):not(.momo-party-row--hero)").forEach((slot) => {
     slot.classList.remove("is-assist");
     void slot.offsetWidth;
     slot.classList.add("is-assist");
@@ -2888,6 +2919,8 @@ function flashStoryEnemyAttack() {
 }
 
 function storyOnEnemyDefeated() {
+  storyState.phraseBusy = false;
+  storyState.phraseInputLocked = false;
   const ch = STORY_CHAPTERS[storyState.chapterIdx];
   const defeated = ch.enemies[storyState.enemyIdx];
   storyState.enemyIdx += 1;
@@ -2952,18 +2985,16 @@ function storyOnTypo() {
 }
 
 function storyOnTimeout() {
-  if (storyState.phraseBusy) return;
+  if (storyState.phraseBusy || storyState.phraseInputLocked) return;
   storyState.phraseBusy = true;
   if (storyState.phase === "defense") {
     storyApplyEnemyAttack("timeout");
     if (storyState.playerHp <= 0) return;
-    storyHoldPhraseTransition(STORY_BATTLE_PACE.missGapMs + STORY_BATTLE_PACE.actionPauseMs + 400);
-    window.setTimeout(() => storyStartAttackPhrase(), STORY_BATTLE_PACE.missGapMs + STORY_BATTLE_PACE.actionPauseMs);
+    storyScheduleNext(() => storyStartAttackPhrase(), STORY_BATTLE_PACE.missGapMs + STORY_BATTLE_PACE.actionPauseMs);
     return;
   }
   setStoryDialog("時間切れ！ こうげきはずれ — 敵のターン！", "ごまちゃん");
-  storyHoldPhraseTransition(STORY_BATTLE_PACE.missGapMs + 400);
-  window.setTimeout(() => storyStartDefensePhrase(1.2), STORY_BATTLE_PACE.missGapMs);
+  storyScheduleNext(() => storyStartDefensePhrase(1.2), STORY_BATTLE_PACE.missGapMs);
 }
 
 function storyOnDefeat() {
@@ -3032,14 +3063,46 @@ function storyHoldPhraseTransition(ms = 1200) {
   storyState.phraseEndAt = performance.now() + ms;
 }
 
+function storyScheduleNext(fn, delayMs = 800) {
+  window.clearTimeout(storyState._nextTimer);
+  storyState.phraseBusy = true;
+  storyHoldPhraseTransition(delayMs + 400);
+  storyState._nextTimer = window.setTimeout(() => {
+    storyState.phraseBusy = false;
+    storyState.phraseInputLocked = false;
+    fn();
+  }, delayMs);
+}
+
+function storyShowSpecialIntro(isEnemy, onReady) {
+  storyState.phraseBusy = true;
+  storyState.phraseInputLocked = true;
+  const splash = $("storySpecialSplash");
+  const wordEl = $("storyPanelWord");
+  const board = $("storyPanelBoard");
+  const card = $("storyPhraseCard");
+  const label = isEnemy ? "敵の大技！" : "大技！";
+  if (splash) {
+    splash.textContent = label;
+    splash.classList.remove("hidden");
+  }
+  if (wordEl) wordEl.textContent = label;
+  if (board) board.innerHTML = "";
+  if (card) card.classList.add("momo-phrase-card--special-intro");
+  updateStoryNextKeyHint();
+  window.clearTimeout(storyShowSpecialIntro._t);
+  storyShowSpecialIntro._t = window.setTimeout(() => {
+    if (splash) splash.classList.add("hidden");
+    if (card) card.classList.remove("momo-phrase-card--special-intro");
+    storyState.phraseInputLocked = false;
+    storyState.phraseBusy = false;
+    if (onReady) onReady();
+  }, STORY_BATTLE_PACE.specialIntroMs);
+}
+
 function storyIsPhraseComplete() {
   const keys = storyState.panelKeys || [];
-  if (!keys.length) return false;
-  const typed = storyState.typedRomaji || "";
-  if (typed.length < keys.length) return false;
-  const base = storyState.panelBaseRomaji || keys.join("");
-  if (typed === base) return true;
-  return (storyState.romajiCandidates || []).some((r) => r === typed);
+  return keys.length > 0 && storyState.panelIndex >= keys.length;
 }
 
 function storyOnPhraseSuccess() {
@@ -3056,7 +3119,7 @@ function storyResetPanelTyping() {
 }
 
 function storyProcessTypedChar(ch) {
-  if (!storyState.active || storyState.phraseBusy || storyState.playerHp <= 0) return;
+  if (!storyState.active || storyState.phraseBusy || storyState.phraseInputLocked || storyState.playerHp <= 0) return;
   if (!storyState.panelKeys?.length) return;
 
   const nextPrefix = `${storyState.typedRomaji || ""}${ch}`.toLowerCase();
@@ -3067,14 +3130,14 @@ function storyProcessTypedChar(ch) {
   }
   storyState.romajiCandidates = narrowed;
   storyState.typedRomaji = nextPrefix;
-  storyState.panelIndex = nextPrefix.length;
+  storyState.panelIndex += 1;
   saveCareerRomaji(loadCareerRomaji() + 1);
   renderStoryPanels();
   if (storyIsPhraseComplete()) storyOnPhraseSuccess();
 }
 
 function onStoryKeydown(ev) {
-  if (!storyState.active || storyState.phraseBusy) return;
+  if (!storyState.active || storyState.phraseBusy || storyState.phraseInputLocked) return;
   if (ev.metaKey || ev.ctrlKey || ev.altKey) return;
   if (ev.isComposing) return;
   if (ev.key === "Enter" || ev.key === "Backspace" || ev.key === " " || ev.key === "　") {
@@ -3102,7 +3165,7 @@ function storyLoop(now) {
   const pt = $("storyPhraseTimer");
   if (pt) pt.textContent = Math.max(0, remain).toFixed(1);
   renderStoryPanels();
-  if (!storyState.phraseBusy && remain <= 0) storyOnTimeout();
+  if (!storyState.phraseBusy && !storyState.phraseInputLocked && remain <= 0) storyOnTimeout();
   storyState.raf = requestAnimationFrame(storyLoop);
 }
 

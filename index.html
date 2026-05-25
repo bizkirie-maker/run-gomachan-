@@ -260,7 +260,7 @@
           <div><span class="hud-label" id="stockLabel">エサストック</span> <strong id="stockCount">0</strong> こ</div>
         </div>
         <p class="points-breakdown-hint muted" id="pointsBreakdownHint"></p>
-        <p class="input-hint">正解は<strong>ローマ字だけ</strong>（ひらがな・漢字の変換は使いません）。IME は英字（半角）にして a〜z を打ってください。お題の下のローマ字を、エサが通りすぎる前に打ち終えましょう。正しく打ち始めるとごまちゃんがエサの方へ近づきます。<strong>時間切れ</strong>はどちらのモードでもストックが減ります。<strong>しっかり</strong>は打ち間違いでもストックが減ります。<strong>やさしい</strong>は打ち間違いのキーは無視です。<strong>正しく打った文字が 30 文字ごと</strong>に、この60秒に<strong>＋1秒</strong>が入ります（60文字目、90文字目…でも同様）。。プレイ中はブラウザ内で<strong>草原風のBGM</strong>が鳴り、時間プラスでは別の効果音が鳴ります（著作楽曲の転載ではありません）。</p>
+        <p class="input-hint">正解は<strong>ローマ字だけ</strong>（ひらがな・漢字の変換は使いません）。IME は英字（半角）にして a〜z を打ってください。お題の下のローマ字を、エサが通りすぎる前に打ち終えましょう。正しく打ち始めるとごまちゃんがエサの方へ近づきます。<strong>時間切れ</strong>はどちらのモードでもストックが減ります。<strong>しっかり</strong>は打ち間違いでもストックが減ります。<strong>やさしい</strong>は打ち間違いのキーは無視です。<strong>正しく打った文字が 30・60・90・120 文字ごと</strong>に、この60秒に<strong>＋1・＋2・＋3・＋4秒</strong>が入ります（以降120文字ごとに繰り返し）。プレイ中はブラウザ内で<strong>草原風のBGM</strong>が鳴り、時間プラスでは別の効果音が鳴ります（著作楽曲の転載ではありません）。</p>
         <input
           id="ghostInput"
           class="ghost-input"
@@ -326,22 +326,25 @@
           <p class="momo-phase-ribbon__sub" id="storyMoveName">通常攻撃</p>
         </div>
 
-        <div class="momo-arena momo-scene cocoa-battle-scene" id="storyScene">
+        <section class="momo-panel-stage momo-panel-top momo-phrase-card momo-phrase-card--attack" id="storyPhraseCard" aria-label="タイピングパネル">
+          <p class="momo-panel-word" id="storyPanelWord" lang="ja">こうげき</p>
+          <p class="momo-next-key" id="storyNextKeyHint">つぎのキーを打て！</p>
+          <div class="momo-panel-board" id="storyPanelBoard"></div>
+          <div class="momo-panel-timer-bar" aria-hidden="true"><div class="momo-panel-timer-fill" id="storyPanelTimerFill"></div></div>
+          <p class="momo-panel-timer-num">のこり <strong id="storyPhraseTimer">5.0</strong> 秒</p>
+          <div class="momo-vkbd" id="storyVirtualKeyboard" aria-hidden="true"></div>
+        </section>
+
+        <div class="momo-special-splash hidden" id="storySpecialSplash" aria-hidden="true">大技！</div>
+
+        <div class="momo-arena momo-scene cocoa-battle-scene momo-battle-field" id="storyScene">
           <div class="cocoa-scene-bg" aria-hidden="true">
             <span class="cocoa-cloud cocoa-cloud--1"></span>
             <span class="cocoa-cloud cocoa-cloud--2"></span>
             <span class="cocoa-cloud cocoa-cloud--3"></span>
             <span class="cocoa-ground"></span>
           </div>
-          <section class="cocoa-panel-overlay momo-panel-stage momo-phrase-card momo-phrase-card--attack" id="storyPhraseCard" aria-label="タイピングパネル">
-            <p class="momo-panel-word" id="storyPanelWord" lang="ja">こうげき</p>
-            <p class="momo-next-key" id="storyNextKeyHint">つぎのキーを打て！</p>
-            <div class="momo-panel-board" id="storyPanelBoard"></div>
-            <div class="momo-panel-timer-bar" aria-hidden="true"><div class="momo-panel-timer-fill" id="storyPanelTimerFill"></div></div>
-            <p class="momo-panel-timer-num">のこり <strong id="storyPhraseTimer">5.0</strong> 秒</p>
-            <div class="momo-vkbd" id="storyVirtualKeyboard" aria-hidden="true"></div>
-          </section>
-          <aside class="cocoa-party-column" id="storyPartyColumn" aria-label="味方パーティ"></aside>
+          <aside class="momo-party-column" id="storyPartyColumn" aria-label="味方パーティ"></aside>
           <div class="cocoa-arena-center">
             <div class="momo-gauge-wrap momo-gauge-wrap--arena cocoa-gauge">
               <span class="momo-gauge-label">げんき</span>
@@ -357,8 +360,8 @@
             <div class="cocoa-enemy-hud" aria-label="敵のHP">
               <span class="cocoa-enemy-hud__badge" id="storyEnemyCategory">モンスター</span>
               <strong class="cocoa-enemy-hud__name" id="storyEnemyNameHud">スライム</strong>
-              <div class="cocoa-hp-bar cocoa-hp-bar--enemy" aria-hidden="true">
-                <div class="cocoa-hp-fill cocoa-hp-fill--enemy" id="storyEnemyHpBar"></div>
+              <div class="momo-hp-bar momo-hp-bar--enemy-head" aria-hidden="true">
+                <div class="momo-hp-fill momo-hp-fill--enemy" id="storyEnemyHpBar"></div>
               </div>
               <span class="cocoa-enemy-hud__hp"><strong id="storyEnemyHp">0</strong> / <span id="storyEnemyMaxHp">0</span></span>
               <span class="cocoa-enemy-hud__atk" id="storyEnemyAtkHint"></span>
@@ -366,7 +369,7 @@
             <div class="cocoa-enemy-spawn" id="storyEnemySpawnBanner" aria-live="assertive"></div>
             <div class="story-enemy cocoa-monster-stage" id="storyEnemy">
               <div class="cocoa-enemy-card" id="storyEnemyCard">
-                <div class="cocoa-monster-wrap" id="storyEnemySprite"></div>
+                <div class="momo-enemy-fig" id="storyEnemySprite"></div>
                 <span class="cocoa-enemy-card__icon" id="storyEnemyIcon" aria-hidden="true">💧</span>
                 <strong class="cocoa-enemy-name" id="storyEnemyName">スライム</strong>
                 <span class="cocoa-enemy-tagline" id="storyEnemyTagline"></span>
