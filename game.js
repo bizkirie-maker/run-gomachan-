@@ -300,13 +300,13 @@ const BUNNY_HOME_X = 4;
 
 /** 文正解後はすぐ次のお題へ（待ちなし） */
 
-/** 累計の正解打鍵で全体秒ボーナス（30→+1, 60→+2, 90→+3, 120→+4秒、以降120文字ごとに繰り返し） */
-const TIME_BONUS_WAVE_STEP = 120;
+/** 累計の正解打鍵で全体秒ボーナス（40→+1, 80→+2, 120→+3, 160→+4秒、以降160文字ごとに繰り返し） */
+const TIME_BONUS_WAVE_STEP = 160;
 const TIME_BONUS_MILESTONES = [
-  { off: 30, sec: 1 },
-  { off: 60, sec: 2 },
-  { off: 90, sec: 3 },
-  { off: 120, sec: 4 },
+  { off: 40, sec: 1 },
+  { off: 80, sec: 2 },
+  { off: 120, sec: 3 },
+  { off: 160, sec: 4 },
 ];
 
 /** 称号：60秒1プレイの最高スコアがこの値ごとに次の段階（50, 100, …） */
@@ -461,7 +461,8 @@ const STORY_BATTLE_PACE = {
   specialPhraseBonus: 1.8,
   specialIntroMs: 1300,
   actionPauseMs: 650,
-  phaseGapMs: 750,
+  phaseGapMs: 400,
+  turnFinishMs: 420,
   missGapMs: 650,
   spawnGapMs: 1200,
   defeatGapMs: 800,
@@ -2765,10 +2766,6 @@ function storyStartDefensePhrase(boostMul = 1) {
 }
 
 function storyOnAttackSuccess() {
-  if (storyState.phraseBusy) return;
-  storyState.phraseBusy = true;
-  const gapMs = STORY_BATTLE_PACE.phaseGapMs + STORY_BATTLE_PACE.actionPauseMs;
-  storyHoldPhraseTransition(gapMs + 400);
   storyState.attackCount += 1;
   const remain = Math.max(0, (storyState.phraseEndAt - performance.now()) / 1000);
   const total = Math.max(0.1, storyState.phraseSec);
@@ -2802,17 +2799,13 @@ function storyOnAttackSuccess() {
   flashStoryHpBar("enemy");
   playStoryBattleFx("attack", { isSpecial, companion: companion > 0 });
   if (storyState.enemyHp <= 0) {
-    storyScheduleNext(() => storyOnEnemyDefeated(), STORY_BATTLE_PACE.defeatGapMs + STORY_BATTLE_PACE.actionPauseMs);
+    storyFinishTurn(() => storyOnEnemyDefeated());
     return;
   }
-  storyScheduleNext(() => storyStartDefensePhrase(), STORY_BATTLE_PACE.phaseGapMs + STORY_BATTLE_PACE.actionPauseMs);
+  storyFinishTurn(() => storyStartDefensePhrase());
 }
 
 function storyOnDefenseSuccess() {
-  if (storyState.phraseBusy) return;
-  storyState.phraseBusy = true;
-  const gapMs = STORY_BATTLE_PACE.phaseGapMs + STORY_BATTLE_PACE.actionPauseMs;
-  storyHoldPhraseTransition(gapMs + 400);
   const tier = storyDefenseTier();
   const baseAtk = storyCalcEnemyAttack(storyState.currentEnemy, storyState.chapterIdx);
   const dmg = storyCalcDefenseDamage(baseAtk, tier);
@@ -2829,10 +2822,10 @@ function storyOnDefenseSuccess() {
   storyState.enemyAttackMul = 1;
   updateStoryHud();
   if (storyState.playerHp <= 0) {
-    storyScheduleNext(() => storyOnDefeat(), STORY_BATTLE_PACE.defeatGapMs + STORY_BATTLE_PACE.actionPauseMs);
+    storyFinishTurn(() => storyOnDefeat());
     return;
   }
-  storyScheduleNext(() => storyStartAttackPhrase(), STORY_BATTLE_PACE.phaseGapMs + STORY_BATTLE_PACE.actionPauseMs);
+  storyFinishTurn(() => storyStartAttackPhrase());
 }
 
 function setStoryArenaMode(mode) {
@@ -2986,15 +2979,17 @@ function storyOnTypo() {
 
 function storyOnTimeout() {
   if (storyState.phraseBusy || storyState.phraseInputLocked) return;
+  if (storyIsPhraseComplete()) return;
   storyState.phraseBusy = true;
+  storyState.phraseInputLocked = true;
   if (storyState.phase === "defense") {
     storyApplyEnemyAttack("timeout");
     if (storyState.playerHp <= 0) return;
-    storyScheduleNext(() => storyStartAttackPhrase(), STORY_BATTLE_PACE.missGapMs + STORY_BATTLE_PACE.actionPauseMs);
+    storyFinishTurn(() => storyStartAttackPhrase());
     return;
   }
   setStoryDialog("時間切れ！ こうげきはずれ — 敵のターン！", "ごまちゃん");
-  storyScheduleNext(() => storyStartDefensePhrase(1.2), STORY_BATTLE_PACE.missGapMs);
+  storyFinishTurn(() => storyStartDefensePhrase(1.2));
 }
 
 function storyOnDefeat() {
@@ -3063,15 +3058,26 @@ function storyHoldPhraseTransition(ms = 1200) {
   storyState.phraseEndAt = performance.now() + ms;
 }
 
-function storyScheduleNext(fn, delayMs = 800) {
+function storyFinishTurn(nextFn) {
   window.clearTimeout(storyState._nextTimer);
-  storyState.phraseBusy = true;
-  storyHoldPhraseTransition(delayMs + 400);
+  const delay = STORY_BATTLE_PACE.turnFinishMs;
+  storyState.phraseEndAt = performance.now() + delay + 500;
+  updateStoryNextKeyHint();
   storyState._nextTimer = window.setTimeout(() => {
+    storyState._nextTimer = 0;
+    if (!storyState.active) {
+      storyState.phraseBusy = false;
+      storyState.phraseInputLocked = false;
+      return;
+    }
     storyState.phraseBusy = false;
     storyState.phraseInputLocked = false;
-    fn();
-  }, delayMs);
+    nextFn();
+  }, delay);
+}
+
+function storyScheduleNext(fn, delayMs) {
+  storyFinishTurn(fn);
 }
 
 function storyShowSpecialIntro(isEnemy, onReady) {
@@ -3107,6 +3113,9 @@ function storyIsPhraseComplete() {
 
 function storyOnPhraseSuccess() {
   if (storyState.phraseBusy) return;
+  storyState.phraseBusy = true;
+  storyState.phraseInputLocked = true;
+  window.clearTimeout(storyState._nextTimer);
   if (storyState.phase === "defense") storyOnDefenseSuccess();
   else storyOnAttackSuccess();
 }
@@ -3133,7 +3142,9 @@ function storyProcessTypedChar(ch) {
   storyState.panelIndex += 1;
   saveCareerRomaji(loadCareerRomaji() + 1);
   renderStoryPanels();
-  if (storyIsPhraseComplete()) storyOnPhraseSuccess();
+  if (storyIsPhraseComplete()) {
+    storyOnPhraseSuccess();
+  }
 }
 
 function onStoryKeydown(ev) {
