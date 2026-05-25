@@ -448,6 +448,12 @@ function storyEnemyEmojiHtml(icon, isBoss = false) {
   return `<span class="momo-enemy-emoji${isBoss ? " momo-enemy-emoji--boss" : ""}" aria-hidden="true">${icon}</span>`;
 }
 
+/** 桃太郎タイピング風 chibi モンスター（CSSスプライト） */
+function momoMonsterSpriteHtml(spriteId, isBoss = false) {
+  const id = spriteId || "slime";
+  return `<div class="momo-monster-wrap"><div class="cocoa-sprite cocoa-sprite--foe cocoa-sprite--battle cocoa-sprite--${id}${isBoss ? " cocoa-sprite--boss" : ""}" aria-hidden="true"><span class="cocoa-sprite__shadow"></span></div></div>`;
+}
+
 /** 桃太郎タイピング風：げんきゲージ（100たまると大技） */
 const STORY_GAUGE_MAX = 100;
 const STORY_GAUGE_PER_NORMAL = 34;
@@ -800,7 +806,8 @@ const storyState = {
   /** 大技イントロ中は入力不可 */
   phraseInputLocked: false,
   _nextTimer: 0,
-  _turnSeq: 0,
+  _phraseCompleteAt: 0,
+  _pendingTurnFn: null,
   /** 章内の全敵（HP・撃破状態つき） */
   battleEnemies: [],
 };
@@ -2295,7 +2302,7 @@ function renderStoryEnemyVisual(enemy) {
   if (tagEl) tagEl.textContent = enemy.tagline || type.tagline;
   if (nameHud) nameHud.textContent = enemy.name;
   if (spriteEl) {
-    spriteEl.innerHTML = storyEnemyEmojiHtml(enemy.icon || type.icon, enemy.isBoss);
+    spriteEl.innerHTML = momoMonsterSpriteHtml(enemy.sprite || type.sprite || type.id, enemy.isBoss);
   }
   if (card) {
     card.classList.toggle("momo-enemy-card--boss", !!enemy.isBoss);
@@ -2630,6 +2637,10 @@ function storySetupPanels(task) {
   storyState.currentPhrase = { text: task.text, yomi: task.yomi };
   storyState.panelKeys = task.panelKeys.map((k) => k.toLowerCase());
   storyState.typosThisPhrase = 0;
+  storyState.phraseBusy = false;
+  storyState.phraseInputLocked = false;
+  storyState._phraseCompleteAt = 0;
+  storyState._pendingTurnFn = null;
   storyResetPanelTyping();
   const now = performance.now();
   storyState.phraseStartedAt = now;
@@ -3072,18 +3083,35 @@ function storyHoldPhraseTransition(ms = 1200) {
 function storyFinishTurn(nextFn) {
   window.clearTimeout(storyState._nextTimer);
   const delay = STORY_BATTLE_PACE.turnFinishMs;
-  storyState.phraseEndAt = performance.now() + delay + 500;
+  storyState.phraseEndAt = performance.now() + delay + 400;
+  storyState._pendingTurnFn = nextFn;
   updateStoryNextKeyHint();
-  storyState._turnSeq = (storyState._turnSeq || 0) + 1;
-  const seq = storyState._turnSeq;
-  storyState._nextTimer = window.setTimeout(() => {
-    if (seq !== storyState._turnSeq) return;
+  const run = () => {
     storyState._nextTimer = 0;
+    storyState._pendingTurnFn = null;
     storyState.phraseBusy = false;
     storyState.phraseInputLocked = false;
     if (!storyState.active) return;
     nextFn();
-  }, delay);
+    requestAnimationFrame(() => $("storyGhostInput")?.focus({ preventScroll: true }));
+  };
+  storyState._nextTimer = window.setTimeout(run, delay);
+}
+
+function storyRecoverStuckTurn(now) {
+  if (!storyState.phraseBusy || !storyIsPhraseComplete() || storyState._nextTimer) return;
+  const since = now - (storyState._phraseCompleteAt || 0);
+  if (since < 700 || since > 8000) return;
+  const fn = storyState._pendingTurnFn;
+  storyState.phraseBusy = false;
+  storyState.phraseInputLocked = false;
+  if (fn && storyState.active) {
+    fn();
+    requestAnimationFrame(() => $("storyGhostInput")?.focus({ preventScroll: true }));
+    return;
+  }
+  if (storyState.phase === "defense") storyStartAttackPhrase();
+  else storyStartDefensePhrase();
 }
 
 function storyScheduleNext(fn, delayMs) {
@@ -3136,10 +3164,17 @@ function storyOnPhraseSuccess() {
   storyState.phraseBusy = true;
   storyState.phraseInputLocked = true;
   storyMarkPhraseComplete();
-  window.clearTimeout(storyState._nextTimer);
+  storyState._phraseCompleteAt = performance.now();
   renderStoryPanels();
-  if (storyState.phase === "defense") storyOnDefenseSuccess();
-  else storyOnAttackSuccess();
+  try {
+    if (storyState.phase === "defense") storyOnDefenseSuccess();
+    else storyOnAttackSuccess();
+  } catch (err) {
+    console.error("[story] phrase success failed", err);
+    storyFinishTurn(() =>
+      storyState.phase === "defense" ? storyStartAttackPhrase() : storyStartDefensePhrase(),
+    );
+  }
 }
 
 function storyResetPanelTyping() {
@@ -3197,7 +3232,8 @@ function storyLoop(now) {
   const remain = (storyState.phraseEndAt - now) / 1000;
   const pt = $("storyPhraseTimer");
   if (pt) pt.textContent = Math.max(0, remain).toFixed(1);
-  renderStoryPanels();
+  if (!storyState.phraseBusy || !storyIsPhraseComplete()) renderStoryPanels();
+  storyRecoverStuckTurn(now);
   if (!storyState.phraseBusy && !storyState.phraseInputLocked && remain <= 0) storyOnTimeout();
   storyState.raf = requestAnimationFrame(storyLoop);
 }

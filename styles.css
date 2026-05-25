@@ -5582,3 +5582,108 @@ body.is-story .momo-pop-sticker--boss .momo-enemy-emoji {
     height: 2rem;
   }
 }
+
+/* ── 桃太郎タイピング風 chibi モンスター（話バトル） ── */
+.momo-monster-wrap {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  line-height: 0;
+  padding: 0.15rem 0;
+}
+
+.momo-battle--pure .momo-monster-wrap {
+  filter: drop-shadow(0 6px 0 rgba(0, 0, 0, 0.12));
+}
+
+.momo-battle--pure .cocoa-sprite--battle.cocoa-sprite--foe {
+  width: clamp(72px, 18vw, 96px);
+  height: clamp(72px, 18vw, 96px);
+  transform: scaleX(-1);
+  animation: momo-monster-idle 2.2s ease-in-out infinite;
+}
+
+.momo-battle--pure .cocoa-sprite--battle.cocoa-sprite--foe.cocoa-sprite--boss {
+  width: clamp(84px, 22vw, 112px);
+  height: clamp(88px, 23vw, 116px);
+  filter: saturate(1.15) drop-shadow(0 0 10px rgba(255, 193, 7, 0.55));
+  animation: momo-monster-boss-idle 1.6s ease-in-out infinite;
+}
+
+.momo-battle--pure .momo-enemy-card--boss .momo-monster-wrap {
+  filter: drop-shadow(0 8px 0 rgba(230, 81, 0, 0.2));
+}
+
+.momo-battle--pure .cocoa-sprite--battle .cocoa-sprite__shadow {
+  width: 80%;
+  height: 14%;
+  background: rgba(0, 0, 0, 0.22);
+}
+
+.momo-battle--pure .story-enemy--hit .cocoa-sprite--battle {
+  animation: momo-monster-hit 0.45s ease;
+}
+
+.momo-battle--pure .story-enemy--attack .cocoa-sprite--battle {
+  animation: momo-monster-lunge 0.55s ease;
+}
+
+@keyframes momo-monster-idle {
+  0%, 100% { transform: scaleX(-1) translateY(0); }
+  50% { transform: scaleX(-1) translateY(-5px); }
+}
+
+@keyframes momo-monster-boss-idle {
+  0%, 100% { transform: scaleX(-1) scale(1) translateY(0); }
+  50% { transform: scaleX(-1) scale(1.04) translateY(-4px); }
+}
+
+@keyframes momo-monster-hit {
+  0%, 100% { transform: scaleX(-1) translateX(0); filter: brightness(1); }
+  35% { transform: scaleX(-1) translateX(6px); filter: brightness(1.35); }
+}
+
+@keyframes momo-monster-lunge {
+  0%, 100% { transform: scaleX(-1) translateX(0); }
+  40% { transform: scaleX(-1) translateX(-10px) scale(1.05); }
+}
+
+/* モンスターをポップ＆桃太郎タイピング風に（彩度アップ） */
+.momo-battle--pure .cocoa-sprite--slime::before {
+  background: radial-gradient(circle at 35% 28%, #c8e6c9, #66bb6a 52%, #388e3c 92%);
+}
+
+.momo-battle--pure .cocoa-sprite--bat::before {
+  background: #9575cd;
+}
+
+.momo-battle--pure .cocoa-sprite--goblin::before {
+  background: #81c784;
+}
+
+.momo-battle--pure .cocoa-sprite--mushroom::before {
+  filter: saturate(1.2);
+}
+
+.momo-battle--pure .cocoa-sprite--ghost::before {
+  filter: saturate(1.15) brightness(1.08);
+}
+
+.momo-battle--pure .cocoa-sprite--dragon::before {
+  filter: saturate(1.2);
+}
+
+.momo-battle--pure .cocoa-sprite--oni::before {
+  filter: saturate(1.25);
+}
+
+body.is-story .momo-enemy-fig .momo-monster-wrap {
+  min-height: clamp(72px, 18vw, 96px);
+}
+
+@media (max-width: 520px) {
+  .momo-battle--pure .cocoa-sprite--battle.cocoa-sprite--foe {
+    width: 68px;
+    height: 68px;
+  }
+}
