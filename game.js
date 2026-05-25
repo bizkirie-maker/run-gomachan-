@@ -300,13 +300,9 @@ const BUNNY_HOME_X = 4;
 
 /** 文正解後はすぐ次のお題へ（待ちなし） */
 
-/** 累計の正解打鍵で全体秒ボーナス（15→+1秒、20→+2秒、25→+3秒、その後25刻みで繰り返し） */
-const TIME_BONUS_WAVE_STEP = 25;
-const TIME_BONUS_MILESTONES = [
-  { off: 15, sec: 1 },
-  { off: 20, sec: 2 },
-  { off: 25, sec: 3 },
-];
+/** 累計の正解打鍵で全体秒ボーナス（40文字ごとに＋1秒） */
+const TIME_BONUS_WAVE_STEP = 40;
+const TIME_BONUS_MILESTONES = [{ off: 40, sec: 1 }];
 
 /** 称号：60秒1プレイの最高スコアがこの値ごとに次の段階（50, 100, …） */
 const TITLE_FROM_BEST_PER = 50;
@@ -481,8 +477,6 @@ function buildStoryChapters(count) {
         attack: 2 + Math.floor(i * 0.14) + e * 2,
         phraseSec: Math.max(2.4, 5.2 - Math.floor(i / 32)),
         defenseSec: Math.max(1.6, 3.4 - Math.floor(i / 42)),
-        /** 2以上で連続攻撃（手強さ） */
-        comboHits: i >= 25 && e === 0 ? 1 + (i % 3) : i >= 60 ? 2 : 0,
       });
     }
     const arc = storyArcLabel(i);
@@ -521,14 +515,16 @@ const storyState = {
   raf: 0,
   typosThisPhrase: 0,
   phraseBusy: false,
-  /** attack | defense — 桃太郎タイピング風 */
+  /** attack | defense — 桃太郎タイピング風ターン制 */
   phase: "attack",
   attackCount: 0,
   currentEnemy: null,
-  /** こうげき失敗時、次の敵攻撃が強くなる（ココア風） */
+  /** 桃太郎タイピング風：1文字ずつ打つパネル列 */
+  panelKeys: [],
+  panelIndex: 0,
+  panelTypoFlash: false,
+  /** 防御時のみ：こうげき失敗で次の被ダメが増える */
   enemyAttackMul: 1,
-  /** 残り連続攻撃回数（敵の追い打ち） */
-  enemyComboLeft: 0,
 };
 
 const state = {
@@ -962,6 +958,36 @@ function pickStoryPhrase() {
   return PHRASES[randomInt(0, PHRASES.length - 1)];
 }
 
+/** 桃太郎タイピング風：ホームポジション中心のキー（序盤は j→f→…） */
+const MOMO_PANEL_POOL_EARLY = "fjaskldgh";
+const MOMO_PANEL_POOL_MID = "asdfghjklqwertyuiop";
+
+/** 章の進みでパネル数が増える（桃太郎タイピングのステップアップ方式） */
+function buildStoryPanelTask(isDefense, chapterIdx) {
+  const progress = chapterIdx + loadStoryProgress();
+  const pool = progress < 12 ? MOMO_PANEL_POOL_EARLY : MOMO_PANEL_POOL_MID;
+  const baseLen = isDefense ? 3 : 4;
+  const len = Math.min(isDefense ? 6 : 10, baseLen + Math.floor(progress / 6) + (isDefense ? 0 : 1));
+
+  if (progress < 10) {
+    const keys = [];
+    for (let i = 0; i < len; i += 1) {
+      keys.push(pool[i % pool.length] || pool[randomInt(0, pool.length - 1)]);
+    }
+    return {
+      text: isDefense ? "ぼうぎょ" : "こうげき",
+      yomi: keys.join(""),
+      panelKeys: keys,
+    };
+  }
+
+  const phrase = isDefense ? pickStoryDefensePhrase() : pickStoryPhrase();
+  const romaji = yomiToRomaji(phrase.yomi);
+  const maxLen = isDefense ? 8 : 14;
+  const keys = [...romaji].slice(0, maxLen);
+  return { text: phrase.text, yomi: phrase.yomi, panelKeys: keys };
+}
+
 function pickRandomPhrase() {
   const { min, max } = state.lenMode;
   const candidates = PHRASES.filter((p) => {
@@ -1191,7 +1217,7 @@ function playGomaTimeBonusSting() {
   });
 }
 
-/** 累計の正解打鍵が 15→+1秒、20→+2秒、25→+3秒（以降 25 打鍵ごとに同じパターンで繰り返し） */
+/** 累計の正解打鍵が 40 文字ごとに ＋1 秒 */
 function maybeGrantTimeBonus() {
   if (!state.playing) return;
   const bonusSec = timeBonusSecAtKeyCount(state.correctKeyCount);
@@ -1664,7 +1690,7 @@ function updateStoryPhaseUi() {
   const card = $("storyPhraseCard");
   if (!badge) return;
   const isDef = storyState.phase === "defense";
-  badge.textContent = isDef ? "ぼうぎょ！" : "こうげき！";
+  badge.textContent = isDef ? "ぼうぎょターン" : "こうげきターン";
   badge.classList.toggle("momo-phase-badge--attack", !isDef);
   badge.classList.toggle("momo-phase-badge--defense", isDef);
   if (card) {
@@ -1725,10 +1751,7 @@ function updateStoryHud() {
     }
   }
   const comboEl = $("storyEnemyComboHint");
-  if (comboEl) {
-    comboEl.textContent =
-      storyState.enemyComboLeft > 0 ? `連続攻撃 ×${storyState.enemyComboLeft + 1}` : "";
-  }
+  if (comboEl) comboEl.textContent = "";
 }
 
 function showStoryDamagePopup(amount, target = "player") {
@@ -1799,7 +1822,6 @@ function startStoryChapter(chapterIdx) {
   storyState.chapterIdx = chapterIdx;
   storyState.enemyIdx = 0;
   storyState.enemyAttackMul = 1;
-  storyState.enemyComboLeft = 0;
   storyState.playerMaxHp = storyCalcPlayerMaxHp();
   storyState.playerHp = storyState.playerMaxHp;
   storyState.attackCount = 0;
@@ -1823,7 +1845,6 @@ function startStoryEnemy() {
   storyState.defenseSec = enemy.defenseSec || Math.max(2.5, enemy.phraseSec - 1);
   storyState.attackCount = 0;
   storyState.enemyAttackMul = 1;
-  storyState.enemyComboLeft = enemy.comboHits || 0;
   const nameEl = $("storyEnemyName");
   const spriteEl = $("storyEnemySprite");
   if (nameEl) nameEl.textContent = enemy.name;
@@ -1832,41 +1853,63 @@ function startStoryEnemy() {
     spriteEl.classList.add(`story-enemy__sprite--${enemy.sprite}`);
   }
   updateStoryHud();
-  /** 中盤以降：たまに敵の先制攻撃 */
-  if (storyState.chapterIdx >= 12 && Math.random() < 0.28) {
-    setStoryDialog(`${enemy.name}の先制攻撃！ まずはぼうぎょ！`, "ナレーション");
-    window.setTimeout(() => storyStartDefensePhrase(1.1), 900);
-  } else {
-    setStoryDialog(`${enemy.name} があらわれた！ ローマ字を打ってこうげき！`, "ナレーション");
-    storyStartAttackPhrase();
-  }
+  setStoryDialog(`${enemy.name} があらわれた！ パネルを打ってこうげき！`, "ナレーション");
+  storyStartAttackPhrase();
   cancelAnimationFrame(storyState.raf);
   storyState.raf = requestAnimationFrame(storyLoop);
 }
 
-function storySetupPhrase(phrase) {
-  storyState.currentPhrase = phrase;
-  const baseRomaji = yomiToRomaji(phrase.yomi);
-  storyState.targetChars = [...baseRomaji];
-  storyState.romajiCandidates = buildRomajiVariants(baseRomaji);
+function storySetupPanels(task) {
+  storyState.currentPhrase = { text: task.text, yomi: task.yomi };
+  storyState.panelKeys = task.panelKeys.map((k) => k.toLowerCase());
+  storyState.panelIndex = 0;
+  storyState.targetChars = [...storyState.panelKeys];
+  storyState.romajiCandidates = buildRomajiVariants(storyState.panelKeys.join(""));
   storyState.typedRomaji = "";
   storyState.typosThisPhrase = 0;
   const now = performance.now();
   storyState.phraseStartedAt = now;
   storyState.phraseEndAt = now + storyState.phraseSec * 1000;
-  const textEl = $("storyPhraseText");
-  if (textEl) textEl.innerHTML = phraseRubyHtml(phrase.text, phrase.yomi);
-  storyRenderTypeline();
+  const wordEl = $("storyPanelWord");
+  if (wordEl) wordEl.textContent = task.text;
+  renderStoryPanels();
   const inp = $("storyGhostInput");
   if (inp) inp.value = "";
+}
+
+function renderStoryPanels() {
+  const board = $("storyPanelBoard");
+  if (!board) return;
+  const keys = storyState.panelKeys;
+  const idx = storyState.panelIndex;
+  board.innerHTML = keys
+    .map((k, i) => {
+      let cls = "momo-key-panel";
+      if (i < idx) cls += " momo-key-panel--done";
+      else if (i === idx) cls += " momo-key-panel--current";
+      if (i === idx && storyState.panelTypoFlash) cls += " momo-key-panel--miss";
+      return `<span class="${cls}">${escapeHtml(k.toUpperCase())}</span>`;
+    })
+    .join("");
+  const card = $("storyPhraseCard");
+  if (card) {
+    card.classList.toggle("momo-phrase-card--attack", storyState.phase === "attack");
+    card.classList.toggle("momo-phrase-card--defense", storyState.phase === "defense");
+  }
+  const remain = Math.max(0, storyState.phraseEndAt - performance.now());
+  const total = Math.max(1, storyState.phraseSec * 1000);
+  const fill = $("storyPanelTimerFill");
+  if (fill) fill.style.width = `${(remain / total) * 100}%`;
 }
 
 function storyStartAttackPhrase() {
   storyState.phase = "attack";
   storyState.phraseBusy = false;
+  storyState.enemyAttackMul = 1;
   storyState.phraseSec = storyState.currentEnemy?.phraseSec || 5;
   updateStoryPhaseUi();
-  storySetupPhrase(pickStoryPhrase());
+  setStoryDialog("ごまちゃんのターン！ パネルを素早く打て！", "ごまちゃん");
+  storySetupPanels(buildStoryPanelTask(false, storyState.chapterIdx));
 }
 
 function storyStartDefensePhrase(boostMul = 1) {
@@ -1880,27 +1923,9 @@ function storyStartDefensePhrase(boostMul = 1) {
   updateStoryHud();
   const enemy = storyState.currentEnemy;
   const atk = storyCalcEnemyAttack(enemy, storyState.chapterIdx);
-  const comboNote = storyState.enemyComboLeft > 0 ? "（連続攻撃！）" : "";
-  setStoryDialog(`${enemy?.name || "敵"}のこうげき！${comboNote} ${atk} ダメージ — 打ってぼうぎょ！`, enemy?.name || "敵");
-  storySetupPhrase(pickStoryDefensePhrase());
+  setStoryDialog(`${enemy?.name || "敵"}のターン！ ${atk} ダメージ — パネルでぼうぎょ！`, enemy?.name || "敵");
+  storySetupPanels(buildStoryPanelTask(true, storyState.chapterIdx));
   flashStoryEnemyAttack();
-}
-
-function storyRenderTypeline() {
-  const guide =
-    storyState.romajiCandidates.find((s) => s.startsWith(storyState.typedRomaji)) ||
-    storyState.targetChars.join("");
-  const rest = guide.slice(storyState.typedRomaji.length);
-  const head = rest.slice(0, 1);
-  const tail = rest.slice(1);
-  const line = $("storyTargetLine");
-  if (line) {
-    line.innerHTML = head
-      ? `<span class="momo-key-next">${escapeHtml(head)}</span><span class="rest">${escapeHtml(tail)}</span>`
-      : `<span class="rest">${escapeHtml(rest)}</span>`;
-  }
-  const caret = $("storyCaret");
-  if (caret) caret.classList.toggle("caret--hide", rest.length === 0);
 }
 
 function storyOnAttackSuccess() {
@@ -1908,16 +1933,17 @@ function storyOnAttackSuccess() {
   storyState.phraseBusy = true;
   storyState.attackCount += 1;
   const remain = Math.max(0, (storyState.phraseEndAt - performance.now()) / 1000);
-  const speedBonus = Math.floor(remain * 0.8);
-  const accuracyBonus = storyState.typosThisPhrase === 0 ? 2 : 0;
-  const lenBonus = Math.floor(storyState.targetChars.length / 4);
+  const total = Math.max(0.1, storyState.phraseSec);
+  const speedRatio = remain / total;
   const companion = storyCompanionAttackBonus();
-  const dmg = 2 + speedBonus + accuracyBonus + lenBonus + companion;
+  let dmg = Math.max(1, Math.round((2 + storyState.panelKeys.length * 0.35) * speedRatio) + companion);
+  if (storyState.typosThisPhrase > 0) dmg = Math.max(1, dmg - storyState.typosThisPhrase * 2);
+  if (speedRatio >= 0.55 && storyState.typosThisPhrase === 0) dmg += 2;
   storyState.enemyHp = Math.max(0, storyState.enemyHp - dmg);
   const enemy = storyState.currentEnemy;
   let msg = `${enemy?.name || "敵"}に ${dmg} ダメージ！`;
   if (companion > 0) msg += " 仲間の援護！";
-  if (speedBonus >= 3) msg += " 速攻！";
+  if (speedRatio >= 0.5 && storyState.typosThisPhrase === 0) msg += " 速攻！";
   setStoryDialog(msg, "ごまちゃん");
   updateStoryHud();
   showStoryDamagePopup(dmg, "enemy");
@@ -1926,11 +1952,7 @@ function storyOnAttackSuccess() {
     window.setTimeout(() => storyOnEnemyDefeated(), 600);
     return;
   }
-  /** こうげき成功のたび敵が反撃（ココア風）。序盤は1回、中盤以降はたまに2連続 */
-  const extraCombo =
-    storyState.enemyComboLeft <= 0 && storyState.chapterIdx >= 8 && storyState.attackCount % 2 === 0 ? 1 : 0;
-  storyState.enemyComboLeft = Math.max(storyState.enemyComboLeft, extraCombo);
-  window.setTimeout(() => storyStartDefensePhrase(), 480);
+  window.setTimeout(() => storyStartDefensePhrase(), 520);
 }
 
 function storyOnDefenseSuccess() {
@@ -1960,18 +1982,6 @@ function storyOnDefenseSuccess() {
   updateStoryHud();
   if (storyState.playerHp <= 0) {
     window.setTimeout(() => storyOnDefeat(), 700);
-    return;
-  }
-  if (storyState.enemyComboLeft > 0) {
-    storyState.enemyComboLeft -= 1;
-    window.setTimeout(() => storyStartDefensePhrase(1.15), 520);
-    return;
-  }
-  /** ぼうぎょ失敗系は追い打ちの可能性 */
-  if (dmg > 0 && tier === "bad" && Math.random() < 0.35) {
-    storyState.enemyComboLeft = 1;
-    setStoryDialog("敵の追い打ち！", storyState.currentEnemy?.name || "敵");
-    window.setTimeout(() => storyStartDefensePhrase(1.2), 650);
     return;
   }
   window.setTimeout(() => storyStartAttackPhrase(), 600);
@@ -2046,14 +2056,18 @@ function storyOnTypo() {
   if (storyState.phase === "defense") {
     storyApplyEnemyAttack("typo");
     if (storyState.playerHp <= 0) return;
-    storyState.typedRomaji = "";
-    storyState.romajiCandidates = buildRomajiVariants(storyState.targetChars.join(""));
-    storyRenderTypeline();
+    storyState.panelIndex = 0;
+    storyState.panelTypoFlash = false;
+    renderStoryPanels();
     storyState.phraseBusy = false;
     return;
   }
-  setStoryDialog("打ち間違い！ こうげき外れ — 敵の反撃！", "ごまちゃん");
-  window.setTimeout(() => storyStartDefensePhrase(1.45), 420);
+  storyState.panelTypoFlash = true;
+  renderStoryPanels();
+  window.setTimeout(() => {
+    storyState.panelTypoFlash = false;
+    renderStoryPanels();
+  }, 280);
 }
 
 function storyOnTimeout() {
@@ -2065,8 +2079,8 @@ function storyOnTimeout() {
     window.setTimeout(() => storyStartAttackPhrase(), 550);
     return;
   }
-  setStoryDialog("時間切れ！ こうげき外れ — 敵の反撃！", "ごまちゃん");
-  window.setTimeout(() => storyStartDefensePhrase(1.38), 420);
+  setStoryDialog("時間切れ！ こうげきはずれ — 敵のターン！", "ごまちゃん");
+  window.setTimeout(() => storyStartDefensePhrase(1.2), 480);
 }
 
 function storyOnDefeat() {
@@ -2119,18 +2133,16 @@ function quitStory() {
 
 function storyProcessTypedChar(ch) {
   if (!storyState.active || storyState.phraseBusy || storyState.playerHp <= 0) return;
-  const nextPrefix = `${storyState.typedRomaji}${ch}`;
-  const narrowed = storyState.romajiCandidates.filter((romaji) => romaji.startsWith(nextPrefix));
-  if (narrowed.length === 0) {
+  const expected = storyState.panelKeys[storyState.panelIndex];
+  if (!expected) return;
+  if (ch.toLowerCase() !== expected) {
     storyOnTypo();
     return;
   }
-  storyState.romajiCandidates = narrowed;
-  storyState.typedRomaji = nextPrefix;
+  storyState.panelIndex += 1;
   saveCareerRomaji(loadCareerRomaji() + 1);
-  storyRenderTypeline();
-  const done = narrowed.length === 1 && narrowed[0] === storyState.typedRomaji;
-  if (done) storyOnPhraseSuccess();
+  renderStoryPanels();
+  if (storyState.panelIndex >= storyState.panelKeys.length) storyOnPhraseSuccess();
 }
 
 function onStoryKeydown(ev) {
@@ -2161,6 +2173,7 @@ function storyLoop(now) {
   const remain = (storyState.phraseEndAt - now) / 1000;
   const pt = $("storyPhraseTimer");
   if (pt) pt.textContent = Math.max(0, remain).toFixed(1);
+  renderStoryPanels();
   if (!storyState.phraseBusy && remain <= 0) storyOnTimeout();
   storyState.raf = requestAnimationFrame(storyLoop);
 }

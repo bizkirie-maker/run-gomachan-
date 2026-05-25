@@ -149,7 +149,7 @@
         <button type="button" class="ghost small back-home-btn" id="backHomeFromStoryBtn">← ホーム</button>
         <h2 id="story-menu-heading">ごまちゃんももたろうタイピング</h2>
       </div>
-      <p class="muted">「ココアの桃太郎タイピング」風の<strong>攻撃／防御</strong>バトルです。お題を打って敵をたおし、敵の攻撃は防御フェーズで打ち返して防ぎます。犬・サル・キジの仲間が旅の途中で加わります。</p>
+      <p class="muted">「ココアの桃太郎たいぴんぐ」と同じ<strong>パネル入力</strong>バトル。アルファベットのパネルを打って攻撃し、敵のターンではパネルで防御します。</p>
       <div class="momo-companion-strip" id="storyCompanionStrip" aria-label="仲間"></div>
       <p class="story-menu-meta muted" id="storyMenuMeta"></p>
       <ul class="story-chapter-list momo-chapter-scroll" id="storyChapterList"></ul>
@@ -255,7 +255,7 @@
           <div><span class="hud-label">スコア</span> <strong id="score">0</strong> pt</div>
           <div><span class="hud-label" id="stockLabel">エサストック</span> <strong id="stockCount">0</strong> こ</div>
         </div>
-        <p class="input-hint">正解は<strong>ローマ字だけ</strong>（ひらがな・漢字の変換は使いません）。IME は英字（半角）にして a〜z を打ってください。お題の下のローマ字を、エサが通りすぎる前に打ち終えましょう。正しく打ち始めるとごまちゃんがエサの方へ近づきます。<strong>時間切れ</strong>はどちらのモードでもストックが減ります。<strong>しっかり</strong>は打ち間違いでもストックが減ります。<strong>やさしい</strong>は打ち間違いのキーは無視です。<strong>正しく打った文字が 15→20→25 文字目</strong>のとき、この60秒に<strong>＋1秒・＋2秒・＋3秒</strong>が順に入ります（そのあとも同じ間隔で繰り返し）。プレイ中はブラウザ内で<strong>草原風のBGM</strong>が鳴り、時間プラスでは別の効果音が鳴ります（著作楽曲の転載ではありません）。</p>
+        <p class="input-hint">正解は<strong>ローマ字だけ</strong>（ひらがな・漢字の変換は使いません）。IME は英字（半角）にして a〜z を打ってください。お題の下のローマ字を、エサが通りすぎる前に打ち終えましょう。正しく打ち始めるとごまちゃんがエサの方へ近づきます。<strong>時間切れ</strong>はどちらのモードでもストックが減ります。<strong>しっかり</strong>は打ち間違いでもストックが減ります。<strong>やさしい</strong>は打ち間違いのキーは無視です。<strong>正しく打った文字が 40 文字ごと</strong>に、この60秒に<strong>＋1秒</strong>が入ります（80文字目、120文字目…でも同様）。。プレイ中はブラウザ内で<strong>草原風のBGM</strong>が鳴り、時間プラスでは別の効果音が鳴ります（著作楽曲の転載ではありません）。</p>
         <input
           id="ghostInput"
           class="ghost-input"
@@ -295,6 +295,11 @@
         </div>
         <div class="story-scene momo-scene" id="storyScene">
           <div class="field-bg momo-field-bg" aria-hidden="true"></div>
+          <div class="story-phrase-card momo-phrase-card momo-phrase-card--top" id="storyPhraseCard">
+            <p class="momo-panel-word" id="storyPanelWord" lang="ja">こうげき</p>
+            <div class="momo-panel-board" id="storyPanelBoard" aria-label="タイピングパネル"></div>
+            <div class="momo-panel-timer-bar" aria-hidden="true"><div class="momo-panel-timer-fill" id="storyPanelTimerFill"></div></div>
+          </div>
           <div class="momo-damage-popup" id="storyDamagePopup" aria-live="assertive"></div>
           <div class="momo-party" id="storyParty" aria-label="仲間"></div>
           <div class="momo-scene-hp momo-scene-hp--ally" aria-label="ごまちゃんのHP">
@@ -340,12 +345,6 @@
               </span>
             </div>
           </div>
-          <div class="story-phrase-card momo-phrase-card" id="storyPhraseCard">
-            <p class="story-phrase-kanji" id="storyPhraseText" lang="ja"></p>
-            <div class="story-phrase-romaji momo-romaji-line">
-              <span id="storyTargetLine"></span><span id="storyCaret" class="caret momo-caret">丨</span>
-            </div>
-          </div>
         </div>
         <div class="momo-rpg-window">
           <p class="momo-rpg-window__speaker" id="storySpeakerName">ごまちゃん</p>
@@ -373,7 +372,7 @@
               <span class="momo-hp-num momo-hp-num--big"><strong id="storyPhraseTimer">5.0</strong> 秒</span>
             </div>
           </div>
-          <p class="input-hint story-input-hint">ローマ字だけ（IME は英字）。<strong>こうげき</strong>で敵にダメージ、<strong>ぼうぎょ</strong>で敵の攻撃を防ぐ。HPは章を進めると増えます。ミスや時間切れは大ダメージ！</p>
+          <p class="input-hint story-input-hint">桃太郎タイピングと同じ操作。<strong>パネルのアルファベット</strong>を順番に打つ。攻撃ターンは速く正確に、防御ターンは敵のダメージを抑える。HPは章を進めると増えます。</p>
           <input id="storyGhostInput" class="ghost-input" type="text" lang="en" inputmode="latin" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="話モード用キー入力" />
           <button type="button" class="ghost small" id="quitStoryBtn">旅をやめる</button>
         </section>
