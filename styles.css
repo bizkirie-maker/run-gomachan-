@@ -3167,13 +3167,13 @@ body.is-playing .bonus-key-hint {
 .momo-damage-popup.is-show {
   opacity: 1;
   transform: translate(-50%, -18px) scale(1);
-  animation: momo-dmg-float 0.85s ease forwards;
+  animation: momo-dmg-float 1.15s ease forwards;
 }
 
 @keyframes momo-dmg-float {
   0% { transform: translate(-50%, 0) scale(0.7); opacity: 0; }
-  20% { opacity: 1; transform: translate(-50%, -12px) scale(1.08); }
-  100% { transform: translate(-50%, -36px) scale(1); opacity: 0; }
+  18% { opacity: 1; transform: translate(-50%, -12px) scale(1.12); }
+  100% { transform: translate(-50%, -42px) scale(1); opacity: 0; }
 }
 
 .momo-hp-num--big {
@@ -4086,4 +4086,244 @@ body.is-story .foot {
 .story-stage-wrap.hidden,
 .stage-wrap.hidden {
   display: none !important;
+}
+
+/* ── 話バトル：戦闘演出（攻撃・防御・登場） ── */
+.momo-battle-live {
+  position: absolute;
+  top: 0.35rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 12;
+  margin: 0;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.06em;
+  color: #fff;
+  background: rgba(198, 40, 40, 0.82);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.momo-battle-live.is-on {
+  opacity: 1;
+  animation: momo-battle-live-pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes momo-battle-live-pulse {
+  0%, 100% { transform: translateX(-50%) scale(1); }
+  50% { transform: translateX(-50%) scale(1.04); }
+}
+
+.momo-battle-fx {
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.momo-battle-fx__slash,
+.momo-battle-fx__shield,
+.momo-battle-fx__spark,
+.momo-battle-fx__beam {
+  position: absolute;
+  opacity: 0;
+}
+
+.momo-battle-fx__slash {
+  left: 22%;
+  top: 38%;
+  font-size: clamp(2rem, 8vw, 3.2rem);
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.25));
+}
+
+.momo-battle-fx__beam {
+  left: 24%;
+  top: 46%;
+  width: 42%;
+  height: 0.35rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, #ffeb3b 35%, #ff9800 70%, transparent);
+  box-shadow: 0 0 12px rgba(255, 152, 0, 0.65);
+}
+
+.momo-battle-fx__shield {
+  left: 50%;
+  top: 34%;
+  transform: translate(-50%, 0);
+  font-size: clamp(2.2rem, 9vw, 3.5rem);
+  filter: drop-shadow(0 3px 8px rgba(21, 101, 192, 0.45));
+}
+
+.momo-battle-fx__spark {
+  left: 68%;
+  top: 30%;
+  font-size: clamp(1.4rem, 5vw, 2rem);
+}
+
+.momo-battle-fx.is-show.is-attack .momo-battle-fx__slash {
+  animation: momo-fx-slash 0.95s ease forwards;
+}
+
+.momo-battle-fx.is-show.is-attack .momo-battle-fx__beam {
+  animation: momo-fx-beam 0.85s ease forwards;
+}
+
+.momo-battle-fx.is-show.is-attack.is-special .momo-battle-fx__slash {
+  animation: momo-fx-slash-special 1.05s ease forwards;
+  color: #ff6f00;
+}
+
+.momo-battle-fx.is-show.is-attack.is-companion .momo-battle-fx__spark {
+  animation: momo-fx-spark 0.9s ease 0.12s forwards;
+}
+
+.momo-battle-fx.is-show.is-defense .momo-battle-fx__shield {
+  animation: momo-fx-shield 1s ease forwards;
+}
+
+.momo-battle-fx.is-show.is-enemy-attack .momo-battle-fx__beam {
+  left: auto;
+  right: 24%;
+  background: linear-gradient(270deg, transparent, #ef5350 35%, #c62828 70%, transparent);
+  animation: momo-fx-beam-enemy 0.9s ease forwards;
+}
+
+@keyframes momo-fx-slash {
+  0% { opacity: 0; transform: translateX(-20px) rotate(-35deg) scale(0.5); }
+  25% { opacity: 1; transform: translateX(40px) rotate(15deg) scale(1.15); }
+  100% { opacity: 0; transform: translateX(120px) rotate(25deg) scale(0.9); }
+}
+
+@keyframes momo-fx-slash-special {
+  0% { opacity: 0; transform: translateX(-30px) rotate(-45deg) scale(0.4); }
+  20% { opacity: 1; transform: translateX(20px) rotate(0deg) scale(1.35); }
+  45% { opacity: 1; transform: translateX(80px) rotate(20deg) scale(1.2); }
+  100% { opacity: 0; transform: translateX(160px) rotate(35deg) scale(0.85); }
+}
+
+@keyframes momo-fx-beam {
+  0% { opacity: 0; transform: scaleX(0.1); transform-origin: left center; }
+  30% { opacity: 1; transform: scaleX(1); }
+  100% { opacity: 0; transform: scaleX(1.05); }
+}
+
+@keyframes momo-fx-beam-enemy {
+  0% { opacity: 0; transform: scaleX(0.1); transform-origin: right center; }
+  30% { opacity: 1; transform: scaleX(1); }
+  100% { opacity: 0; transform: scaleX(1.05); }
+}
+
+@keyframes momo-fx-shield {
+  0% { opacity: 0; transform: translate(-50%, 10px) scale(0.4); }
+  35% { opacity: 1; transform: translate(-50%, -8px) scale(1.15); }
+  100% { opacity: 0; transform: translate(-50%, -18px) scale(1); }
+}
+
+@keyframes momo-fx-spark {
+  0% { opacity: 0; transform: translateY(8px) scale(0.6); }
+  40% { opacity: 1; transform: translateY(-6px) scale(1.1); }
+  100% { opacity: 0; transform: translateY(-20px) scale(0.9); }
+}
+
+.momo-arena--fighting .momo-party-slot--hero .momo-party-slot__icon {
+  animation: momo-idle-bob 2.2s ease-in-out infinite;
+}
+
+.momo-arena--fighting .story-enemy:not(.story-enemy--hit):not(.story-enemy--attack) {
+  animation: momo-idle-bob-enemy 2.4s ease-in-out infinite;
+}
+
+.momo-arena--defense.momo-arena--fighting .story-enemy {
+  animation: momo-enemy-ready 1.1s ease-in-out infinite;
+}
+
+@keyframes momo-idle-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+@keyframes momo-idle-bob-enemy {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+@keyframes momo-enemy-ready {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-4px); }
+}
+
+.momo-party-slot--hero.is-attacking {
+  animation: momo-hero-attack 0.75s ease;
+}
+
+.momo-party-slot--hero.is-attacking--special {
+  animation: momo-hero-attack-special 0.95s ease;
+}
+
+@keyframes momo-hero-attack {
+  0% { transform: translateX(0); }
+  35% { transform: translateX(14px) scale(1.03); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes momo-hero-attack-special {
+  0% { transform: translateX(0) scale(1); }
+  25% { transform: translateX(18px) scale(1.06); filter: brightness(1.12); }
+  100% { transform: translateX(0) scale(1); }
+}
+
+.momo-party-slot--hero.is-blocking {
+  animation: momo-hero-block 0.85s ease;
+}
+
+.momo-party-slot--hero.is-blocking--perfect {
+  box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.55);
+}
+
+.momo-party-slot--hero.is-blocking--good {
+  box-shadow: 0 0 0 3px rgba(66, 165, 245, 0.45);
+}
+
+@keyframes momo-hero-block {
+  0%, 100% { transform: translateX(0); }
+  40% { transform: translateX(-6px) scale(0.98); filter: brightness(1.08); }
+}
+
+.momo-party-slot.is-assist {
+  animation: momo-companion-assist 0.7s ease;
+}
+
+@keyframes momo-companion-assist {
+  0%, 100% { transform: translateX(0); }
+  40% { transform: translateX(10px) scale(1.04); }
+}
+
+.story-enemy.is-spawn {
+  animation: momo-enemy-spawn-in 0.85s ease;
+}
+
+@keyframes momo-enemy-spawn-in {
+  0% { opacity: 0; transform: translateY(24px) scale(0.75); }
+  60% { opacity: 1; transform: translateY(-6px) scale(1.05); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+.momo-arena--attack.momo-arena--fighting {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.45),
+    inset 0 -40px 60px rgba(255, 152, 0, 0.12),
+    0 8px 22px var(--shadow);
+}
+
+.momo-arena--defense.momo-arena--fighting {
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.45),
+    inset 0 -40px 60px rgba(66, 165, 245, 0.14),
+    0 8px 22px var(--shadow);
 }

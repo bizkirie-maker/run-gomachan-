@@ -427,6 +427,20 @@ const STORY_COMPANIONS = [
 const STORY_GAUGE_MAX = 100;
 const STORY_GAUGE_PER_NORMAL = 34;
 
+/** 話バトルのテンポ（ゆっくり＋攻撃演出の待ち時間） */
+const STORY_BATTLE_PACE = {
+  phraseSecBase: 8.5,
+  phraseSecMin: 6.2,
+  defenseSecBase: 6.2,
+  defenseSecMin: 4.5,
+  specialPhraseBonus: 1.8,
+  actionPauseMs: 1100,
+  phaseGapMs: 1300,
+  missGapMs: 850,
+  spawnGapMs: 1500,
+  defeatGapMs: 900,
+};
+
 /** ごまちゃんの技 */
 const STORY_PLAYER_SKILLS = {
   normal: { name: "通常攻撃", short: "こうげき" },
@@ -691,8 +705,8 @@ function buildStoryChapters(count) {
         specialMove: type.specialMove,
         hp: 5 + Math.floor(i * 0.42) + e * 4 + (isBoss ? 8 : 0),
         attack: 2 + Math.floor(i * 0.14) + e * 2 + (isBoss ? 3 : 0),
-        phraseSec: Math.max(2.4, 5.2 - Math.floor(i / 32)),
-        defenseSec: Math.max(1.6, 3.4 - Math.floor(i / 42)),
+        phraseSec: Math.max(STORY_BATTLE_PACE.phraseSecMin, STORY_BATTLE_PACE.phraseSecBase - Math.floor(i / 55)),
+        defenseSec: Math.max(STORY_BATTLE_PACE.defenseSecMin, STORY_BATTLE_PACE.defenseSecBase - Math.floor(i / 70)),
       });
     }
     const arc = storyArcLabel(i);
@@ -2353,12 +2367,15 @@ function updateStoryPhaseUi() {
   if (isDef) {
     banner.textContent = "ぼうぎょ！";
     if (ribbon) ribbon.className = "momo-phase-ribbon momo-phase-ribbon--defense";
+    setStoryArenaMode("defense");
   } else if (isSpecial) {
     banner.textContent = "大技！";
     if (ribbon) ribbon.className = "momo-phase-ribbon momo-phase-ribbon--special";
+    setStoryArenaMode("attack");
   } else {
     banner.textContent = "こうげき！";
     if (ribbon) ribbon.className = "momo-phase-ribbon momo-phase-ribbon--attack";
+    setStoryArenaMode("attack");
   }
   if (moveEl) {
     moveEl.textContent = isDef
@@ -2442,7 +2459,7 @@ function showStoryDamagePopup(amount, target = "player") {
   pop.textContent = `-${amount}`;
   pop.className = `momo-damage-popup momo-damage-popup--${target} is-show`;
   window.clearTimeout(showStoryDamagePopup._t);
-  showStoryDamagePopup._t = window.setTimeout(() => pop.classList.remove("is-show"), 850);
+  showStoryDamagePopup._t = window.setTimeout(() => pop.classList.remove("is-show"), 1200);
 }
 
 function flashStoryHpBar(which) {
@@ -2507,6 +2524,7 @@ function beginStoryBattle() {
   attachStoryKeyCapture();
   void resumeGomaAudio();
   startGomaStoryBattleBgm();
+  setStoryBattleLive(true);
   $("storyGhostInput")?.focus({ preventScroll: true });
 }
 
@@ -2549,6 +2567,12 @@ function startStoryEnemy() {
   renderStoryEnemyVisual(enemy);
   renderStoryPartyPanel();
   updateStoryHud();
+  const enemyEl = $("storyEnemy");
+  if (enemyEl) {
+    enemyEl.classList.remove("is-spawn");
+    void enemyEl.offsetWidth;
+    enemyEl.classList.add("is-spawn");
+  }
   setStoryDialog(`${enemy.appearLine || enemy.name + " があらわれた！"} こうげきターンから始まる！`, enemy.name);
   storyStartAttackPhrase();
   cancelAnimationFrame(storyState.raf);
@@ -2648,7 +2672,7 @@ function storyStartAttackPhrase() {
   }
   storyState.moveName = moveName;
   const equip = storyEquipBonus();
-  storyState.phraseSec = (storyState.currentEnemy?.phraseSec || 5) + (useSpecial ? 1.2 : 0) + equip.phraseSecAdd;
+  storyState.phraseSec = (storyState.currentEnemy?.phraseSec || 5) + (useSpecial ? STORY_BATTLE_PACE.specialPhraseBonus : 0) + equip.phraseSecAdd;
   updateStoryPhaseUi();
   updateStoryHud();
   const msg = useSpecial
@@ -2680,6 +2704,7 @@ function storyStartDefensePhrase(boostMul = 1) {
   setStoryDialog(intro, enemy?.name || "敵");
   storySetupPanels(buildStoryPanelTask(true, storyState.chapterIdx, move.isSpecial));
   flashStoryEnemyAttack();
+  playStoryBattleFx("enemy-attack");
 }
 
 function storyOnAttackSuccess() {
@@ -2715,11 +2740,13 @@ function storyOnAttackSuccess() {
   updateStoryHud();
   showStoryDamagePopup(dmg, "enemy");
   flashStoryEnemyHit();
+  flashStoryHpBar("enemy");
+  playStoryBattleFx("attack", { isSpecial, companion: companion > 0 });
   if (storyState.enemyHp <= 0) {
-    window.setTimeout(() => storyOnEnemyDefeated(), 600);
+    window.setTimeout(() => storyOnEnemyDefeated(), STORY_BATTLE_PACE.defeatGapMs + STORY_BATTLE_PACE.actionPauseMs);
     return;
   }
-  window.setTimeout(() => storyStartDefensePhrase(), 520);
+  window.setTimeout(() => storyStartDefensePhrase(), STORY_BATTLE_PACE.phaseGapMs + STORY_BATTLE_PACE.actionPauseMs);
 }
 
 function storyOnDefenseSuccess() {
@@ -2737,18 +2764,86 @@ function storyOnDefenseSuccess() {
   );
   showStoryDamagePopup(dmg, "player");
   flashStoryHpBar("player");
+  playStoryBattleFx("defense", { tier });
   storyState.enemyAttackMul = 1;
   updateStoryHud();
   if (storyState.playerHp <= 0) {
-    window.setTimeout(() => storyOnDefeat(), 700);
+    window.setTimeout(() => storyOnDefeat(), STORY_BATTLE_PACE.defeatGapMs + STORY_BATTLE_PACE.actionPauseMs);
     return;
   }
-  window.setTimeout(() => storyStartAttackPhrase(), 600);
+  window.setTimeout(() => storyStartAttackPhrase(), STORY_BATTLE_PACE.phaseGapMs + STORY_BATTLE_PACE.actionPauseMs);
 }
 
 function storyOnPhraseSuccess() {
   if (storyState.phase === "defense") storyOnDefenseSuccess();
   else storyOnAttackSuccess();
+}
+
+function setStoryArenaMode(mode) {
+  const arena = $("storyScene");
+  if (!arena) return;
+  arena.classList.remove("momo-arena--attack", "momo-arena--defense", "momo-arena--fighting");
+  if (mode) {
+    arena.classList.add(`momo-arena--${mode}`, "momo-arena--fighting");
+  }
+}
+
+function setStoryBattleLive(on) {
+  const el = $("storyBattleLive");
+  if (!el) return;
+  el.classList.toggle("is-on", !!on);
+}
+
+function playStoryBattleFx(kind, opts = {}) {
+  const fx = $("storyBattleFx");
+  if (!fx) return;
+  fx.classList.remove("is-show", "is-attack", "is-defense", "is-special", "is-enemy-attack", "is-companion");
+  void fx.offsetWidth;
+  if (kind === "attack") {
+    fx.classList.add("is-attack", "is-show");
+    if (opts.isSpecial) fx.classList.add("is-special");
+    if (opts.companion) {
+      fx.classList.add("is-companion");
+      flashStoryCompanions();
+    }
+    flashStoryPlayerAttack(opts.isSpecial);
+  } else if (kind === "defense") {
+    fx.classList.add("is-defense", "is-show");
+    flashStoryPlayerBlock(opts.tier);
+  } else if (kind === "enemy-attack") {
+    fx.classList.add("is-enemy-attack", "is-show");
+  }
+  window.clearTimeout(playStoryBattleFx._t);
+  playStoryBattleFx._t = window.setTimeout(
+    () => fx.classList.remove("is-show", "is-attack", "is-defense", "is-special", "is-enemy-attack", "is-companion"),
+    STORY_BATTLE_PACE.actionPauseMs,
+  );
+}
+
+function flashStoryPlayerAttack(isSpecial = false) {
+  const hero = $("storyHeroSlot");
+  if (!hero) return;
+  hero.classList.remove("is-attacking", "is-attacking--special");
+  void hero.offsetWidth;
+  hero.classList.add("is-attacking", isSpecial ? "is-attacking--special" : "");
+}
+
+function flashStoryPlayerBlock(tier) {
+  const hero = $("storyHeroSlot");
+  if (!hero) return;
+  hero.classList.remove("is-blocking", "is-blocking--perfect", "is-blocking--good", "is-blocking--bad");
+  void hero.offsetWidth;
+  hero.classList.add("is-blocking", tier ? `is-blocking--${tier}` : "");
+}
+
+function flashStoryCompanions() {
+  const col = $("storyPartyColumn");
+  if (!col) return;
+  col.querySelectorAll(".momo-party-slot:not(.momo-party-slot--locked):not(.momo-party-slot--hero)").forEach((slot) => {
+    slot.classList.remove("is-assist");
+    void slot.offsetWidth;
+    slot.classList.add("is-assist");
+  });
 }
 
 function flashStoryEnemyHit() {
@@ -2777,7 +2872,7 @@ function storyOnEnemyDefeated() {
   }
   const line = defeated.defeatLine || `${defeated.name} をたおした！`;
   setStoryDialog(`${line} つぎの敵が現れた…`, "ナレーション");
-  window.setTimeout(() => startStoryEnemy(), 1100);
+  window.setTimeout(() => startStoryEnemy(), STORY_BATTLE_PACE.spawnGapMs);
 }
 
 function storyPlayerHit(dmg, msg, speaker = "ナレーション") {
@@ -2809,6 +2904,7 @@ function storyApplyEnemyAttack(reason) {
         : "敵の強烈な一撃！";
   storyState.enemyAttackMul = 1;
   storyPlayerHit(dmg, msg, storyState.currentEnemy?.name || "敵");
+  playStoryBattleFx("enemy-attack");
 }
 
 function storyOnTypo() {
@@ -2836,16 +2932,17 @@ function storyOnTimeout() {
   if (storyState.phase === "defense") {
     storyApplyEnemyAttack("timeout");
     if (storyState.playerHp <= 0) return;
-    window.setTimeout(() => storyStartAttackPhrase(), 550);
+    window.setTimeout(() => storyStartAttackPhrase(), STORY_BATTLE_PACE.missGapMs + STORY_BATTLE_PACE.actionPauseMs);
     return;
   }
   setStoryDialog("時間切れ！ こうげきはずれ — 敵のターン！", "ごまちゃん");
-  window.setTimeout(() => storyStartDefensePhrase(1.2), 480);
+  window.setTimeout(() => storyStartDefensePhrase(1.2), STORY_BATTLE_PACE.missGapMs);
 }
 
 function storyOnDefeat() {
   storyResultVictory = false;
   storyState.active = false;
+  setStoryBattleLive(false);
   stopGomaBgm();
   detachStoryKeyCapture();
   cancelAnimationFrame(storyState.raf);
@@ -2885,6 +2982,7 @@ function quitStory() {
   if (storyState.active && !cutsceneState.active && !window.confirm("冒険をやめてホームにもどりますか？")) return;
   if (cutsceneState.active && !window.confirm("ストーリーを中断してホームにもどりますか？")) return;
   storyState.active = false;
+  setStoryBattleLive(false);
   closeStoryCutscene();
   stopGomaBgm();
   detachStoryKeyCapture();
