@@ -5395,6 +5395,67 @@ body.is-story .foot {
   animation: momo-companion-assist 0.7s ease;
 }
 
+.momo-party-row--companion.is-attacking .momo-party-row__fig {
+  animation: momo-companion-attack-lunge 0.58s ease var(--companion-attack-delay, 0s);
+}
+
+.momo-party-row--companion.is-blocking .momo-party-row__fig {
+  animation: momo-companion-block 0.65s ease var(--companion-attack-delay, 0s);
+}
+
+.momo-party-row--companion.is-hit .momo-party-row__fig {
+  animation: momo-companion-hit 0.45s ease;
+}
+
+.momo-companion-strikes {
+  position: absolute;
+  inset: 0;
+  z-index: 12;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.momo-companion-strike {
+  position: absolute;
+  left: 16%;
+  bottom: calc(28% + var(--strike-lane, 0px));
+  font-size: clamp(1.4rem, 5vw, 2rem);
+  line-height: 1;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.25));
+  animation: momo-companion-strike-fly 0.65s ease var(--strike-delay, 0s) forwards;
+  opacity: 0;
+}
+
+@keyframes momo-companion-attack-lunge {
+  0%, 100% { transform: translateX(0) scale(1); }
+  45% { transform: translateX(32px) scale(1.2); }
+}
+
+@keyframes momo-companion-block {
+  0%, 100% { transform: translateX(0); }
+  40% { transform: translateX(8px) scale(1.08); }
+}
+
+@keyframes momo-companion-hit {
+  0%, 100% { transform: translateX(0); filter: brightness(1); }
+  35% { transform: translateX(-6px); filter: brightness(1.35); }
+}
+
+@keyframes momo-companion-strike-fly {
+  0% { opacity: 0; transform: translate(0, 0) scale(0.6); }
+  15% { opacity: 1; transform: translate(10px, -8px) scale(1); }
+  100% { opacity: 0; transform: translate(52vw, -36px) scale(1.25); }
+}
+
+.momo-arena--fighting .momo-party-row--companion:not(.is-attacking):not(.is-hit) .momo-party-row__fig {
+  animation: momo-companion-idle 2.4s ease-in-out infinite;
+}
+
+@keyframes momo-companion-idle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
 .momo-arena--fighting .momo-party-row--hero .momo-party-row__fig {
   animation: momo-idle-bob 2.2s ease-in-out infinite;
 }

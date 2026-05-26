@@ -423,9 +423,9 @@ const STORY_HERO = {
 };
 
 const STORY_COMPANIONS = [
-  { id: "dog", name: "犬", icon: "🐕", unlockClear: 20, attackBonus: 1, defenseSecBonus: 0, hpBonus: 5, skillName: "かみつき" },
-  { id: "monkey", name: "サル", icon: "🐒", unlockClear: 50, attackBonus: 1, defenseSecBonus: 0.6, hpBonus: 3, skillName: "もうふパンチ" },
-  { id: "pheasant", name: "キジ", icon: "🐦", unlockClear: 85, attackBonus: 0, defenseSecBonus: 0, hpBonus: 6, skillName: "つつき", defenseReduceBonus: 0.1 },
+  { id: "dog", name: "犬", icon: "🐕", unlockClear: 20, attackBonus: 2, defenseSecBonus: 0, hpBonus: 5, skillName: "かみつき" },
+  { id: "monkey", name: "サル", icon: "🐒", unlockClear: 50, attackBonus: 2, defenseSecBonus: 0.6, hpBonus: 3, skillName: "もうふパンチ" },
+  { id: "pheasant", name: "キジ", icon: "🐦", unlockClear: 85, attackBonus: 2, defenseSecBonus: 0, hpBonus: 6, skillName: "つつき", defenseReduceBonus: 0.1 },
 ];
 
 /** ごまちゃん（練習モードと同じうさぎCSS）＋仲間は大きな絵文字 */
@@ -736,10 +736,10 @@ function buildStoryChapters(count) {
         isBoss,
         normalMove: type.normalMove,
         specialMove: type.specialMove,
-        hp: Math.max(3, 3 + Math.floor(i * 0.28) + e * 2 + (isBoss ? 5 : 0)),
-        attack: 2 + Math.floor(i * 0.12) + e + (isBoss ? 2 : 0),
-        phraseSec: Math.max(STORY_BATTLE_PACE.phraseSecMin, STORY_BATTLE_PACE.phraseSecBase - Math.floor(i / 55)),
-        defenseSec: Math.max(STORY_BATTLE_PACE.defenseSecMin, STORY_BATTLE_PACE.defenseSecBase - Math.floor(i / 70)),
+        hp: Math.max(10, 10 + Math.floor(i * 0.85) + e * 5 + (isBoss ? 16 : 0)),
+        attack: 4 + Math.floor(i * 0.3) + e * 2 + (isBoss ? 5 : 0),
+        phraseSec: Math.max(4.0, STORY_BATTLE_PACE.phraseSecBase - Math.floor(i / 35) - e * 0.12),
+        defenseSec: Math.max(3.4, STORY_BATTLE_PACE.defenseSecBase - Math.floor(i / 42) - e * 0.1),
       });
     }
     const arc = storyArcLabel(i);
@@ -897,7 +897,8 @@ function storyCalcPlayerMaxHp() {
 
 function storyCalcEnemyAttack(enemy, chapterIdx) {
   const base = enemy?.attack || 10 + Math.floor(chapterIdx * 0.7);
-  return Math.round(base * (storyState.enemyAttackMul || 1));
+  const chapterScale = 1 + chapterIdx * 0.045;
+  return Math.round(base * chapterScale * (storyState.enemyAttackMul || 1));
 }
 
 function storyDefenseTier() {
@@ -1390,12 +1391,13 @@ function storyPickEnemyMove(enemy) {
   const useSpecial =
     enemy.isBoss
       ? storyState.enemyTurnCount % 2 === 0
-      : storyState.enemyTurnCount >= 3 && (storyState.enemyTurnCount % 3 === 0 || Math.random() < 0.22);
+      : storyState.enemyTurnCount >= 2 &&
+        (storyState.enemyTurnCount % 2 === 0 || Math.random() < 0.3);
   if (useSpecial) {
     return {
       name: enemy.specialMove || type.specialMove || "モンスター大技",
       isSpecial: true,
-      mul: enemy.isBoss ? 1.65 : 1.45,
+      mul: enemy.isBoss ? 1.85 : 1.58,
     };
   }
   return {
@@ -2241,7 +2243,7 @@ function renderStoryPartyPanel() {
   </div>`;
   STORY_COMPANIONS.forEach((c) => {
     const on = cleared >= c.unlockClear;
-    html += `<div class="momo-party-row${on ? "" : " momo-party-row--locked"}" title="${on ? c.skillName : `第${c.unlockClear}章`}">
+    html += `<div class="momo-party-row momo-party-row--companion${on ? "" : " momo-party-row--locked"}" id="storyCompanion_${c.id}" data-companion-id="${c.id}" title="${on ? c.skillName : `第${c.unlockClear}章`}">
       <div class="momo-party-row__fig">${storyAllyEmojiHtml(c.icon, on ? "md" : "sm")}</div>
       <div class="momo-party-row__info">
         <span class="momo-party-row__name">${c.name}</span>
@@ -2254,6 +2256,77 @@ function renderStoryPartyPanel() {
 
 function storyCompanionAttackBonus() {
   return getUnlockedCompanions().reduce((s, c) => s + (c.attackBonus || 0), 0);
+}
+
+function storyCompanionSkillDamage(companion, isSpecial, speedRatio) {
+  let dmg = companion.attackBonus || 2;
+  if (speedRatio >= 0.45) dmg += 1;
+  if (isSpecial) dmg = Math.round(dmg * 1.75);
+  return Math.max(1, dmg);
+}
+
+function spawnCompanionStrikeFx(companion, index) {
+  const layer = $("storyCompanionStrikes");
+  if (!layer) return;
+  const el = document.createElement("span");
+  el.className = "momo-companion-strike";
+  el.textContent = companion.icon;
+  el.style.setProperty("--strike-delay", `${index * 0.22}s`);
+  el.style.setProperty("--strike-lane", `${index * 14}px`);
+  layer.appendChild(el);
+  window.setTimeout(() => el.remove(), 900 + index * 220);
+}
+
+/** 仲間全員の攻撃演出＋ダメージ（桃太郎タイピング風） */
+function storyRunCompanionAttacks(isSpecial, speedRatio) {
+  const companions = getUnlockedCompanions();
+  if (companions.length === 0) return { total: 0, messages: [] };
+  let total = 0;
+  const messages = [];
+  companions.forEach((c, i) => {
+    const slot = $(`storyCompanion_${c.id}`);
+    const cdmg = storyCompanionSkillDamage(c, isSpecial, speedRatio);
+    total += cdmg;
+    messages.push(`${c.name}「${c.skillName}」${cdmg}ダメ`);
+    if (slot) {
+      slot.style.setProperty("--companion-attack-delay", `${i * 0.22}s`);
+      slot.classList.remove("is-attacking", "is-assist", "is-hit");
+      void slot.offsetWidth;
+      slot.classList.add("is-attacking");
+    }
+    spawnCompanionStrikeFx(c, i);
+  });
+  if (total > 0) {
+    window.setTimeout(() => flashStoryEnemyHit(), 280);
+  }
+  return { total, messages };
+}
+
+function flashStoryPartyHit() {
+  const hero = $("storyHeroSlot");
+  if (hero) {
+    hero.classList.remove("is-hit");
+    void hero.offsetWidth;
+    hero.classList.add("is-hit");
+  }
+  getUnlockedCompanions().forEach((c) => {
+    const slot = $(`storyCompanion_${c.id}`);
+    if (!slot) return;
+    slot.classList.remove("is-hit", "is-attacking");
+    void slot.offsetWidth;
+    slot.classList.add("is-hit");
+  });
+}
+
+function flashStoryCompanionsBlock() {
+  getUnlockedCompanions().forEach((c, i) => {
+    const slot = $(`storyCompanion_${c.id}`);
+    if (!slot) return;
+    slot.style.setProperty("--companion-attack-delay", `${i * 0.1}s`);
+    slot.classList.remove("is-blocking", "is-assist");
+    void slot.offsetWidth;
+    slot.classList.add("is-blocking", "is-assist");
+  });
 }
 
 function storyCompanionDefenseSecBonus() {
@@ -2836,31 +2909,44 @@ function storyOnAttackSuccess() {
   let dmg = 1 + Math.ceil(storyState.panelKeys.length * 0.55);
   if (speedRatio >= 0.35) dmg += 1;
   if (speedRatio >= 0.6 && storyState.typosThisPhrase === 0) dmg += 1;
-  dmg += companion;
   dmg += Math.round(equip.storyAtkBonus);
   if (isSpecial) dmg = Math.round(dmg * 2.2);
   if (storyState.typosThisPhrase > 0) dmg = Math.max(1, dmg - storyState.typosThisPhrase);
   if (speedRatio >= 0.55 && storyState.typosThisPhrase === 0) dmg += isSpecial ? 4 : 2;
+  storyState.enemyHp = Math.max(0, storyState.enemyHp - dmg);
+
+  const companionStrike = storyRunCompanionAttacks(isSpecial, speedRatio);
+  if (companionStrike.total > 0) {
+    storyState.enemyHp = Math.max(0, storyState.enemyHp - companionStrike.total);
+  }
+
+  const enemy = storyState.currentEnemy;
+  let msg = isSpecial
+    ? `大技「${storyState.moveName}」${dmg} ダメージ！`
+    : `${enemy?.name || "敵"}に ${dmg} ダメージ！`;
+  if (companionStrike.messages.length > 0) {
+    msg += " " + companionStrike.messages.join(" ");
+  } else if (companion > 0) {
+    msg += " 仲間の援護！";
+  }
+  if (equip.storyAtkBonus > 0) msg += " 装備の力！";
+  if (speedRatio >= 0.5 && storyState.typosThisPhrase === 0) msg += " 速攻！";
   if (!isSpecial) {
     storyState.gauge = Math.min(
       STORY_GAUGE_MAX,
       storyState.gauge + STORY_GAUGE_PER_NORMAL + equip.storyGaugeBonus,
     );
   }
-  storyState.enemyHp = Math.max(0, storyState.enemyHp - dmg);
-  const enemy = storyState.currentEnemy;
-  let msg = isSpecial
-    ? `大技「${storyState.moveName}」${dmg} ダメージ！`
-    : `${enemy?.name || "敵"}に ${dmg} ダメージ！`;
-  if (companion > 0) msg += " 仲間の援護！";
-  if (equip.storyAtkBonus > 0) msg += " 装備の力！";
-  if (speedRatio >= 0.5 && storyState.typosThisPhrase === 0) msg += " 速攻！";
   setStoryDialog(msg, "ごまちゃん");
   updateStoryHud();
-  showStoryDamagePopup(dmg, "enemy");
+  const totalDmg = dmg + companionStrike.total;
+  showStoryDamagePopup(totalDmg, "enemy");
   flashStoryEnemyHit();
   flashStoryHpBar("enemy");
-  playStoryBattleFx("attack", { isSpecial, companion: companion > 0 });
+  playStoryBattleFx("attack", {
+    isSpecial,
+    companion: companionStrike.messages.length > 0 || companion > 0,
+  });
   if (storyState.enemyHp <= 0) {
     storyState.battlePhase = "enemy-defeat";
     const enemyEl = $("storyEnemy");
@@ -2889,6 +2975,7 @@ function storyOnDefenseSuccess() {
     showStoryDamagePopup(dmg, "player");
     flashStoryHpBar("player");
   playStoryBattleFx("defense", { tier });
+  if (getUnlockedCompanions().length > 0) flashStoryCompanionsBlock();
   storyState.enemyAttackMul = 1;
   updateStoryHud();
   if (storyState.playerHp <= 0) {
@@ -2956,9 +3043,10 @@ function flashStoryPlayerBlock(tier) {
 }
 
 function flashStoryCompanions() {
-  const col = $("storyPartyColumn");
-  if (!col) return;
-  col.querySelectorAll(".momo-party-row:not(.momo-party-row--locked):not(.momo-party-row--hero)").forEach((slot) => {
+  getUnlockedCompanions().forEach((c, i) => {
+    const slot = $(`storyCompanion_${c.id}`);
+    if (!slot) return;
+    slot.style.setProperty("--companion-attack-delay", `${i * 0.12}s`);
     slot.classList.remove("is-assist");
     void slot.offsetWidth;
     slot.classList.add("is-assist");
@@ -3016,12 +3104,7 @@ function storyPlayerHit(dmg, msg, speaker = "ナレーション") {
   updateStoryHud();
   showStoryDamagePopup(dmg, "player");
   flashStoryHpBar("player");
-  const hero = $("storyHeroSlot");
-  if (hero) {
-    hero.classList.remove("is-hit");
-    void hero.offsetWidth;
-    hero.classList.add("is-hit");
-  }
+  flashStoryPartyHit();
   if (storyState.playerHp <= 0) {
     window.setTimeout(() => storyOnDefeat(), 700);
   }
@@ -3029,7 +3112,7 @@ function storyPlayerHit(dmg, msg, speaker = "ナレーション") {
 
 function storyApplyEnemyAttack(reason) {
   const base = storyCalcEnemyAttack(storyState.currentEnemy, storyState.chapterIdx);
-  const bonus = reason === "timeout" ? 1.4 : reason === "typo" ? 1.28 : 1;
+  const bonus = reason === "timeout" ? 1.55 : reason === "typo" ? 1.38 : 1;
   const dmg = Math.max(1, Math.round(base * bonus));
   const msg =
     reason === "timeout"
@@ -3083,7 +3166,7 @@ function storyOnTimeout() {
     return;
   }
   setStoryDialog("時間切れ！ こうげきはずれ — 敵のターン！", "ごまちゃん");
-  storyFinishTurn(() => storyStartDefensePhrase(1.2));
+  storyFinishTurn(() => storyStartDefensePhrase(1.35));
 }
 
 function storyOnDefeat() {
