@@ -6421,3 +6421,305 @@ body.is-story .cocoa-battle-scene {
     width: min(98%, 360px);
   }
 }
+
+/* ── ポップ犬（ごまちゃんと同系 chibi CSS） ── */
+.chibi-dog--story-mini {
+  position: relative;
+  width: 58px;
+  height: 54px;
+  transform: scaleX(-1) scale(0.48);
+  transform-origin: left bottom;
+  margin: 0 0 -6px -2px;
+  pointer-events: none;
+  filter: drop-shadow(0 3px 0 rgba(93, 64, 55, 0.2));
+}
+
+.chibi-dog__pose {
+  position: absolute;
+  inset: 0;
+}
+
+.chibi-dog__body {
+  position: absolute;
+  left: 18%;
+  bottom: 22%;
+  width: 52%;
+  height: 38%;
+  background: linear-gradient(165deg, #d7ccc8 0%, #a1887f 55%, #8d6e63 100%);
+  border-radius: 48% 52% 42% 58% / 55% 45% 55% 45%;
+  z-index: 1;
+  box-shadow: inset 2px 2px 4px rgba(255, 255, 255, 0.25);
+}
+
+.chibi-dog__chest {
+  position: absolute;
+  left: 28%;
+  bottom: 34%;
+  width: 28%;
+  height: 22%;
+  background: radial-gradient(circle at 40% 35%, #efebe9 0%, #bcaaa4 80%);
+  border-radius: 50%;
+  z-index: 2;
+}
+
+.chibi-dog__tail {
+  position: absolute;
+  right: 6%;
+  bottom: 38%;
+  width: 22%;
+  height: 28%;
+  background: linear-gradient(145deg, #8d6e63, #6d4c41);
+  border-radius: 60% 40% 50% 50%;
+  transform: rotate(-28deg);
+  z-index: 0;
+  animation: chibi-dog-tail 0.75s ease-in-out infinite alternate;
+}
+
+.chibi-dog__leg {
+  position: absolute;
+  width: 14%;
+  height: 22%;
+  background: linear-gradient(180deg, #a1887f, #6d4c41);
+  border-radius: 40% 40% 45% 45%;
+  z-index: 0;
+}
+
+.chibi-dog__leg--back { left: 24%; bottom: 8%; }
+.chibi-dog__leg--front { left: 44%; bottom: 6%; }
+
+.chibi-dog__head {
+  position: absolute;
+  left: 46%;
+  bottom: 38%;
+  width: 44%;
+  height: 42%;
+  z-index: 3;
+}
+
+.chibi-dog__ear {
+  position: absolute;
+  top: 0;
+  width: 38%;
+  height: 52%;
+  background: linear-gradient(165deg, #bcaaa4 0%, #6d4c41 100%);
+  border-radius: 55% 45% 20% 20%;
+  z-index: 1;
+}
+
+.chibi-dog__ear--l { left: 2%; transform: rotate(-18deg); }
+.chibi-dog__ear--r { right: 2%; transform: rotate(18deg); }
+
+.chibi-dog__head::before {
+  content: "";
+  position: absolute;
+  left: 8%;
+  top: 22%;
+  width: 84%;
+  height: 72%;
+  background: linear-gradient(165deg, #efebe9 0%, #d7ccc8 45%, #bcaaa4 100%);
+  border-radius: 48% 52% 46% 54%;
+  z-index: 2;
+  box-shadow: inset -2px -3px 4px rgba(0, 0, 0, 0.08);
+}
+
+.chibi-dog__eye {
+  position: absolute;
+  top: 42%;
+  width: 16%;
+  height: 20%;
+  background: #3e2723;
+  border-radius: 50%;
+  z-index: 4;
+}
+
+.chibi-dog__eye--l { left: 22%; }
+.chibi-dog__eye--r { right: 22%; }
+
+.chibi-dog__eye::after {
+  content: "";
+  position: absolute;
+  top: 12%;
+  left: 18%;
+  width: 42%;
+  height: 42%;
+  background: #fff;
+  border-radius: 50%;
+}
+
+.chibi-dog__nose {
+  position: absolute;
+  left: 50%;
+  top: 58%;
+  transform: translateX(-50%);
+  width: 22%;
+  height: 16%;
+  background: #3e2723;
+  border-radius: 45% 45% 50% 50%;
+  z-index: 5;
+}
+
+.chibi-dog__mouth {
+  position: absolute;
+  left: 50%;
+  top: 70%;
+  transform: translateX(-50%);
+  width: 18%;
+  height: 12%;
+  border-bottom: 3px solid #e57373;
+  border-radius: 0 0 50% 50%;
+  z-index: 5;
+}
+
+.chibi-dog__cheek {
+  position: absolute;
+  top: 52%;
+  width: 18%;
+  height: 14%;
+  background: radial-gradient(circle, rgba(244, 143, 177, 0.65) 0%, transparent 72%);
+  border-radius: 50%;
+  z-index: 4;
+}
+
+.chibi-dog__cheek--l { left: 8%; }
+.chibi-dog__cheek--r { right: 8%; }
+
+@keyframes chibi-dog-tail {
+  0% { transform: rotate(-28deg); }
+  100% { transform: rotate(-8deg); }
+}
+
+.momo-battle--cocoa .momo-pop-sticker--hero {
+  padding: 0.35rem 0.55rem 0.28rem;
+  animation: pop-sticker-bounce 2.4s ease-in-out infinite;
+}
+
+.momo-battle--cocoa .momo-pop-sticker--hero .bunny--story-mini {
+  transform: scaleX(-1) scale(0.56);
+  margin: 0 0 -4px 0;
+  filter: saturate(1.15) brightness(1.05) drop-shadow(0 3px 0 rgba(236, 64, 122, 0.22));
+}
+
+.momo-battle--cocoa .momo-pop-sticker--ally.momo-pop-sticker--md {
+  width: auto;
+  height: auto;
+  min-width: 3.6rem;
+  min-height: 3.6rem;
+  padding: 0.28rem 0.38rem 0.22rem;
+  border-radius: 46% 54% 50% 50%;
+  background: linear-gradient(145deg, #fff8e1 0%, #ffcc80 52%, #ffb74d 100%);
+  border-color: #fff;
+}
+
+.momo-battle--cocoa .momo-pop-sticker--ally .chibi-dog--story-mini {
+  transform: scaleX(-1) scale(0.52);
+  margin: 0;
+}
+
+/* ── 桃太郎タイピング風：ダメージ時1対1クローズアップ ── */
+.cocoa-battle-scene--duel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  background: radial-gradient(ellipse at center, transparent 35%, rgba(13, 71, 161, 0.38) 100%);
+  pointer-events: none;
+  animation: duel-vignette-in 0.35s ease forwards;
+}
+
+@keyframes duel-vignette-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.cocoa-battle-scene--duel .cocoa-panel-overlay,
+.cocoa-battle-scene--duel .cocoa-arena-center {
+  opacity: 0 !important;
+  visibility: hidden;
+  pointer-events: none;
+  transform: scale(0.88) translateY(8%);
+  transition: opacity 0.28s ease, transform 0.32s ease, visibility 0.28s;
+}
+
+.cocoa-battle-scene--duel .cocoa-party-slot.is-duel-hidden,
+.cocoa-battle-scene--duel .cocoa-party-slot--companion.is-duel-hidden {
+  opacity: 0 !important;
+  visibility: hidden;
+  max-height: 0;
+  overflow: hidden;
+  margin: 0;
+  padding: 0;
+  pointer-events: none;
+}
+
+.cocoa-battle-scene--duel .cocoa-party-column {
+  justify-content: center;
+  align-items: flex-start;
+  z-index: 14;
+  transition: transform 0.38s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cocoa-battle-scene--duel .cocoa-enemy-zone {
+  justify-content: center;
+  z-index: 14;
+  transition: transform 0.38s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.cocoa-battle-scene--duel-ally .cocoa-party-column {
+  transform: translateX(6%) scale(1.42);
+}
+
+.cocoa-battle-scene--duel-ally .cocoa-enemy-zone {
+  transform: translateX(-4%) scale(1.42);
+}
+
+.cocoa-battle-scene--duel-enemy .cocoa-party-column {
+  transform: translateX(4%) scale(1.42);
+}
+
+.cocoa-battle-scene--duel-enemy .cocoa-enemy-zone {
+  transform: translateX(-6%) scale(1.42);
+}
+
+.cocoa-battle-scene--duel .is-duel-focus .momo-pop-sticker--hero,
+.cocoa-battle-scene--duel .is-duel-focus .momo-pop-sticker--ally {
+  animation: duel-pop-pulse 0.55s ease;
+}
+
+.cocoa-battle-scene--duel-ally .story-enemy.is-duel-focus {
+  animation: duel-enemy-hit-shake 0.5s ease;
+}
+
+.cocoa-battle-scene--duel-enemy .cocoa-party-slot--hero.is-duel-focus {
+  animation: duel-ally-hit-shake 0.5s ease;
+}
+
+.cocoa-battle-scene--duel .cocoa-enemy-hud.is-duel-focus {
+  transform: scale(1.12);
+  z-index: 15;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+}
+
+.cocoa-battle-scene--duel .momo-damage-popup {
+  z-index: 25;
+  font-size: clamp(1.8rem, 7vw, 2.6rem);
+}
+
+@keyframes duel-pop-pulse {
+  0%, 100% { transform: scale(1); }
+  45% { transform: scale(1.08); }
+}
+
+@keyframes duel-enemy-hit-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-10px); filter: brightness(1.3); }
+  50% { transform: translateX(8px); }
+}
+
+@keyframes duel-ally-hit-shake {
+  0%, 100% { transform: translateX(0); }
+  30% { transform: translateX(-8px); filter: brightness(1.25); }
+}
+
+.cocoa-battle-scene--duel .cocoa-monster-wrap .cocoa-sprite--foe {
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.2));
+}

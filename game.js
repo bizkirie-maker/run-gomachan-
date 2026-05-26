@@ -428,9 +428,9 @@ const STORY_COMPANIONS = [
   { id: "pheasant", name: "キジ", icon: "🐦", unlockClear: 85, attackBonus: 2, defenseSecBonus: 0, hpBonus: 6, skillName: "つつき", defenseReduceBonus: 0.1 },
 ];
 
-/** ごまちゃん（練習モードと同じうさぎCSS）＋仲間は大きな絵文字 */
+/** ごまちゃん（練習モードと同じポップうさぎCSS） */
 function storyGomachanFigureHtml() {
-  return `<div class="bunny bunny--side bunny--story-mini" aria-hidden="true"><div class="bunny-pose bunny-pose--sit">
+  return `<div class="bunny bunny--pop bunny--side bunny--story-mini" aria-hidden="true"><div class="bunny-pose bunny-pose--sit">
     <span class="bunny-tail"></span><span class="bunny-haunch"></span><span class="bunny-hind-thigh"></span><span class="bunny-hind-paw"></span>
     <span class="bunny-body"></span><span class="bunny-belly-highlight"></span><span class="bunny-neck"></span>
     <span class="bunny-fore-thigh"></span><span class="bunny-fore-paw"></span><span class="bunny-fore-toe"></span>
@@ -438,6 +438,31 @@ function storyGomachanFigureHtml() {
     <span class="bunny-eye"><span class="bunny-eye-highlight"></span></span><span class="bunny-whiskers"></span>
     <span class="bunny-nose"></span><span class="bunny-nose-shine"></span><span class="bunny-cheeks"></span></span>
   </div></div>`;
+}
+
+/** 犬仲間 — ごまちゃんと同系統のポップCSSイラスト */
+function storyDogFigureHtml() {
+  return `<div class="chibi-dog chibi-dog--pop chibi-dog--side chibi-dog--story-mini" aria-hidden="true"><div class="chibi-dog__pose">
+    <span class="chibi-dog__tail"></span><span class="chibi-dog__body"></span><span class="chibi-dog__chest"></span>
+    <span class="chibi-dog__leg chibi-dog__leg--back"></span><span class="chibi-dog__leg chibi-dog__leg--front"></span>
+    <span class="chibi-dog__head"><span class="chibi-dog__ear chibi-dog__ear--l"></span><span class="chibi-dog__ear chibi-dog__ear--r"></span>
+    <span class="chibi-dog__eye chibi-dog__eye--l"></span><span class="chibi-dog__eye chibi-dog__eye--r"></span>
+    <span class="chibi-dog__nose"></span><span class="chibi-dog__mouth"></span><span class="chibi-dog__cheek chibi-dog__cheek--l"></span><span class="chibi-dog__cheek chibi-dog__cheek--r"></span></span>
+  </div></div>`;
+}
+
+function storyAllyPopWrap(innerHtml, kind = "hero") {
+  const cls =
+    kind === "hero"
+      ? "momo-pop-sticker momo-pop-sticker--hero"
+      : "momo-pop-sticker momo-pop-sticker--ally momo-pop-sticker--md";
+  return `<span class="${cls}">${innerHtml}</span>`;
+}
+
+function storyAllyFigureHtml(allyId, role = "hero") {
+  if (allyId === "gomachan") return storyAllyPopWrap(storyGomachanFigureHtml(), "hero");
+  if (allyId === "dog") return storyAllyPopWrap(storyDogFigureHtml(), "ally");
+  return storyAllyPopWrap(storyAllySpriteHtml(allyId, role === "hero" ? "lg" : "md"), "ally");
 }
 
 function storyAllySpriteHtml(kind, size = "lg") {
@@ -473,6 +498,7 @@ const STORY_BATTLE_PACE = {
   spawnGapMs: 1200,
   defeatGapMs: 1300,
   engageMs: 950,
+  duelFocusMs: 1100,
 };
 
 /** ごまちゃんの技 */
@@ -2328,7 +2354,7 @@ function renderStoryPartyPanel() {
   const pPct = maxP > 0 ? Math.max(0, (curP / maxP) * 100) : 0;
   const lv = storyPlayerLevel();
   let html = `<div class="cocoa-party-slot cocoa-party-slot--hero" id="storyHeroSlot">
-    <div class="cocoa-party-slot__fig">${storyAllySpriteHtml("gomachan", "lg")}</div>
+    <div class="cocoa-party-slot__fig">${storyAllyFigureHtml("gomachan", "hero")}</div>
     <div class="cocoa-party-slot__info">
       <span class="cocoa-party-slot__name">${STORY_HERO.name}</span>
       <span class="cocoa-party-slot__sub">Lv.${lv}</span>
@@ -2338,7 +2364,7 @@ function renderStoryPartyPanel() {
   </div>`;
   getUnlockedCompanions().forEach((c) => {
     html += `<div class="cocoa-party-slot cocoa-party-slot--companion" id="storyCompanion_${c.id}" data-companion-id="${c.id}" title="${c.skillName}">
-      <div class="cocoa-party-slot__fig">${storyAllySpriteHtml(c.id, "md")}</div>
+      <div class="cocoa-party-slot__fig">${storyAllyFigureHtml(c.id, "ally")}</div>
       <div class="cocoa-party-slot__info">
         <span class="cocoa-party-slot__name">${c.name}</span>
         <span class="cocoa-party-slot__sub">${c.skillName}</span>
@@ -2382,6 +2408,7 @@ function storyRunCompanionAttacks(isSpecial, speedRatio) {
     const cdmg = storyCompanionSkillDamage(c, isSpecial, speedRatio);
     total += cdmg;
     messages.push(`${c.name}「${c.skillName}」${cdmg}ダメ`);
+    storyFocusDuel("ally", { companionId: c.id });
     if (slot) {
       slot.style.setProperty("--companion-attack-delay", `${i * 0.22}s`);
       slot.classList.remove("is-attacking", "is-assist", "is-hit");
@@ -2831,6 +2858,7 @@ function startStoryEnemy() {
 }
 
 function storySetupPanels(task) {
+  storyFocusDuel(null);
   storyState.currentPhrase = { text: task.text, yomi: task.yomi };
   storyState.panelKeys = task.panelKeys.map((k) => k.toLowerCase());
   storyState.typosThisPhrase = 0;
@@ -3030,6 +3058,7 @@ function storyOnAttackSuccess() {
   setStoryDialog(msg);
   updateStoryHud();
   const totalDmg = dmg + companionStrike.total;
+  storyFocusDuel("ally");
   showStoryDamagePopup(totalDmg, "enemy");
   flashStoryEnemyHit();
   flashStoryHpBar("enemy");
@@ -3064,7 +3093,10 @@ function storyOnDefenseSuccess() {
   );
     showStoryDamagePopup(dmg, "player");
     flashStoryHpBar("player");
-  if (dmg > 0) flashStoryPartyHit();
+  if (dmg > 0) {
+    flashStoryPartyHit();
+    storyFocusDuel("enemy");
+  }
   playStoryBattleFx("defense", { tier });
   if (getUnlockedCompanions().length > 0) flashStoryCompanionsBlock();
   storyState.enemyAttackMul = 1;
@@ -3083,6 +3115,47 @@ function setStoryArenaMode(mode) {
   if (mode) {
     arena.classList.add(`momo-arena--${mode}`, "momo-arena--fighting");
   }
+}
+
+function storyFocusDuel(kind, opts = {}) {
+  const arena = $("storyScene");
+  if (!arena) return;
+  arena.classList.remove(
+    "cocoa-battle-scene--duel",
+    "cocoa-battle-scene--duel-ally",
+    "cocoa-battle-scene--duel-enemy",
+  );
+  arena.removeAttribute("data-duel-companion");
+  document.querySelectorAll(".cocoa-party-slot, .story-enemy, .cocoa-enemy-hud").forEach((el) => {
+    el.classList.remove("is-duel-focus", "is-duel-hidden");
+  });
+  if (!kind) return;
+  arena.classList.add("cocoa-battle-scene--duel", `cocoa-battle-scene--duel-${kind}`);
+  const hero = $("storyHeroSlot");
+  const enemy = $("storyEnemy");
+  const enemyHud = document.querySelector(".cocoa-enemy-hud");
+  if (kind === "ally") {
+    enemy?.classList.add("is-duel-focus");
+    enemyHud?.classList.add("is-duel-focus");
+    if (opts.companionId) {
+      arena.setAttribute("data-duel-companion", opts.companionId);
+      hero?.classList.add("is-duel-hidden");
+      $(`storyCompanion_${opts.companionId}`)?.classList.add("is-duel-focus");
+    } else {
+      hero?.classList.add("is-duel-focus");
+      document.querySelectorAll(".cocoa-party-slot--companion").forEach((el) => el.classList.add("is-duel-hidden"));
+    }
+  } else if (kind === "enemy") {
+    hero?.classList.add("is-duel-focus");
+    enemy?.classList.add("is-duel-focus");
+    enemyHud?.classList.add("is-duel-focus");
+    document.querySelectorAll(".cocoa-party-slot--companion").forEach((el) => el.classList.add("is-duel-hidden"));
+  }
+}
+
+function storyClearDuelFocus(delayMs = STORY_BATTLE_PACE.duelFocusMs) {
+  window.clearTimeout(storyClearDuelFocus._t);
+  storyClearDuelFocus._t = window.setTimeout(() => storyFocusDuel(null), delayMs);
 }
 
 function setStoryBattleLive(on) {
@@ -3115,6 +3188,9 @@ function playStoryBattleFx(kind, opts = {}) {
     () => fx.classList.remove("is-show", "is-attack", "is-defense", "is-special", "is-enemy-attack", "is-companion"),
     STORY_BATTLE_PACE.actionPauseMs,
   );
+  if (kind === "attack" || kind === "enemy-attack" || kind === "defense") {
+    storyClearDuelFocus(Math.max(STORY_BATTLE_PACE.duelFocusMs, STORY_BATTLE_PACE.actionPauseMs));
+  }
 }
 
 function flashStoryPlayerAttack(isSpecial = false) {
@@ -3193,6 +3269,7 @@ function storyPlayerHit(dmg, msg, speaker = "ナレーション") {
   storyState.playerHp = Math.max(0, storyState.playerHp - dmg);
   setStoryDialog(`${msg} ${dmg} ダメージ！`, speaker);
   updateStoryHud();
+  storyFocusDuel("enemy");
   showStoryDamagePopup(dmg, "player");
   flashStoryHpBar("player");
   flashStoryPartyHit();
