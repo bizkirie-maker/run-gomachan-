@@ -2,6 +2,8 @@
  * ごまちゃんタイピング — 試作品（ローカル保存のモード別トップ10）
  */
 
+const APP_BUILD = "20260525-story-v2";
+
 const DIFFICULTY = {
   beginner: { id: "beginner", label: "初級", phraseSec: 5, points: 1, sceneClass: "diff-beginner" },
   intermediate: { id: "intermediate", label: "中級", phraseSec: 4, points: 2, sceneClass: "diff-intermediate" },
@@ -423,14 +425,14 @@ const STORY_HERO = {
 };
 
 const STORY_COMPANIONS = [
-  { id: "dog", name: "犬", icon: "🐕", unlockClear: 20, attackBonus: 2, defenseSecBonus: 0, hpBonus: 5, skillName: "かみつき" },
-  { id: "monkey", name: "サル", icon: "🐒", unlockClear: 50, attackBonus: 2, defenseSecBonus: 0.6, hpBonus: 3, skillName: "もうふパンチ" },
-  { id: "pheasant", name: "キジ", icon: "🐦", unlockClear: 85, attackBonus: 2, defenseSecBonus: 0, hpBonus: 6, skillName: "つつき", defenseReduceBonus: 0.1 },
+  { id: "dog", name: "犬", icon: "🐕", unlockClear: 20, attackBonus: 1, defenseSecBonus: 0, hpBonus: 5, skillName: "かみつき" },
+  { id: "monkey", name: "サル", icon: "🐒", unlockClear: 50, attackBonus: 1, defenseSecBonus: 0.6, hpBonus: 3, skillName: "もうふパンチ" },
+  { id: "pheasant", name: "キジ", icon: "🐦", unlockClear: 85, attackBonus: 0, defenseSecBonus: 0, hpBonus: 6, skillName: "つつき", defenseReduceBonus: 0.1 },
 ];
 
-/** ごまちゃん（練習モードと同じポップうさぎCSS） */
+/** ごまちゃん（バトル用ミニうさぎCSS・練習モードと同系） */
 function storyGomachanFigureHtml() {
-  return `<div class="bunny bunny--pop bunny--side bunny--story-mini" aria-hidden="true"><div class="bunny-pose bunny-pose--sit">
+  return `<div class="bunny bunny--side bunny--story-mini" aria-hidden="true"><div class="bunny-pose bunny-pose--sit">
     <span class="bunny-tail"></span><span class="bunny-haunch"></span><span class="bunny-hind-thigh"></span><span class="bunny-hind-paw"></span>
     <span class="bunny-body"></span><span class="bunny-belly-highlight"></span><span class="bunny-neck"></span>
     <span class="bunny-fore-thigh"></span><span class="bunny-fore-paw"></span><span class="bunny-fore-toe"></span>
@@ -440,29 +442,9 @@ function storyGomachanFigureHtml() {
   </div></div>`;
 }
 
-/** 犬仲間 — ごまちゃんと同系統のポップCSSイラスト */
-function storyDogFigureHtml() {
-  return `<div class="chibi-dog chibi-dog--pop chibi-dog--side chibi-dog--story-mini" aria-hidden="true"><div class="chibi-dog__pose">
-    <span class="chibi-dog__tail"></span><span class="chibi-dog__body"></span><span class="chibi-dog__chest"></span>
-    <span class="chibi-dog__leg chibi-dog__leg--back"></span><span class="chibi-dog__leg chibi-dog__leg--front"></span>
-    <span class="chibi-dog__head"><span class="chibi-dog__ear chibi-dog__ear--l"></span><span class="chibi-dog__ear chibi-dog__ear--r"></span>
-    <span class="chibi-dog__eye chibi-dog__eye--l"></span><span class="chibi-dog__eye chibi-dog__eye--r"></span>
-    <span class="chibi-dog__nose"></span><span class="chibi-dog__mouth"></span><span class="chibi-dog__cheek chibi-dog__cheek--l"></span><span class="chibi-dog__cheek chibi-dog__cheek--r"></span></span>
-  </div></div>`;
-}
-
-function storyAllyPopWrap(innerHtml, kind = "hero") {
-  const cls =
-    kind === "hero"
-      ? "momo-pop-sticker momo-pop-sticker--hero"
-      : "momo-pop-sticker momo-pop-sticker--ally momo-pop-sticker--md";
-  return `<span class="${cls}">${innerHtml}</span>`;
-}
-
 function storyAllyFigureHtml(allyId, role = "hero") {
-  if (allyId === "gomachan") return storyAllyPopWrap(storyGomachanFigureHtml(), "hero");
-  if (allyId === "dog") return storyAllyPopWrap(storyDogFigureHtml(), "ally");
-  return storyAllyPopWrap(storyAllySpriteHtml(allyId, role === "hero" ? "lg" : "md"), "ally");
+  if (allyId === "gomachan") return storyGomachanFigureHtml();
+  return storyAllySpriteHtml(allyId, role === "hero" ? "lg" : "md");
 }
 
 function storyAllySpriteHtml(kind, size = "lg") {
@@ -483,22 +465,22 @@ function momoMonsterSpriteHtml(spriteId, isBoss = false) {
 const STORY_GAUGE_MAX = 100;
 const STORY_GAUGE_PER_NORMAL = 34;
 
-/** 話バトルのテンポ（桃太郎タイピング本家準拠・ゆっくりめ） */
+/** 話バトルのテンポ（桃太郎タイピング本家準拠） */
 const STORY_BATTLE_PACE = {
-  phraseSecBase: 7.5,
-  phraseSecMin: 5.5,
-  defenseSecBase: 5.5,
-  defenseSecMin: 4.2,
-  specialPhraseBonus: 1.5,
-  specialIntroMs: 1400,
-  actionPauseMs: 950,
-  phaseGapMs: 700,
-  turnFinishMs: 850,
-  missGapMs: 900,
-  spawnGapMs: 1200,
-  defeatGapMs: 1300,
-  engageMs: 950,
-  duelFocusMs: 1100,
+  phraseSecBase: 6.0,
+  phraseSecMin: 4.5,
+  defenseSecBase: 4.5,
+  defenseSecMin: 3.2,
+  specialPhraseBonus: 1.2,
+  specialIntroMs: 900,
+  actionPauseMs: 500,
+  phaseGapMs: 300,
+  turnFinishMs: 400,
+  missGapMs: 500,
+  spawnGapMs: 600,
+  defeatGapMs: 650,
+  engageMs: 600,
+  duelFocusMs: 500,
 };
 
 /** ごまちゃんの技 */
@@ -763,10 +745,10 @@ function buildStoryChapters(count) {
         isBoss,
         normalMove: type.normalMove,
         specialMove: type.specialMove,
-        hp: Math.max(10, 10 + Math.floor(i * 0.85) + e * 5 + (isBoss ? 16 : 0)),
-        attack: 4 + Math.floor(i * 0.3) + e * 2 + (isBoss ? 5 : 0),
-        phraseSec: Math.max(4.0, STORY_BATTLE_PACE.phraseSecBase - Math.floor(i / 35) - e * 0.12),
-        defenseSec: Math.max(3.4, STORY_BATTLE_PACE.defenseSecBase - Math.floor(i / 42) - e * 0.1),
+        hp: Math.max(3, 3 + Math.floor(i * 0.28) + e * 2 + (isBoss ? 5 : 0)),
+        attack: 2 + Math.floor(i * 0.12) + e + (isBoss ? 2 : 0),
+        phraseSec: Math.max(STORY_BATTLE_PACE.phraseSecMin, STORY_BATTLE_PACE.phraseSecBase - Math.floor(i / 55)),
+        defenseSec: Math.max(STORY_BATTLE_PACE.defenseSecMin, STORY_BATTLE_PACE.defenseSecBase - Math.floor(i / 70)),
       });
     }
     const arc = storyArcLabel(i);
@@ -924,8 +906,7 @@ function storyCalcPlayerMaxHp() {
 
 function storyCalcEnemyAttack(enemy, chapterIdx) {
   const base = enemy?.attack || 10 + Math.floor(chapterIdx * 0.7);
-  const chapterScale = 1 + chapterIdx * 0.045;
-  return Math.round(base * chapterScale * (storyState.enemyAttackMul || 1));
+  return Math.round(base * (storyState.enemyAttackMul || 1));
 }
 
 function storyDefenseTier() {
@@ -988,6 +969,7 @@ function showHome() {
   detachPlayKeyCapture();
   detachStoryKeyCapture();
   document.body.classList.remove("is-playing", "is-story");
+  leaveStoryAppShell();
   cancelAnimationFrame(state.raf);
   cancelAnimationFrame(storyState.raf);
   hideAllMainScreens();
@@ -1003,6 +985,7 @@ function showPracticePanel() {
   detachPlayKeyCapture();
   detachStoryKeyCapture();
   document.body.classList.remove("is-playing", "is-story");
+  leaveStoryAppShell();
   cancelAnimationFrame(state.raf);
   hideAllMainScreens();
   $("practicePanel")?.classList.remove("hidden");
@@ -1018,6 +1001,7 @@ function showEquipHub() {
   detachPlayKeyCapture();
   detachStoryKeyCapture();
   document.body.classList.remove("is-playing", "is-story");
+  leaveStoryAppShell();
   hideAllMainScreens();
   $("equipHubPanel")?.classList.remove("hidden");
   equipModalDraft = [...getEquippedIds()];
@@ -1029,16 +1013,30 @@ function showEquipHub() {
   if (ec) ec.textContent = String(getEquippedIds().length);
 }
 
+function enterStoryAppShell(mode = "menu") {
+  document.body.classList.add("is-story");
+  document.body.classList.remove("is-playing", "is-story-menu", "is-story-battle", "is-story-result");
+  if (mode === "menu") document.body.classList.add("is-story-menu");
+  if (mode === "battle") document.body.classList.add("is-story-battle");
+  if (mode === "result") document.body.classList.add("is-story-result");
+}
+
+function leaveStoryAppShell() {
+  document.body.classList.remove("is-story", "is-story-menu", "is-story-battle", "is-story-result");
+}
+
 function showStoryMenu() {
   state.playing = false;
   storyState.active = false;
   closeStoryCutscene();
-  stopGomaBgm();
   detachStoryKeyCapture();
-  document.body.classList.remove("is-playing", "is-story");
+  leaveStoryAppShell();
+  enterStoryAppShell("menu");
   hideAllMainScreens();
   $("storyMenuPanel")?.classList.remove("hidden");
   renderStoryChapterList();
+  void resumeGomaAudio();
+  startGomaStoryBattleBgm();
 }
 
 function loadCareerRomaji() {
@@ -1371,7 +1369,7 @@ function retryStoryChapter() {
   storyState.enemyTurnCount = 0;
   storyState.moveKind = "normal";
   storyState.active = true;
-  document.body.classList.add("is-story");
+  enterStoryAppShell("battle");
   const label = $("storyChapterLabel");
   if (label) label.textContent = ch.title;
   showBriefToast("Esc：この章を最初からやり直し");
@@ -2334,12 +2332,12 @@ function getUnlockedCompanions() {
 
 function renderStoryCompanionStrip() {
   const strip = $("storyCompanionStrip");
-  const cleared = loadStoryProgress();
+  const prog = storyCompanionUnlockProgress();
   const html = [
     `<span class="momo-companion is-on" title="${STORY_HERO.name}（主人公）">${STORY_HERO.icon} ${STORY_HERO.name}</span>`,
     ...STORY_COMPANIONS.map((c) => {
-    const on = cleared >= c.unlockClear;
-    return `<span class="momo-companion${on ? " is-on" : ""}" title="${on ? `${c.name}（仲間）` : `第${c.unlockClear}章クリアで仲間`}">${c.icon} ${c.name}</span>`;
+    const on = prog >= c.unlockClear;
+    return `<span class="momo-companion${on ? " is-on" : ""}" title="${on ? `${c.name}（仲間・戦闘参加）` : `第${c.unlockClear}章から仲間`}">${c.icon} ${c.name}</span>`;
     }),
   ].join("");
   if (strip) strip.innerHTML = html;
@@ -2391,10 +2389,10 @@ function spawnCompanionStrikeFx(companion, index) {
   const el = document.createElement("span");
   el.className = "momo-companion-strike";
   el.textContent = companion.icon;
-  el.style.setProperty("--strike-delay", `${index * 0.22}s`);
+  el.style.setProperty("--strike-delay", `${index * 0.12}s`);
   el.style.setProperty("--strike-lane", `${index * 14}px`);
   layer.appendChild(el);
-  window.setTimeout(() => el.remove(), 900 + index * 220);
+  window.setTimeout(() => el.remove(), 520 + index * 120);
 }
 
 /** 仲間全員の攻撃演出＋ダメージ（桃太郎タイピング風） */
@@ -2408,9 +2406,8 @@ function storyRunCompanionAttacks(isSpecial, speedRatio) {
     const cdmg = storyCompanionSkillDamage(c, isSpecial, speedRatio);
     total += cdmg;
     messages.push(`${c.name}「${c.skillName}」${cdmg}ダメ`);
-    storyFocusDuel("ally", { companionId: c.id });
     if (slot) {
-      slot.style.setProperty("--companion-attack-delay", `${i * 0.22}s`);
+      slot.style.setProperty("--companion-attack-delay", `${i * 0.12}s`);
       slot.classList.remove("is-attacking", "is-assist", "is-hit");
       void slot.offsetWidth;
       slot.classList.add("is-attacking");
@@ -2418,7 +2415,7 @@ function storyRunCompanionAttacks(isSpecial, speedRatio) {
     spawnCompanionStrikeFx(c, i);
   });
   if (total > 0) {
-    window.setTimeout(() => flashStoryEnemyHit(), 280);
+    window.setTimeout(() => flashStoryEnemyHit(), 180);
   }
   return { total, messages };
 }
@@ -2704,7 +2701,7 @@ function showStoryDamagePopup(amount, target = "player") {
   pop.textContent = `-${amount}`;
   pop.className = `momo-damage-popup momo-damage-popup--${target} is-show`;
   window.clearTimeout(showStoryDamagePopup._t);
-  showStoryDamagePopup._t = window.setTimeout(() => pop.classList.remove("is-show"), 1200);
+  showStoryDamagePopup._t = window.setTimeout(() => pop.classList.remove("is-show"), 850);
 }
 
 function flashStoryHpBar(which) {
@@ -2734,22 +2731,21 @@ function renderStoryChapterList() {
   if (meta) {
     const lv = storyPlayerLevel();
     const maxHp = storyCalcPlayerMaxHp();
-    const eqSum = formatAggregateEquipSummary(loadCareerPoints());
-    meta.textContent = `旅のしおり — 全 ${STORY_CHAPTER_COUNT} 章。クリア ${cleared} 章。ごまちゃん Lv.${lv}（HP ${maxHp}）／ ${eqSum}`;
+    meta.textContent = `Lv.${lv}　HP ${maxHp}　クリア ${cleared} / ${STORY_CHAPTER_COUNT} 章`;
   }
   if (!list) return;
   list.innerHTML = "";
   STORY_CHAPTERS.forEach((ch, i) => {
     const locked = i > cleared;
     const li = document.createElement("li");
-    li.className = `story-chapter-item${locked ? " is-locked" : ""}${i < cleared ? " is-cleared" : ""}`;
+    li.className = `cocoa-chapter-item${locked ? " is-locked" : ""}${i < cleared ? " is-cleared" : ""}${!locked && i === cleared ? " is-current" : ""}`;
     const btn = document.createElement("button");
     btn.type = "button";
-    btn.className = "story-chapter-btn momo-chapter-btn";
+    btn.className = "cocoa-chapter-btn";
     btn.disabled = locked;
     const lead = ch.enemies[0];
-    const badge = i < cleared ? "クリア済み" : locked ? "ロック" : ch.arc;
-    btn.innerHTML = `<strong>${escapeHtml(ch.title)}</strong><span>${lead.icon} ${escapeHtml(lead.name)}（${escapeHtml(lead.category)}）— ${ch.enemies.length} 戦</span>`;
+    const badge = i < cleared ? "クリア" : locked ? "🔒" : "挑戦";
+    btn.innerHTML = `<span class="cocoa-chapter-btn__head"><span class="cocoa-chapter-btn__num">${i + 1}</span><strong>${escapeHtml(ch.title)}</strong><span class="cocoa-chapter-btn__badge">${badge}</span></span><span class="cocoa-chapter-btn__sub">${lead.icon} ${escapeHtml(lead.name)} · ${ch.enemies.length} 戦 — ${escapeHtml(ch.arc)}</span>`;
     if (!locked) btn.addEventListener("click", () => startStoryChapter(i));
     li.appendChild(btn);
     list.appendChild(li);
@@ -2775,10 +2771,10 @@ function beginStoryBattle() {
   storyState._defeatLock = false;
   storyState.phraseBusy = false;
   storyState.phase = "attack";
+  enterStoryAppShell("battle");
   hideAllMainScreens();
   $("storyStageWrap")?.classList.remove("hidden");
   $("storyResultPanel")?.classList.add("hidden");
-  document.body.classList.add("is-story");
   renderStoryCompanionStrip();
   renderStoryPartyPanel();
   attachStoryKeyCapture();
@@ -2814,7 +2810,8 @@ function startStoryChapter(chapterIdx) {
   storyState.enemyTurnCount = 0;
   storyState.moveKind = "normal";
   storyState.active = true;
-  document.body.classList.add("is-story");
+  enterStoryAppShell("battle");
+  hideAllMainScreens();
   void resumeGomaAudio();
   startGomaStoryBattleBgm();
   const label = $("storyChapterLabel");
@@ -3065,7 +3062,7 @@ function storyOnAttackSuccess() {
   playStoryBattleFx("attack", {
     isSpecial,
     companion: companionStrike.messages.length > 0 || companion > 0,
-    skipCompanionFlash: companionStrike.messages.length > 0,
+    skipCompanionFlash: false,
   });
   if (storyState.enemyHp <= 0) {
     storyState.battlePhase = "enemy-defeat";
@@ -3141,9 +3138,18 @@ function storyFocusDuel(kind, opts = {}) {
       arena.setAttribute("data-duel-companion", opts.companionId);
       hero?.classList.add("is-duel-hidden");
       $(`storyCompanion_${opts.companionId}`)?.classList.add("is-duel-focus");
+      document.querySelectorAll(".cocoa-party-slot--companion").forEach((el) => {
+        if (el.id !== `storyCompanion_${opts.companionId}`) el.classList.add("is-duel-hidden");
+      });
     } else {
       hero?.classList.add("is-duel-focus");
-      document.querySelectorAll(".cocoa-party-slot--companion").forEach((el) => el.classList.add("is-duel-hidden"));
+      document.querySelectorAll(".cocoa-party-slot--companion").forEach((el) => {
+        if (el.classList.contains("is-attacking")) {
+          el.classList.add("is-duel-focus");
+        } else {
+          el.classList.add("is-duel-hidden");
+        }
+      });
     }
   } else if (kind === "enemy") {
     hero?.classList.add("is-duel-focus");
@@ -3274,7 +3280,7 @@ function storyPlayerHit(dmg, msg, speaker = "ナレーション") {
   flashStoryHpBar("player");
   flashStoryPartyHit();
   if (storyState.playerHp <= 0) {
-    window.setTimeout(() => storyOnDefeat(), 700);
+    window.setTimeout(() => storyOnDefeat(), 450);
   }
 }
 
@@ -3344,9 +3350,11 @@ function storyOnDefeat() {
   storyStopBattleTimers();
   setStoryBattleLive(false);
   stopGomaBgm();
-  document.body.classList.remove("is-story");
+  enterStoryAppShell("result");
   hideAllMainScreens();
   $("storyResultPanel")?.classList.remove("hidden");
+  const iconEl = document.querySelector(".cocoa-story-result__icon");
+  if (iconEl) iconEl.textContent = "😢";
   $("storyResultHeading").textContent = "冒険失敗…";
   $("storyResultText").textContent =
     "ごまちゃんは力尽きました。練習モードでタイピングを鍛えて、もう一度挑戦しましょう。";
@@ -3364,12 +3372,14 @@ function finishStoryChapter() {
   setStoryBattleLive(false);
   stopGomaBgm();
   detachStoryKeyCapture();
-  document.body.classList.remove("is-story");
+  enterStoryAppShell("result");
   const ch = STORY_CHAPTERS[storyState.chapterIdx];
   const prog = loadStoryProgress();
   if (storyState.chapterIdx + 1 > prog) saveStoryProgress(storyState.chapterIdx + 1);
   hideAllMainScreens();
   $("storyResultPanel")?.classList.remove("hidden");
+  const iconEl = document.querySelector(".cocoa-story-result__icon");
+  if (iconEl) iconEl.textContent = "🎉";
   $("storyResultHeading").textContent = `${ch.title} クリア！`;
   const newMax = storyCalcPlayerMaxHp();
   $("storyResultText").textContent = `${ch.outro}（Lv.${storyPlayerLevel()} / HP ${newMax}）`;
@@ -3391,7 +3401,6 @@ function quitStory() {
   closeStoryCutscene();
   stopGomaBgm();
   detachStoryKeyCapture();
-  document.body.classList.remove("is-story");
   showHome();
 }
 
@@ -3435,7 +3444,7 @@ function storyRecoverStuckTurn(now) {
     return;
   }
   const since = now - (storyState._phraseCompleteAt || 0);
-  if (since < 700 || since > 8000) return;
+  if (since < 450 || since > 8000) return;
   const fn = storyState._pendingTurnFn;
   storyState.phraseBusy = false;
   storyState.phraseInputLocked = false;
@@ -3590,6 +3599,10 @@ function init() {
   hideAllMainScreens();
   $("homePanel")?.classList.remove("hidden");
   $("stageWrap")?.classList.add("hidden");
+  const buildLabel = `${window.__GOMACACHE__ || "—"} / ${APP_BUILD}`;
+  document.querySelectorAll(".build-id").forEach((el) => {
+    el.textContent = buildLabel;
+  });
 
   $("goPracticeBtn")?.addEventListener("click", showPracticePanel);
   $("goEquipBtn")?.addEventListener("click", showEquipHub);
@@ -3599,7 +3612,7 @@ function init() {
   $("backHomeFromStoryBtn")?.addEventListener("click", showHome);
   $("quitStoryBtn")?.addEventListener("click", quitStory);
   $("storyContinueBtn")?.addEventListener("click", onStoryContinue);
-  $("storyBackHomeBtn")?.addEventListener("click", showHome);
+  $("storyBackHomeBtn")?.addEventListener("click", showStoryMenu);
 
   $("startBtn").addEventListener("click", startGame);
   $("againBtn").addEventListener("click", startGame);

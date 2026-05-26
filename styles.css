@@ -3220,22 +3220,39 @@ body.is-playing .bonus-key-hint {
 }
 
 body.is-story {
-  padding: 0.5rem clamp(0.35rem, 2vw, 0.75rem) 0.75rem;
+  padding: 0;
+  margin: 0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  background: linear-gradient(180deg, #1a237e 0%, #283593 100%);
+}
+
+body.is-story .wash-bg {
+  display: none;
 }
 
 body.is-story .shell {
   max-width: none;
   width: 100%;
-  padding: 0.35rem 0.5rem 0.5rem;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 body.is-story .story-stage-wrap {
   flex: 1;
   width: 100%;
   max-width: none;
-  min-height: calc(100vh - 1rem);
+  min-height: 100vh;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
+  padding: clamp(0.35rem, 2vw, 0.65rem);
+  background: linear-gradient(180deg, #1a237e 0%, #283593 100%);
+  box-sizing: border-box;
 }
 
 body.is-story .momo-battle--pure,
@@ -5381,11 +5398,12 @@ body.is-story .foot {
 
 .momo-party-row--hero.is-attacking,
 .cocoa-party-slot--hero.is-attacking {
-  animation: momo-hero-attack 0.75s ease;
+  animation: momo-hero-attack 0.52s ease;
 }
 
-.momo-party-row--hero.is-attacking--special {
-  animation: momo-hero-attack-special 0.95s ease;
+.momo-party-row--hero.is-attacking--special,
+.cocoa-party-slot--hero.is-attacking--special {
+  animation: momo-hero-attack-special 0.65s ease;
 }
 
 .momo-party-row--hero.is-blocking {
@@ -5397,11 +5415,11 @@ body.is-story .foot {
 }
 
 .momo-party-row--companion.is-attacking .momo-party-row__fig {
-  animation: momo-companion-attack-lunge 0.58s ease var(--companion-attack-delay, 0s);
+  animation: momo-companion-attack-lunge 0.42s ease var(--companion-attack-delay, 0s);
 }
 
 .momo-party-row--companion.is-blocking .momo-party-row__fig {
-  animation: momo-companion-block 0.65s ease var(--companion-attack-delay, 0s);
+  animation: momo-companion-block 0.48s ease var(--companion-attack-delay, 0s);
 }
 
 .momo-party-row--companion.is-hit .momo-party-row__fig {
@@ -5423,7 +5441,7 @@ body.is-story .foot {
   font-size: clamp(1.4rem, 5vw, 2rem);
   line-height: 1;
   filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.25));
-  animation: momo-companion-strike-fly 0.65s ease var(--strike-delay, 0s) forwards;
+  animation: momo-companion-strike-fly 0.48s ease var(--strike-delay, 0s) forwards;
   opacity: 0;
 }
 
@@ -6588,6 +6606,11 @@ body.is-story .cocoa-battle-scene {
   100% { transform: rotate(-8deg); }
 }
 
+.momo-battle--cocoa .cocoa-party-slot--hero .bunny--story-mini {
+  transform: scaleX(-1) scale(0.48);
+  margin: 0 0 -5px -2px;
+}
+
 .momo-battle--cocoa .momo-pop-sticker--hero {
   padding: 0.35rem 0.55rem 0.28rem;
   animation: pop-sticker-bounce 2.4s ease-in-out infinite;
@@ -6640,6 +6663,19 @@ body.is-story .cocoa-battle-scene {
   transition: opacity 0.28s ease, transform 0.32s ease, visibility 0.28s;
 }
 
+.cocoa-battle-scene--duel-ally .cocoa-party-slot--companion.is-attacking.is-duel-focus {
+  opacity: 1 !important;
+  visibility: visible !important;
+  max-height: none !important;
+  overflow: visible;
+  margin: 0;
+  padding: 0.45rem 0.55rem;
+}
+
+.cocoa-battle-scene--duel-ally .cocoa-party-slot--companion.is-attacking.is-duel-focus .cocoa-party-slot__fig {
+  animation: momo-companion-attack-lunge-momo 0.72s ease var(--companion-attack-delay, 0s);
+}
+
 .cocoa-battle-scene--duel .cocoa-party-slot.is-duel-hidden,
 .cocoa-battle-scene--duel .cocoa-party-slot--companion.is-duel-hidden {
   opacity: 0 !important;
@@ -6680,6 +6716,8 @@ body.is-story .cocoa-battle-scene {
   transform: translateX(-6%) scale(1.42);
 }
 
+.cocoa-battle-scene--duel .is-duel-focus .bunny--story-mini,
+.cocoa-battle-scene--duel .is-duel-focus .cocoa-sprite--ally,
 .cocoa-battle-scene--duel .is-duel-focus .momo-pop-sticker--hero,
 .cocoa-battle-scene--duel .is-duel-focus .momo-pop-sticker--ally {
   animation: duel-pop-pulse 0.55s ease;
@@ -6722,4 +6760,394 @@ body.is-story .cocoa-battle-scene {
 
 .cocoa-battle-scene--duel .cocoa-monster-wrap .cocoa-sprite--foe {
   filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.2));
+}
+
+/* ═══════════════════════════════════════════
+   桃太郎タイピング — 旅のしおり（章選択）＆リザルト
+   「話」を押したらここが専用アプリになる
+   ═══════════════════════════════════════════ */
+
+.cocoa-story-app {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: clamp(0.35rem, 2vw, 0.65rem);
+  box-sizing: border-box;
+  background: linear-gradient(180deg, #1a237e 0%, #283593 100%);
+}
+
+.cocoa-story-frame {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow:
+    inset 0 0 0 3px #5c6bc0,
+    inset 0 0 0 6px #1a237e,
+    0 12px 32px rgba(0, 0, 0, 0.28);
+  background: linear-gradient(180deg, #3949ab 0%, #283593 100%);
+}
+
+.cocoa-story-titlebar {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+  padding: 0.55rem 0.65rem 0.45rem;
+  background: linear-gradient(180deg, #fffde7 0%, #fff176 48%, #ffeb3b 100%);
+  border-bottom: 4px solid #ff8f00;
+  box-shadow:
+    inset 0 0 0 3px #fff,
+    0 4px 0 rgba(245, 124, 0, 0.35);
+}
+
+.cocoa-story-back {
+  margin: 0;
+  flex-shrink: 0;
+  color: #4e342e;
+  border-color: rgba(78, 52, 46, 0.25);
+  background: rgba(255, 255, 255, 0.72);
+}
+
+.cocoa-story-brand {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-width: 0;
+}
+
+.cocoa-story-brand__peach {
+  font-size: clamp(2rem, 8vw, 2.75rem);
+  line-height: 1;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.15));
+}
+
+.cocoa-story-brand__hero {
+  font-size: clamp(1.85rem, 7vw, 2.5rem);
+  line-height: 1;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.12));
+}
+
+.cocoa-story-brand__text {
+  flex: 1;
+  min-width: 0;
+}
+
+.cocoa-story-brand__kicker {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  color: #e65100;
+}
+
+.cocoa-story-brand__text h2 {
+  margin: 0.05rem 0 0;
+  font-size: clamp(1.05rem, 4.2vw, 1.45rem);
+  font-weight: 900;
+  line-height: 1.25;
+  color: #4e342e;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+.cocoa-story-brand__sub {
+  margin: 0.15rem 0 0;
+  font-size: clamp(0.72rem, 2.6vw, 0.88rem);
+  font-weight: 800;
+  color: rgba(78, 52, 46, 0.78);
+}
+
+.cocoa-story-map {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.cocoa-story-map__sky {
+  position: absolute;
+  inset: 0 0 22%;
+  background: linear-gradient(180deg, #87ceeb 0%, #b3e5fc 55%, #c8e6c9 100%);
+  overflow: hidden;
+}
+
+.cocoa-story-map__ground {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 22%;
+  background:
+    repeating-linear-gradient(90deg, #689f38 0 8px, #558b2f 8px 16px);
+  border-top: 3px solid #33691e;
+}
+
+.cocoa-story-map__inner {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0.65rem clamp(0.55rem, 3vw, 0.95rem) 0.75rem;
+}
+
+.cocoa-story-rules {
+  margin: 0;
+  padding: 0.45rem 0.65rem;
+  border-radius: 999px;
+  font-size: clamp(0.72rem, 2.5vw, 0.86rem);
+  font-weight: 800;
+  text-align: center;
+  color: #1b5e20;
+  background: rgba(255, 255, 255, 0.82);
+  border: 2px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.cocoa-story-companions {
+  margin: 0.55rem 0 0.35rem;
+  justify-content: center;
+}
+
+.cocoa-story-companions .momo-companion {
+  font-size: clamp(0.72rem, 2.4vw, 0.84rem);
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.cocoa-story-status {
+  margin: 0.15rem 0 0.45rem;
+  text-align: center;
+  font-size: clamp(0.82rem, 2.8vw, 0.98rem);
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+.cocoa-chapter-scroll {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0.55rem 0.65rem 0.65rem;
+  border-radius: 14px;
+  background: rgba(255, 253, 247, 0.88);
+  border: 3px solid rgba(255, 213, 79, 0.92);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.65),
+    0 8px 20px rgba(0, 0, 0, 0.12);
+}
+
+.cocoa-chapter-scroll__label {
+  margin: 0 0 0.45rem;
+  font-size: 0.78rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  color: #e65100;
+}
+
+.cocoa-chapter-list {
+  list-style: none;
+  margin: 0;
+  padding: 0 0.15rem 0.15rem 0;
+  display: grid;
+  gap: 0.55rem;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-color: rgba(255, 152, 0, 0.45) transparent;
+}
+
+.cocoa-chapter-item.is-current .cocoa-chapter-btn {
+  border-color: #ff8f00;
+  background: linear-gradient(165deg, #fff8e1, #ffe082 55%, #ffcc80);
+  box-shadow:
+    0 0 0 2px rgba(255, 152, 0, 0.35),
+    0 6px 16px rgba(255, 152, 0, 0.22);
+}
+
+.cocoa-chapter-item.is-cleared .cocoa-chapter-btn {
+  border-color: rgba(76, 175, 80, 0.55);
+  background: linear-gradient(165deg, #f1f8e9, #c8e6c9 60%, #a5d6a7);
+}
+
+.cocoa-chapter-item.is-locked .cocoa-chapter-btn {
+  opacity: 0.52;
+  cursor: not-allowed;
+  filter: grayscale(0.35);
+}
+
+.cocoa-chapter-btn {
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  border: 2px solid rgba(57, 73, 171, 0.28);
+  border-radius: 14px;
+  padding: 0.75rem 0.85rem;
+  background: rgba(255, 255, 255, 0.92);
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+}
+
+.cocoa-chapter-btn:not(:disabled):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.1);
+}
+
+.cocoa-chapter-btn__head {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.cocoa-chapter-btn__num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 900;
+  color: #fff;
+  background: linear-gradient(180deg, #ff9800, #ef6c00);
+  box-shadow: 0 2px 0 #e65100;
+}
+
+.cocoa-chapter-btn strong {
+  flex: 1;
+  font-size: clamp(0.92rem, 3vw, 1.05rem);
+  color: #3d3a36;
+}
+
+.cocoa-chapter-btn__badge {
+  font-size: 0.72rem;
+  font-weight: 900;
+  padding: 0.12rem 0.45rem;
+  border-radius: 999px;
+  background: rgba(57, 73, 171, 0.12);
+  color: #3949ab;
+}
+
+.cocoa-chapter-item.is-cleared .cocoa-chapter-btn__badge {
+  background: rgba(46, 125, 50, 0.15);
+  color: #2e7d32;
+}
+
+.cocoa-chapter-item.is-current .cocoa-chapter-btn__badge {
+  background: rgba(255, 152, 0, 0.2);
+  color: #e65100;
+}
+
+.cocoa-chapter-btn__sub {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: rgba(61, 58, 54, 0.72);
+  padding-left: 2.3rem;
+}
+
+/* リザルト画面 */
+.cocoa-story-app--result {
+  align-items: center;
+  justify-content: center;
+}
+
+.cocoa-story-frame--result {
+  flex: 0 1 auto;
+  width: min(100%, 420px);
+  min-height: auto;
+  margin: auto;
+}
+
+.cocoa-story-result {
+  padding: clamp(1.25rem, 5vw, 2rem);
+  text-align: center;
+  background: linear-gradient(180deg, #fffde7 0%, #fff9c4 45%, #ffe082 100%);
+}
+
+.cocoa-story-result__icon {
+  display: block;
+  font-size: clamp(2.5rem, 12vw, 3.5rem);
+  line-height: 1;
+  margin-bottom: 0.35rem;
+}
+
+.cocoa-story-result__title {
+  margin: 0 0 0.55rem;
+  font-size: clamp(1.2rem, 5vw, 1.55rem);
+  font-weight: 900;
+  color: #4e342e;
+}
+
+.cocoa-story-result__text {
+  margin: 0 0 1rem;
+  font-size: clamp(0.88rem, 3vw, 1rem);
+  font-weight: 700;
+  line-height: 1.55;
+  color: rgba(78, 52, 46, 0.88);
+}
+
+.cocoa-story-result__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.cocoa-story-btn {
+  width: 100%;
+  font: inherit;
+  font-weight: 900;
+  cursor: pointer;
+  border-radius: 999px;
+  padding: 0.72rem 1rem;
+  border: 3px solid transparent;
+  transition: transform 0.12s ease, filter 0.12s ease;
+}
+
+.cocoa-story-btn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.04);
+}
+
+.cocoa-story-btn--primary {
+  color: #fff;
+  background: linear-gradient(180deg, #ff9800, #ef6c00);
+  border-color: #ff8f00;
+  box-shadow: 0 4px 0 #e65100;
+}
+
+.cocoa-story-btn--ghost {
+  color: #3949ab;
+  background: rgba(255, 255, 255, 0.88);
+  border-color: rgba(57, 73, 171, 0.35);
+}
+
+body.is-story .momo-cutscene {
+  z-index: 200;
+}
+
+@media (max-width: 520px) {
+  .cocoa-story-titlebar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .cocoa-story-back {
+    align-self: flex-start;
+  }
+
+  .cocoa-chapter-btn__sub {
+    padding-left: 0;
+  }
 }
