@@ -2,7 +2,7 @@
  * ごまちゃんタイピング — 試作品（ローカル保存のモード別トップ10）
  */
 
-const APP_BUILD = "20260525-momo-chibi-v1";
+const APP_BUILD = "20260525-momo-harder-v1";
 
 const DIFFICULTY = {
   beginner: { id: "beginner", label: "初級", phraseSec: 5, points: 1, sceneClass: "diff-beginner" },
@@ -481,6 +481,21 @@ const STORY_BATTLE_PACE = {
   defeatGapMs: 650,
 };
 
+/** 敵の強さ（章・連戦ごとに伸びる。数値を上げると全体が手強くなる） */
+const STORY_ENEMY_POWER = {
+  hpBase: 6,
+  hpPerChapter: 0.55,
+  hpPerEncounter: 3,
+  hpBossBonus: 12,
+  atkBase: 3,
+  atkPerChapter: 0.22,
+  atkPerEncounter: 2,
+  atkBossBonus: 4,
+  atkGlobalMul: 1.25,
+  phraseSecDropEvery: 45,
+  defenseSecDropEvery: 55,
+};
+
 /** ごまちゃんの技（桃太郎タイピング本家準拠） */
 const STORY_PLAYER_SKILLS = {
   normal: { name: "通常攻撃", short: "こうげき" },
@@ -743,10 +758,26 @@ function buildStoryChapters(count) {
         isBoss,
         normalMove: type.normalMove,
         specialMove: type.specialMove,
-        hp: Math.max(3, 3 + Math.floor(i * 0.28) + e * 2 + (isBoss ? 5 : 0)),
-        attack: 2 + Math.floor(i * 0.12) + e + (isBoss ? 2 : 0),
-        phraseSec: Math.max(STORY_BATTLE_PACE.phraseSecMin, STORY_BATTLE_PACE.phraseSecBase - Math.floor(i / 55)),
-        defenseSec: Math.max(STORY_BATTLE_PACE.defenseSecMin, STORY_BATTLE_PACE.defenseSecBase - Math.floor(i / 70)),
+        hp: Math.max(
+          STORY_ENEMY_POWER.hpBase,
+          STORY_ENEMY_POWER.hpBase +
+            Math.floor(i * STORY_ENEMY_POWER.hpPerChapter) +
+            e * STORY_ENEMY_POWER.hpPerEncounter +
+            (isBoss ? STORY_ENEMY_POWER.hpBossBonus : 0),
+        ),
+        attack:
+          STORY_ENEMY_POWER.atkBase +
+          Math.floor(i * STORY_ENEMY_POWER.atkPerChapter) +
+          e * STORY_ENEMY_POWER.atkPerEncounter +
+          (isBoss ? STORY_ENEMY_POWER.atkBossBonus : 0),
+        phraseSec: Math.max(
+          STORY_BATTLE_PACE.phraseSecMin,
+          STORY_BATTLE_PACE.phraseSecBase - Math.floor(i / STORY_ENEMY_POWER.phraseSecDropEvery),
+        ),
+        defenseSec: Math.max(
+          STORY_BATTLE_PACE.defenseSecMin,
+          STORY_BATTLE_PACE.defenseSecBase - Math.floor(i / STORY_ENEMY_POWER.defenseSecDropEvery),
+        ),
       });
     }
     const arc = storyArcLabel(i);
@@ -904,7 +935,7 @@ function storyCalcPlayerMaxHp() {
 
 function storyCalcEnemyAttack(enemy, chapterIdx) {
   const base = enemy?.attack || 10 + Math.floor(chapterIdx * 0.7);
-  return Math.round(base * (storyState.enemyAttackMul || 1));
+  return Math.round(base * (storyState.enemyAttackMul || 1) * STORY_ENEMY_POWER.atkGlobalMul);
 }
 
 function storyDefenseTier() {
@@ -1486,7 +1517,7 @@ function storyPickEnemyMove(enemy) {
     return {
       name: enemy.specialMove || type.specialMove || "モンスター大技",
       isSpecial: true,
-      mul: enemy.isBoss ? 1.65 : 1.45,
+      mul: enemy.isBoss ? 1.75 : 1.55,
     };
   }
   return {
