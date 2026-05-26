@@ -36,7 +36,7 @@
 
   <header class="top-bar">
     <h1><span class="title-icon" aria-hidden="true">🐰</span> ごまちゃんのエサタイピング <small>試作品</small></h1>
-    <p class="tagline">菜の花畑のごまちゃんと、<strong>練習</strong>・<strong>装備</strong>・<strong>桃太郎タイピング</strong>の3つの遊び方でタイピングを楽しもう。</p>
+    <p class="tagline">菜の花畑のごまちゃんと、<strong>練習</strong>・<strong>便利屋</strong>・<strong>桃太郎タイピング</strong>の3つの遊び方でタイピングを楽しもう。</p>
   </header>
 
   <main class="shell">
@@ -46,7 +46,7 @@
       <p class="muted home-lead">ごまちゃんと一緒に、タイピングで遊ぼう。</p>
       <p class="muted deploy-banner home-build-banner">
         <strong>更新確認</strong> — 読み込み ID：<code class="build-id" id="cacheBustTag">…</code>
-        （末尾が <code>20260525-momo-chibi-body-v1</code> なら最新版です）
+        （末尾が <code>20260525-momo-benriya-v1</code> なら最新版です）
       </p>
       <div class="mode-grid">
         <button type="button" class="mode-card mode-card--practice" id="goPracticeBtn">
@@ -55,9 +55,9 @@
           <span class="mode-card__desc">モードを選んで、60秒タイムアタックで練習</span>
         </button>
         <button type="button" class="mode-card mode-card--equip" id="goEquipBtn">
-          <span class="mode-card__icon" aria-hidden="true">👑</span>
-          <span class="mode-card__title">装備</span>
-          <span class="mode-card__desc">解放したアイテムを<strong>3つまで</strong>身につける</span>
+          <span class="mode-card__icon" aria-hidden="true">🏪</span>
+          <span class="mode-card__title">便利屋</span>
+          <span class="mode-card__desc">戦闘で得た<strong>銭</strong>で武器・防具・道具・お守りを買う（桃太郎タイピング本家）</span>
         </button>
         <button type="button" class="mode-card mode-card--story" id="goStoryBtn">
           <span class="mode-card__icon" aria-hidden="true">🍑</span>
@@ -135,19 +135,19 @@
       <button type="button" class="ghost" id="openRankingBtn">このモードのトップ10を見る</button>
     </section>
 
-    <!-- 装備モード：3つまで装着 -->
+    <!-- 便利屋（桃太郎タイピング本家） -->
     <section class="panel equip-hub-panel hidden" id="equipHubPanel" aria-labelledby="equip-hub-heading">
       <div class="sub-head">
         <button type="button" class="ghost small back-home-btn" id="backHomeFromEquipBtn">← ホーム</button>
-        <h2 id="equip-hub-heading">装備</h2>
+        <h2 id="equip-hub-heading">便利屋</h2>
       </div>
       <p class="muted" id="equipHubHint"></p>
       <p class="equip-hub-career">
-        累計ポイント：<strong id="equipHubPoints">0</strong> pt（<strong>2000</strong> pt ごとに解放）　／　装着 <strong id="equipHubCount">0</strong>／3
+        所持銭：<strong id="equipHubPoints">0</strong> 銭　／　桃太郎タイピングと同じく、戦闘の報酬で買い物できます
       </p>
       <p class="equip-hub-active-effects muted" id="equipHubActiveEffects"></p>
       <div class="equip-hub-body career-modal__panel career-modal__panel--ff5" id="equipHubBody"></div>
-      <p class="muted equip-hub-note">ボタンを押すと装着 ON／OFF。同時に付けられるのは<strong>3つまで</strong>です。装備は<strong>練習モード</strong>（得点・お題秒数）と<strong>話モード</strong>（攻撃・HP・防御・げんき）の両方に効きます。</p>
+      <p class="muted equip-hub-note">武器・防具は購入後「強化」でLvアップ。お守りも銭で強化できます。効果は<strong>桃太郎タイピング</strong>の冒険にだけ効きます。</p>
     </section>
 
     <!-- 話モード：桃太郎タイピング本家 — 旅のしおり（章選択） -->
@@ -156,7 +156,10 @@
         <button type="button" class="ghost small back-home-btn" id="backHomeFromStoryBtn">← ホーム</button>
         <h2 id="story-menu-heading">ごまちゃんの桃太郎たいぴんぐ</h2>
       </div>
-      <p class="muted"><strong>桃太郎タイピング</strong>と同じルール。①こうげき（パネルを打つ）→②ぼうぎょ。敵を全部たおすと章クリア！</p>
+      <p class="muted"><strong>桃太郎タイピング</strong>と同じルール。①こうげき → ②ぼうぎょ → 敵も順番に攻撃。戦闘で得た銭は便利屋で使えます。</p>
+      <div class="story-menu-actions">
+        <button type="button" class="ghost small" id="storyGoBenriyaBtn">🏪 便利屋</button>
+      </div>
       <div class="momo-companion-strip" id="storyCompanionStrip" aria-label="仲間"></div>
       <p class="story-menu-meta muted" id="storyMenuMeta"></p>
       <ul class="story-chapter-list momo-chapter-scroll" id="storyChapterList"></ul>

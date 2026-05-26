@@ -7619,3 +7619,112 @@ body.is-story .momo-cutscene {
     padding-left: 0;
   }
 }
+
+/* 便利屋（桃太郎タイピング本家） */
+.story-menu-actions {
+  margin: 0.5rem 0 0.75rem;
+}
+
+.benriya-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-bottom: 0.75rem;
+}
+
+.benriya-tab {
+  padding: 0.35rem 0.85rem;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 152, 0, 0.45);
+  background: rgba(255, 255, 255, 0.7);
+  font-weight: 800;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.benriya-tab.is-on {
+  background: linear-gradient(180deg, #ffe082, #ffb300);
+  border-color: #f57c00;
+  color: #4e342e;
+}
+
+.benriya-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.benriya-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  padding: 0.55rem 0.65rem;
+  border-radius: 12px;
+  background: rgba(255, 252, 248, 0.92);
+  border: 2px solid rgba(224, 138, 108, 0.35);
+}
+
+.benriya-row.is-equipped {
+  border-color: rgba(255, 152, 0, 0.75);
+  background: linear-gradient(180deg, #fff8e8, #ffe0b2);
+}
+
+.benriya-row.is-locked {
+  opacity: 0.55;
+}
+
+.benriya-row__main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.benriya-row__main strong {
+  font-size: 0.95rem;
+}
+
+.benriya-row__main span {
+  font-size: 0.78rem;
+  color: rgba(61, 58, 54, 0.78);
+}
+
+.benriya-row__stat {
+  font-weight: 800;
+  color: #c86b4e !important;
+}
+
+.benriya-row__acts {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: flex-end;
+}
+
+.benriya-buy-btn,
+.benriya-up-btn,
+.benriya-equip-btn {
+  padding: 0.3rem 0.65rem;
+  border-radius: 8px;
+  border: 2px solid #f57c00;
+  background: linear-gradient(180deg, #fff9c4, #ffca28);
+  font-weight: 800;
+  font-size: 0.78rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.benriya-buy-btn:disabled,
+.benriya-up-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.benriya-max,
+.benriya-equipped {
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: #2e7d32;
+}
