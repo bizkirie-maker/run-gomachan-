@@ -4472,11 +4472,17 @@ body.is-story .foot {
 }
 
 .cocoa-battle-scene {
-  min-height: min(58vw, 320px);
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(118px, 32%) minmax(0, 1fr) minmax(118px, 34%);
+  gap: 0.45rem;
+  min-height: min(62vw, 380px);
+  padding: 0.55rem;
   border: 4px solid #3949ab;
   border-radius: 12px;
   background: #87ceeb;
   box-shadow: inset 0 0 0 2px #7986cb;
+  overflow: hidden;
 }
 
 .cocoa-scene-bg {
@@ -6121,5 +6127,297 @@ body.is-story .momo-enemy-fig .momo-monster-wrap {
 
   .momo-retry-hint {
     display: none;
+  }
+}
+
+/* ══ ココアの桃太郎たいぴんぐ — 戦闘画面（本家準拠） ══ */
+.cocoa-battle-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  padding: 0.15rem 0.25rem 0.35rem;
+}
+
+.cocoa-battle-head__left {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.cocoa-chapter-label,
+.cocoa-player-lv {
+  font-size: clamp(0.88rem, 2.8vw, 1.05rem);
+  font-weight: 900;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+.cocoa-quit-btn {
+  margin: 0;
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.55);
+}
+
+body.is-story .momo-battle--cocoa {
+  max-width: none;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
+}
+
+body.is-story .cocoa-battle-scene {
+  flex: 1;
+  min-height: min(68vh, 520px);
+}
+
+.momo-battle--cocoa .cocoa-party-slot {
+  padding: 0.45rem 0.55rem;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 3px solid rgba(255, 255, 255, 0.92);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.momo-battle--cocoa .cocoa-party-slot--hero {
+  background: linear-gradient(135deg, rgba(255, 253, 231, 0.98), rgba(255, 224, 130, 0.88));
+  border-color: #ffb300;
+}
+
+.momo-battle--cocoa .cocoa-party-slot__name {
+  font-size: clamp(0.88rem, 2.8vw, 1.05rem);
+}
+
+.momo-battle--cocoa .cocoa-party-slot__sub {
+  font-size: clamp(0.72rem, 2.2vw, 0.86rem);
+}
+
+.momo-battle--cocoa .cocoa-party-slot__hpnum {
+  font-size: clamp(0.82rem, 2.5vw, 1rem);
+  font-weight: 900;
+}
+
+.momo-battle--cocoa .cocoa-hp-bar {
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.85);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.momo-battle--cocoa .cocoa-hp-bar.momo-hp-bar--large {
+  height: 18px;
+}
+
+.momo-battle--cocoa .cocoa-sprite--lg {
+  width: clamp(72px, 18vw, 96px);
+  height: clamp(82px, 20vw, 108px);
+}
+
+.momo-battle--cocoa .cocoa-sprite--md {
+  width: clamp(56px, 14vw, 72px);
+  height: clamp(64px, 16vw, 82px);
+}
+
+.momo-battle--cocoa .cocoa-sprite--foe.cocoa-sprite--battle {
+  width: clamp(88px, 22vw, 118px);
+  height: clamp(88px, 22vw, 118px);
+}
+
+.momo-battle--cocoa .cocoa-sprite--foe.cocoa-sprite--battle.cocoa-sprite--boss {
+  width: clamp(100px, 26vw, 132px);
+  height: clamp(104px, 28vw, 138px);
+}
+
+.momo-battle--cocoa .cocoa-enemy-hud {
+  padding: 0.55rem 0.65rem;
+  border-radius: 12px;
+  border-width: 3px;
+}
+
+.momo-battle--cocoa .cocoa-enemy-hud__badge {
+  font-size: clamp(0.72rem, 2.2vw, 0.88rem);
+  padding: 0.2rem 0.55rem;
+}
+
+.momo-battle--cocoa .cocoa-enemy-hud__name {
+  font-size: clamp(0.95rem, 3vw, 1.2rem);
+}
+
+.momo-battle--cocoa .cocoa-enemy-hud__hp {
+  font-size: clamp(0.88rem, 2.6vw, 1.08rem);
+  font-weight: 900;
+}
+
+.momo-battle--cocoa .cocoa-enemy-hud__atk {
+  font-size: clamp(0.75rem, 2.3vw, 0.9rem);
+}
+
+.momo-battle--cocoa .cocoa-battle-msg {
+  font-size: clamp(0.82rem, 2.5vw, 0.96rem);
+  min-height: 2.6em;
+}
+
+.momo-battle--cocoa .cocoa-gauge .momo-gauge-bar {
+  height: 14px;
+}
+
+.momo-battle--cocoa .cocoa-gauge .momo-gauge-label,
+.momo-battle--cocoa .cocoa-gauge .momo-gauge-text {
+  font-size: clamp(0.82rem, 2.4vw, 0.96rem);
+  font-weight: 900;
+}
+
+.cocoa-turn-badge {
+  display: inline-block;
+  margin: 0 auto 0.35rem;
+  padding: 0.22rem 0.85rem;
+  border-radius: 999px;
+  font-size: clamp(0.82rem, 2.6vw, 0.98rem);
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  border: 2px solid #fff;
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.12);
+}
+
+.cocoa-turn-badge--attack {
+  background: linear-gradient(180deg, #ffe082, #ff9800);
+  color: #4e2600;
+}
+
+.cocoa-turn-badge--defense {
+  background: linear-gradient(180deg, #90caf9, #2196f3);
+  color: #0d47a1;
+}
+
+.cocoa-turn-badge--special {
+  background: linear-gradient(180deg, #fff176, #ff6f00);
+  color: #4e342e;
+}
+
+.momo-battle--cocoa .cocoa-panel-overlay {
+  width: min(96%, 420px);
+  padding: 0.65rem 0.6rem 0.75rem;
+  border-width: 4px;
+  border-color: #ffb300;
+  background: rgba(255, 253, 247, 0.78);
+  box-shadow:
+    inset 0 0 0 2px rgba(255, 255, 255, 0.75),
+    0 10px 28px rgba(0, 0, 0, 0.18);
+  text-align: center;
+}
+
+.momo-battle--cocoa .cocoa-panel-overlay.momo-phrase-card--defense {
+  border-color: #42a5f5;
+  background: rgba(245, 251, 255, 0.78);
+}
+
+.momo-battle--cocoa .cocoa-panel-overlay.momo-phrase-card--special {
+  border-color: #ff7043;
+  background: rgba(255, 248, 225, 0.8);
+}
+
+.momo-battle--cocoa .cocoa-panel-overlay .momo-panel-word {
+  font-size: clamp(1.25rem, 4.8vw, 1.65rem);
+  font-weight: 900;
+  color: #4e342e;
+  margin: 0.15rem 0 0.35rem;
+}
+
+.momo-battle--cocoa .cocoa-panel-overlay .momo-key-panel {
+  min-width: 2.75rem;
+  height: 2.85rem;
+  font-size: 1.35rem;
+  font-weight: 900;
+  border-radius: 10px;
+  border: 3px solid #fff;
+  background: linear-gradient(180deg, #fff 0%, #f5f5f5 100%);
+  box-shadow: 0 4px 0 #bdbdbd;
+}
+
+.momo-battle--cocoa .cocoa-panel-overlay .momo-key-panel--current {
+  background: linear-gradient(180deg, #fff59d 0%, #ffeb3b 100%);
+  border-color: #ff8f00;
+  box-shadow: 0 4px 0 #f57c00;
+  color: #bf360c;
+}
+
+.momo-battle--cocoa .cocoa-panel-overlay .momo-key-panel--done {
+  background: linear-gradient(180deg, #c8e6c9, #81c784);
+  border-color: #43a047;
+  color: #1b5e20;
+}
+
+.momo-battle--cocoa .cocoa-panel-overlay.momo-phrase-card--defense .momo-key-panel--current {
+  background: linear-gradient(180deg, #bbdefb 0%, #64b5f6 100%);
+  border-color: #1565c0;
+  color: #0d47a1;
+}
+
+.cocoa-battle-scene.momo-arena--engage .cocoa-party-column {
+  animation: momo-party-march-in 0.95s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.cocoa-battle-scene.momo-arena--engage .cocoa-enemy-zone {
+  animation: momo-enemy-march-in 0.95s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.cocoa-party-slot--hero.is-attacking,
+.cocoa-party-slot--hero.is-attacking--special {
+  animation: momo-hero-attack-momo 0.85s ease;
+}
+
+.cocoa-party-slot--companion.is-attacking .cocoa-party-slot__fig {
+  animation: momo-companion-attack-lunge-momo 0.72s ease var(--companion-attack-delay, 0s);
+}
+
+.cocoa-party-slot--companion.is-blocking .cocoa-party-slot__fig {
+  animation: momo-companion-block 0.65s ease var(--companion-attack-delay, 0s);
+}
+
+.cocoa-party-slot--companion.is-hit .cocoa-party-slot__fig,
+.cocoa-party-slot--hero.is-hit {
+  animation: momo-companion-hit 0.45s ease;
+}
+
+.cocoa-battle-scene.momo-arena--fighting .cocoa-party-slot--companion:not(.is-attacking):not(.is-hit) .cocoa-party-slot__fig {
+  animation: momo-companion-idle 2.4s ease-in-out infinite;
+}
+
+.cocoa-battle-scene.momo-arena--fighting .cocoa-party-slot--hero .cocoa-party-slot__fig {
+  animation: momo-companion-idle 2.8s ease-in-out infinite;
+}
+
+.cocoa-battle-scene.momo-arena--attack.momo-arena--fighting {
+  box-shadow:
+    inset 0 0 0 2px #7986cb,
+    inset 0 -48px 70px rgba(255, 152, 0, 0.14);
+}
+
+.cocoa-battle-scene.momo-arena--defense.momo-arena--fighting {
+  box-shadow:
+    inset 0 0 0 2px #7986cb,
+    inset 0 -48px 70px rgba(66, 165, 245, 0.16);
+}
+
+@media (max-width: 640px) {
+  .cocoa-battle-scene {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    min-height: auto;
+  }
+
+  .momo-battle--cocoa .cocoa-party-column {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .momo-battle--cocoa .cocoa-party-slot {
+    flex: 1 1 calc(50% - 0.35rem);
+    min-width: 140px;
+  }
+
+  .momo-battle--cocoa .cocoa-panel-overlay {
+    top: 42%;
+    width: min(98%, 360px);
   }
 }

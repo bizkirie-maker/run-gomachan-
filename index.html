@@ -151,7 +151,7 @@
         <button type="button" class="ghost small back-home-btn" id="backHomeFromStoryBtn">← ホーム</button>
         <h2 id="story-menu-heading">ごまちゃんももたろうタイピング</h2>
       </div>
-      <p class="muted"><strong>桃太郎タイピング</strong>と同じルール。①こうげき（<strong>日本語の文</strong>をローマ字で打つ）→②ぼうぎょ。敵を全部たおすと章クリア！　<strong>Esc</strong>で同じ章をやり直せます。</p>
+      <p class="muted"><strong>ココアの桃太郎たいぴんぐ</strong>と同じ画面・ルール。日本語の文をローマ字で打ってこうげき／ぼうぎょ。　<strong>Esc</strong>＝やり直し</p>
       <div class="momo-companion-strip" id="storyCompanionStrip" aria-label="仲間"></div>
       <p class="story-menu-meta muted" id="storyMenuMeta"></p>
       <ul class="story-chapter-list momo-chapter-scroll" id="storyChapterList"></ul>
@@ -306,71 +306,75 @@
       </div>
     </section>
 
-    <!-- 話モード：桃太郎タイピング本家レイアウト -->
+    <!-- 話モード：ココアの桃太郎たいぴんぐ準拠レイアウト -->
     <section class="story-stage-wrap hidden" id="storyStageWrap" aria-live="polite">
-      <div class="momo-battle momo-battle--pure momo-battle--momo">
-        <header class="momo-topbar">
-          <div class="momo-topbar__left">
-            <span class="momo-chapter-label" id="storyChapterLabel">第1章</span>
-            <span class="momo-player-lv" id="storyPlayerLv">Lv.1</span>
-          </div>
-          <div class="momo-flow" aria-label="ターンの流れ">
-            <span class="momo-flow__step" id="storyFlowAttack">① こうげき</span>
-            <span class="momo-flow__arrow" aria-hidden="true">→</span>
-            <span class="momo-flow__step" id="storyFlowDefense">② ぼうぎょ</span>
+      <div class="momo-battle momo-battle--cocoa">
+        <header class="cocoa-battle-head">
+          <div class="cocoa-battle-head__left">
+            <span class="cocoa-chapter-label" id="storyChapterLabel">第1章</span>
+            <span class="cocoa-player-lv" id="storyPlayerLv">Lv.1</span>
           </div>
           <span class="momo-retry-hint">Esc＝やり直し</span>
-          <button type="button" class="ghost small momo-quit-btn" id="quitStoryBtn">やめる</button>
+          <button type="button" class="ghost small cocoa-quit-btn" id="quitStoryBtn">やめる</button>
         </header>
 
-        <div class="momo-phase-ribbon momo-phase-ribbon--attack" id="storyPhaseRibbon">
-          <p class="momo-phase-ribbon__main" id="storyTurnBanner">こうげき！</p>
-          <p class="momo-phase-ribbon__sub" id="storyMoveName">通常攻撃</p>
-        </div>
+        <div class="cocoa-battle-scene momo-scene" id="storyScene">
+          <div class="cocoa-scene-bg" aria-hidden="true">
+            <span class="cocoa-cloud cocoa-cloud--1"></span>
+            <span class="cocoa-cloud cocoa-cloud--2"></span>
+            <span class="cocoa-cloud cocoa-cloud--3"></span>
+            <div class="cocoa-ground"></div>
+          </div>
 
-        <section class="momo-panel-stage momo-panel-top momo-phrase-card momo-phrase-card--attack" id="storyPhraseCard" aria-label="タイピングパネル">
-          <p class="momo-panel-word" id="storyPanelWord" lang="ja">こうげき</p>
-          <p class="momo-next-key" id="storyNextKeyHint">つぎのキーを打て！</p>
-          <div class="momo-panel-board" id="storyPanelBoard"></div>
-          <div class="momo-panel-timer-bar" aria-hidden="true"><div class="momo-panel-timer-fill" id="storyPanelTimerFill"></div></div>
-          <p class="momo-panel-timer-num">のこり <strong id="storyPhraseTimer">5.0</strong> 秒</p>
-          <div class="momo-vkbd" id="storyVirtualKeyboard" aria-hidden="true"></div>
-        </section>
+          <aside class="cocoa-party-column" id="storyPartyColumn" aria-label="味方パーティ"></aside>
 
-        <div class="momo-special-splash hidden" id="storySpecialSplash" aria-hidden="true">大技！</div>
-
-        <div class="momo-arena momo-scene momo-battle-field" id="storyScene">
-          <div class="field-bg momo-field-bg" aria-hidden="true"></div>
-          <aside class="momo-party-column" id="storyPartyColumn" aria-label="味方パーティ"></aside>
-          <div class="momo-arena-center">
-            <div class="momo-gauge-wrap momo-gauge-wrap--arena">
+          <div class="cocoa-arena-center">
+            <div class="cocoa-gauge momo-gauge-wrap momo-gauge-wrap--arena">
               <span class="momo-gauge-label">げんき</span>
               <div class="momo-gauge-bar" aria-hidden="true"><div class="momo-gauge-fill" id="storyGaugeBar"></div></div>
               <span class="momo-gauge-text" id="storyGaugeText">0/100</span>
             </div>
-            <p class="momo-battle-msg" id="storyDialog"></p>
-            <span class="visually-hidden" id="storySpeakerName"></span>
-          </div>
-          <div class="momo-enemy-zone">
-            <div class="momo-enemy-hpblock" aria-label="敵のHP">
-              <span class="momo-enemy-head__badge" id="storyEnemyCategory">モンスター</span>
-              <strong class="momo-enemy-head__name" id="storyEnemyNameHud">スライム</strong>
-              <div class="momo-hp-bar momo-hp-bar--enemy-head momo-hp-bar--large" aria-hidden="true">
-                <div class="momo-hp-fill momo-hp-fill--enemy" id="storyEnemyHpBar"></div>
-              </div>
-              <span class="momo-enemy-head__hp"><strong id="storyEnemyHp">0</strong> / <span id="storyEnemyMaxHp">0</span> HP</span>
-              <span class="momo-enemy-atk" id="storyEnemyAtkHint"></span>
-            </div>
-            <div class="momo-enemy-spawn" id="storyEnemySpawnBanner" aria-live="assertive"></div>
-            <div class="story-enemy momo-enemy" id="storyEnemy">
-              <div class="momo-enemy-card" id="storyEnemyCard">
-                <div class="momo-enemy-fig" id="storyEnemySprite"></div>
-                <span class="momo-enemy-card__icon" id="storyEnemyIcon" aria-hidden="true">💧</span>
-                <strong class="story-enemy__name" id="storyEnemyName">スライム</strong>
-                <span class="momo-enemy-card__tagline" id="storyEnemyTagline"></span>
-              </div>
+            <div class="cocoa-msg-window">
+              <p class="cocoa-battle-msg" id="storyDialog"></p>
+              <span class="visually-hidden" id="storySpeakerName"></span>
             </div>
           </div>
+
+          <div class="cocoa-enemy-zone">
+            <div class="cocoa-enemy-hud" aria-label="敵のHP">
+              <span class="cocoa-enemy-hud__badge" id="storyEnemyCategory">モンスター</span>
+              <strong class="cocoa-enemy-hud__name" id="storyEnemyNameHud">スライム</strong>
+              <div class="cocoa-hp-bar cocoa-hp-bar--enemy momo-hp-bar--large" aria-hidden="true">
+                <div class="cocoa-hp-fill cocoa-hp-fill--enemy" id="storyEnemyHpBar"></div>
+              </div>
+              <span class="cocoa-enemy-hud__hp"><strong id="storyEnemyHp">0</strong> / <span id="storyEnemyMaxHp">0</span></span>
+              <span class="cocoa-enemy-hud__atk" id="storyEnemyAtkHint"></span>
+            </div>
+            <div class="cocoa-enemy-spawn" id="storyEnemySpawnBanner" aria-live="assertive"></div>
+            <div class="story-enemy cocoa-monster-stage" id="storyEnemy">
+              <div class="cocoa-enemy-card" id="storyEnemyCard">
+                <div class="cocoa-monster-wrap" id="storyEnemySprite"></div>
+                <span class="cocoa-enemy-card__icon" id="storyEnemyIcon" aria-hidden="true">💧</span>
+                <strong class="cocoa-enemy-name" id="storyEnemyName">スライム</strong>
+                <span class="cocoa-enemy-tagline" id="storyEnemyTagline"></span>
+              </div>
+            </div>
+          </div>
+
+          <section class="cocoa-panel-overlay momo-phrase-card momo-phrase-card--attack" id="storyPhraseCard" aria-label="タイピングパネル">
+            <p class="cocoa-turn-badge" id="storyTurnBanner">こうげき</p>
+            <p class="momo-panel-word" id="storyPanelWord" lang="ja"></p>
+            <p class="momo-next-key" id="storyNextKeyHint">つぎのキーを打て！</p>
+            <div class="momo-panel-board" id="storyPanelBoard"></div>
+            <div class="momo-panel-timer-bar" aria-hidden="true"><div class="momo-panel-timer-fill" id="storyPanelTimerFill"></div></div>
+            <p class="momo-panel-timer-num">のこり <strong id="storyPhraseTimer">5.0</strong> 秒</p>
+            <div class="momo-vkbd" id="storyVirtualKeyboard" aria-hidden="true"></div>
+            <p class="visually-hidden" id="storyMoveName"></p>
+            <span class="visually-hidden" id="storyPhaseRibbon"></span>
+            <span class="visually-hidden" id="storyFlowAttack"></span>
+            <span class="visually-hidden" id="storyFlowDefense"></span>
+          </section>
+
           <div class="momo-companion-strikes" id="storyCompanionStrikes" aria-hidden="true"></div>
           <div class="momo-battle-fx" id="storyBattleFx" aria-hidden="true">
             <span class="momo-battle-fx__slash" id="storyFxSlash">⚔</span>
@@ -382,6 +386,7 @@
           <div class="momo-damage-popup" id="storyDamagePopup" aria-live="assertive"></div>
         </div>
 
+        <div class="momo-special-splash hidden" id="storySpecialSplash" aria-hidden="true">大技！</div>
         <input id="storyGhostInput" class="ghost-input" type="text" lang="en" inputmode="latin" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="話モード用キー入力" />
       </div>
     </section>

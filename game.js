@@ -440,8 +440,8 @@ function storyGomachanFigureHtml() {
   </div></div>`;
 }
 
-function storyAllyEmojiHtml(icon, size = "md") {
-  return `<span class="momo-ally-emoji momo-ally-emoji--${size}" aria-hidden="true">${icon}</span>`;
+function storyAllySpriteHtml(kind, size = "lg") {
+  return `<div class="cocoa-sprite cocoa-sprite--ally cocoa-sprite--${size} cocoa-sprite--${kind}" aria-hidden="true"><span class="cocoa-sprite__shadow"></span></div>`;
 }
 
 function storyEnemyEmojiHtml(icon, isBoss = false) {
@@ -1466,12 +1466,8 @@ function buildStoryPanelTask(isDefense, chapterIdx, isSpecial = false) {
       : Math.min(14, romaji.length);
   const keys = [...romaji].slice(0, maxLen);
   const text = isDefense
-    ? isSpecial
-      ? `大技ぼうぎょ「${phrase.text}」`
-      : phrase.text
-    : isSpecial
-      ? `${STORY_PLAYER_SKILLS.special.name}「${phrase.text}」`
-      : phrase.text;
+    ? phrase.text
+    : phrase.text;
   return { text, yomi: phrase.yomi, panelKeys: keys };
 }
 
@@ -2323,28 +2319,29 @@ function renderStoryCompanionStrip() {
   if (strip) strip.innerHTML = html;
 }
 
-/** バトル左列：ごまちゃん＋犬・サル・キジ（ココア版桃太郎タイピング風 chibi） */
+/** バトル左列：ごまちゃん＋犬・サル・キジ（ココア版桃太郎たいぴんぐ準拠 chibi） */
 function renderStoryPartyPanel() {
   const col = $("storyPartyColumn");
   if (!col) return;
   const curP = Math.max(0, storyState.playerHp ?? storyCalcPlayerMaxHp());
   const maxP = storyState.playerMaxHp ?? storyCalcPlayerMaxHp();
   const pPct = maxP > 0 ? Math.max(0, (curP / maxP) * 100) : 0;
-  let html = `<div class="momo-party-row momo-party-row--hero" id="storyHeroSlot">
-    <div class="momo-party-row__fig">${storyGomachanFigureHtml()}</div>
-    <div class="momo-party-row__info">
-      <span class="momo-party-row__name">${STORY_HERO.name}</span>
-      <span class="momo-party-row__sub">${STORY_HERO.role}</span>
-      <div class="momo-hp-bar momo-hp-bar--ally momo-hp-bar--large" aria-hidden="true"><div class="momo-hp-fill momo-hp-fill--ally" id="storyPlayerHpBar" style="width:${pPct}%"></div></div>
-      <span class="momo-party-row__hpnum"><strong id="storyPlayerHp">${curP}</strong>/<span id="storyPlayerMaxHp">${maxP}</span></span>
+  const lv = storyPlayerLevel();
+  let html = `<div class="cocoa-party-slot cocoa-party-slot--hero" id="storyHeroSlot">
+    <div class="cocoa-party-slot__fig">${storyAllySpriteHtml("gomachan", "lg")}</div>
+    <div class="cocoa-party-slot__info">
+      <span class="cocoa-party-slot__name">${STORY_HERO.name}</span>
+      <span class="cocoa-party-slot__sub">Lv.${lv}</span>
+      <div class="cocoa-hp-bar momo-hp-bar--ally momo-hp-bar--large" aria-hidden="true"><div class="cocoa-hp-fill cocoa-hp-fill--ally" id="storyPlayerHpBar" style="width:${pPct}%"></div></div>
+      <span class="cocoa-party-slot__hpnum"><strong id="storyPlayerHp">${curP}</strong>/<span id="storyPlayerMaxHp">${maxP}</span></span>
     </div>
   </div>`;
   getUnlockedCompanions().forEach((c) => {
-    html += `<div class="momo-party-row momo-party-row--companion" id="storyCompanion_${c.id}" data-companion-id="${c.id}" title="${c.skillName}">
-      <div class="momo-party-row__fig">${storyAllyEmojiHtml(c.icon, "md")}</div>
-      <div class="momo-party-row__info">
-        <span class="momo-party-row__name">${c.name}</span>
-        <span class="momo-party-row__sub">${c.skillName}</span>
+    html += `<div class="cocoa-party-slot cocoa-party-slot--companion" id="storyCompanion_${c.id}" data-companion-id="${c.id}" title="${c.skillName}">
+      <div class="cocoa-party-slot__fig">${storyAllySpriteHtml(c.id, "md")}</div>
+      <div class="cocoa-party-slot__info">
+        <span class="cocoa-party-slot__name">${c.name}</span>
+        <span class="cocoa-party-slot__sub">${c.skillName}</span>
       </div>
     </div>`;
   });
@@ -2430,10 +2427,10 @@ function storyCompanionDefenseSecBonus() {
   return getUnlockedCompanions().reduce((s, c) => s + (c.defenseSecBonus || 0), 0);
 }
 
-function setStoryDialog(text, speaker = "ごまちゃん") {
+function setStoryDialog(text, speaker = "") {
   const el = $("storyDialog");
   const sp = $("storySpeakerName");
-  if (el) el.textContent = `【${speaker}】${text}`;
+  if (el) el.textContent = text;
   if (sp) sp.textContent = speaker;
 }
 
@@ -2458,13 +2455,13 @@ function renderStoryEnemyVisual(enemy) {
     spriteEl.innerHTML = momoMonsterSpriteHtml(enemy.sprite || type.sprite || type.id, enemy.isBoss);
   }
   if (card) {
-    card.classList.toggle("momo-enemy-card--boss", !!enemy.isBoss);
+    card.classList.toggle("cocoa-enemy-card--boss", !!enemy.isBoss);
     card.dataset.enemyType = type.id;
   }
   if (banner) {
     banner.classList.remove("is-show");
     void banner.offsetWidth;
-    banner.innerHTML = `<span class="momo-enemy-spawn__badge">${escapeHtml(enemy.category || type.category)}</span><strong>${escapeHtml(enemy.icon || type.icon)} ${escapeHtml(enemy.name)}</strong><span class="momo-enemy-spawn__sub">${escapeHtml(enemy.tagline || type.tagline)}</span>`;
+    banner.innerHTML = `<span class="cocoa-enemy-spawn__badge">${escapeHtml(enemy.category || type.category)} 登場！</span><strong>${escapeHtml(enemy.icon || type.icon)} ${escapeHtml(enemy.name)}</strong><span class="cocoa-enemy-spawn__sub">${escapeHtml(enemy.tagline || type.tagline)}</span>`;
     banner.classList.add("is-show");
   }
 }
@@ -2595,42 +2592,23 @@ function onCutsceneAdvance(ev) {
 }
 
 function updateStoryPhaseUi() {
-  const banner = $("storyTurnBanner");
-  const ribbon = $("storyPhaseRibbon");
+  const badge = $("storyTurnBanner");
   const card = $("storyPhraseCard");
-  const moveEl = $("storyMoveName");
-  const flowAtk = $("storyFlowAttack");
-  const flowDef = $("storyFlowDefense");
-  if (!banner) return;
+  if (!badge) return;
   const isDef = storyState.phase === "defense";
   const isSpecial = !isDef && storyState.moveKind === "special";
   if (isDef) {
-    banner.textContent = "ぼうぎょ！";
-    if (ribbon) ribbon.className = "momo-phase-ribbon momo-phase-ribbon--defense";
+    badge.textContent = "ぼうぎょ";
+    badge.className = "cocoa-turn-badge cocoa-turn-badge--defense";
     setStoryArenaMode("defense");
   } else if (isSpecial) {
-    banner.textContent = "大技！";
-    if (ribbon) ribbon.className = "momo-phase-ribbon momo-phase-ribbon--special";
+    badge.textContent = "大技";
+    badge.className = "cocoa-turn-badge cocoa-turn-badge--special";
     setStoryArenaMode("attack");
   } else {
-    banner.textContent = "こうげき！";
-    if (ribbon) ribbon.className = "momo-phase-ribbon momo-phase-ribbon--attack";
+    badge.textContent = "こうげき";
+    badge.className = "cocoa-turn-badge cocoa-turn-badge--attack";
     setStoryArenaMode("attack");
-  }
-  if (moveEl) {
-    moveEl.textContent = isDef
-      ? `敵の技「${storyState.enemyMoveName || "攻撃"}」を防御`
-      : isSpecial
-        ? `大技「${storyState.moveName}」`
-        : `技「${storyState.moveName || STORY_PLAYER_SKILLS.normal.name}」`;
-  }
-  if (flowAtk) {
-    flowAtk.classList.toggle("momo-flow__step--on", !isDef);
-    flowAtk.classList.remove("momo-flow__step--defense");
-  }
-  if (flowDef) {
-    flowDef.classList.toggle("momo-flow__step--on", isDef);
-    flowDef.classList.toggle("momo-flow__step--defense", isDef);
   }
   if (card) {
     card.classList.toggle("momo-phrase-card--defense", isDef);
@@ -2662,7 +2640,7 @@ function updateStoryHud() {
   if (eMaxEl) eMaxEl.textContent = String(maxE);
   if (pBar) {
     pBar.style.width = `${pPct}%`;
-    pBar.classList.toggle("momo-hp-fill--low", pPct > 0 && pPct <= 28);
+    pBar.classList.toggle("cocoa-hp-fill--low", pPct > 0 && pPct <= 28);
   }
   if (eBar) eBar.style.width = `${ePct}%`;
   if (eNameHud && storyState.currentEnemy) eNameHud.textContent = storyState.currentEnemy.name;
@@ -2705,7 +2683,7 @@ function showStoryDamagePopup(amount, target = "player") {
 function flashStoryHpBar(which) {
   if (which === "player") {
     const slot = $("storyHeroSlot");
-    const bar = $("storyPlayerHpBar")?.closest(".momo-hp-bar");
+    const bar = $("storyPlayerHpBar")?.closest(".cocoa-hp-bar, .momo-hp-bar");
     [slot, bar].forEach((el) => {
       if (!el) return;
       el.classList.remove("momo-hp-bar--hit");
@@ -2714,7 +2692,7 @@ function flashStoryHpBar(which) {
     });
     return;
   }
-  const bar = $("storyEnemyHpBar")?.closest(".momo-hp-bar");
+  const bar = $("storyEnemyHpBar")?.closest(".cocoa-hp-bar, .momo-hp-bar");
   if (!bar) return;
   bar.classList.remove("momo-hp-bar--hit");
   void bar.offsetWidth;
@@ -2846,7 +2824,7 @@ function startStoryEnemy() {
     enemyEl.classList.add("is-spawn");
   }
   storyPlayBattleEngage();
-  setStoryDialog(`${enemy.appearLine || enemy.name + " があらわれた！"} こうげきターンから始まる！`, enemy.name);
+  setStoryDialog(`${enemy.appearLine || enemy.name + " があらわれた！"}`, enemy.name);
   storyStartAttackPhrase();
   cancelAnimationFrame(storyState.raf);
   storyState.raf = requestAnimationFrame(storyLoop);
@@ -2966,11 +2944,11 @@ function storyStartAttackPhrase() {
     storyShowSpecialIntro(false, () => {
       const task = buildStoryPanelTask(false, storyState.chapterIdx, true);
       storySetupPanels(task);
-      setStoryDialog(`「${task.text}」を打て！`, "ごまちゃん");
+      setStoryDialog(`「${task.text}」`, "");
     });
     return;
   }
-  setStoryDialog("こうげき！ 表示の文をローマ字で打て！", "ごまちゃん");
+  setStoryDialog("表示の文をローマ字で打て！", "");
   storySetupPanels(buildStoryPanelTask(false, storyState.chapterIdx, false));
 }
 
@@ -3049,7 +3027,7 @@ function storyOnAttackSuccess() {
       storyState.gauge + STORY_GAUGE_PER_NORMAL + equip.storyGaugeBonus,
     );
   }
-  setStoryDialog(msg, "ごまちゃん");
+  setStoryDialog(msg);
   updateStoryHud();
   const totalDmg = dmg + companionStrike.total;
   showStoryDamagePopup(totalDmg, "enemy");
@@ -3083,7 +3061,6 @@ function storyOnDefenseSuccess() {
   const label = storyDefenseTierLabel(tier);
   setStoryDialog(
     `${label}！ ${storyState.enemyMoveName || "攻撃"} ${baseAtk}→${dmg}（${reduced} 軽減）`,
-    "ごまちゃん",
   );
     showStoryDamagePopup(dmg, "player");
     flashStoryHpBar("player");
@@ -3214,7 +3191,7 @@ function storyOnEnemyDefeated() {
 
 function storyPlayerHit(dmg, msg, speaker = "ナレーション") {
   storyState.playerHp = Math.max(0, storyState.playerHp - dmg);
-  setStoryDialog(`${msg} ごまちゃんは ${dmg} ダメージ。`, speaker);
+  setStoryDialog(`${msg} ${dmg} ダメージ！`, speaker);
   updateStoryHud();
   showStoryDamagePopup(dmg, "player");
   flashStoryHpBar("player");
@@ -3279,7 +3256,7 @@ function storyOnTimeout() {
     storyFinishTurn(() => storyStartAttackPhrase());
     return;
   }
-  setStoryDialog("時間切れ！ こうげきはずれ — 敵のターン！", "ごまちゃん");
+  setStoryDialog("時間切れ！ 敵のターン！");
   storyFinishTurn(() => storyStartDefensePhrase(1.35));
 }
 
