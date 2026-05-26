@@ -151,7 +151,7 @@
         <button type="button" class="ghost small back-home-btn" id="backHomeFromStoryBtn">← ホーム</button>
         <h2 id="story-menu-heading">ごまちゃんももたろうタイピング</h2>
       </div>
-      <p class="muted"><strong>桃太郎タイピング</strong>と同じルール。①こうげき（<strong>日本語の文</strong>をローマ字で打つ）→②ぼうぎょ。敵を全部たおすと章クリア！</p>
+      <p class="muted"><strong>桃太郎タイピング</strong>と同じルール。①こうげき（<strong>日本語の文</strong>をローマ字で打つ）→②ぼうぎょ。敵を全部たおすと章クリア！　<strong>Esc</strong>で同じ章をやり直せます。</p>
       <div class="momo-companion-strip" id="storyCompanionStrip" aria-label="仲間"></div>
       <p class="story-menu-meta muted" id="storyMenuMeta"></p>
       <ul class="story-chapter-list momo-chapter-scroll" id="storyChapterList"></ul>
@@ -175,6 +175,7 @@
           </div>
         </div>
         <p class="bonus-key-hint" id="bonusKeyHint" aria-live="polite"></p>
+        <p class="retry-hint" id="practiceRetryHint">Esc＝やり直し</p>
         <p class="score-gain-popup" id="scoreGainPopup" aria-live="polite"></p>
         <div class="nanohana-layer" aria-hidden="true">
           <div class="nanohana" style="--x: 3%; --d: 0s; --s: 0.82"></div>
@@ -318,6 +319,7 @@
             <span class="momo-flow__arrow" aria-hidden="true">→</span>
             <span class="momo-flow__step" id="storyFlowDefense">② ぼうぎょ</span>
           </div>
+          <span class="momo-retry-hint">Esc＝やり直し</span>
           <button type="button" class="ghost small momo-quit-btn" id="quitStoryBtn">やめる</button>
         </header>
 
@@ -353,10 +355,10 @@
             <div class="momo-enemy-hpblock" aria-label="敵のHP">
               <span class="momo-enemy-head__badge" id="storyEnemyCategory">モンスター</span>
               <strong class="momo-enemy-head__name" id="storyEnemyNameHud">スライム</strong>
-              <div class="momo-hp-bar momo-hp-bar--enemy-head" aria-hidden="true">
+              <div class="momo-hp-bar momo-hp-bar--enemy-head momo-hp-bar--large" aria-hidden="true">
                 <div class="momo-hp-fill momo-hp-fill--enemy" id="storyEnemyHpBar"></div>
               </div>
-              <span class="momo-enemy-head__hp"><strong id="storyEnemyHp">0</strong> / <span id="storyEnemyMaxHp">0</span></span>
+              <span class="momo-enemy-head__hp"><strong id="storyEnemyHp">0</strong> / <span id="storyEnemyMaxHp">0</span> HP</span>
               <span class="momo-enemy-atk" id="storyEnemyAtkHint"></span>
             </div>
             <div class="momo-enemy-spawn" id="storyEnemySpawnBanner" aria-live="assertive"></div>

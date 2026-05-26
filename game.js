@@ -458,20 +458,21 @@ function momoMonsterSpriteHtml(spriteId, isBoss = false) {
 const STORY_GAUGE_MAX = 100;
 const STORY_GAUGE_PER_NORMAL = 34;
 
-/** 話バトルのテンポ（桃太郎タイピング本家準拠） */
+/** 話バトルのテンポ（桃太郎タイピング本家準拠・ゆっくりめ） */
 const STORY_BATTLE_PACE = {
-  phraseSecBase: 6.0,
-  phraseSecMin: 4.5,
-  defenseSecBase: 4.5,
-  defenseSecMin: 3.2,
-  specialPhraseBonus: 1.2,
-  specialIntroMs: 900,
-  actionPauseMs: 500,
-  phaseGapMs: 300,
-  turnFinishMs: 400,
-  missGapMs: 500,
-  spawnGapMs: 600,
-  defeatGapMs: 650,
+  phraseSecBase: 7.5,
+  phraseSecMin: 5.5,
+  defenseSecBase: 5.5,
+  defenseSecMin: 4.2,
+  specialPhraseBonus: 1.5,
+  specialIntroMs: 1400,
+  actionPauseMs: 950,
+  phaseGapMs: 700,
+  turnFinishMs: 850,
+  missGapMs: 900,
+  spawnGapMs: 1200,
+  defeatGapMs: 1300,
+  engageMs: 950,
 };
 
 /** ごまちゃんの技 */
@@ -1287,12 +1288,101 @@ function showTimeBonusFlash(sec) {
 }
 
 function showTitleToast(name) {
+  showBriefToast(`新しい称号：「${name}」`, 2200);
+}
+
+function showBriefToast(msg, ms = 1800) {
   const el = $("toastPanel");
   if (!el) return;
-  el.textContent = `新しい称号：「${name}」`;
+  el.textContent = msg;
   el.classList.add("toast-panel--show");
-  window.clearTimeout(showTitleToast._t);
-  showTitleToast._t = window.setTimeout(() => el.classList.remove("toast-panel--show"), 2200);
+  window.clearTimeout(showBriefToast._t);
+  showBriefToast._t = window.setTimeout(() => el.classList.remove("toast-panel--show"), ms);
+}
+
+function isOverlayModalOpen() {
+  return (
+    !$("titlesModal")?.classList.contains("hidden") ||
+    !$("equipsModal")?.classList.contains("hidden") ||
+    !$("rankPanel")?.classList.contains("hidden")
+  );
+}
+
+function retryPracticeGame() {
+  if (!state.playing) return;
+  state.playing = false;
+  state.awaitingNextPhrase = false;
+  cancelAnimationFrame(state.raf);
+  detachPlayKeyCapture();
+  stopGomaBgm();
+  document.body.classList.remove("is-playing");
+  $("resultPanel")?.classList.add("hidden");
+  showBriefToast("Esc：同じ設定でもう一度！");
+  startGame();
+}
+
+function retryStoryChapter() {
+  const idx = storyState.chapterIdx;
+  const ch = STORY_CHAPTERS[idx];
+  if (!ch) return;
+  closeStoryCutscene();
+  storyStopBattleTimers();
+  storyState.battlePhase = "ended";
+  storyState.active = false;
+  storyState.phraseBusy = false;
+  storyState.phraseInputLocked = false;
+  storyState._defeatLock = false;
+  detachStoryKeyCapture();
+  setStoryBattleLive(false);
+  $("storyResultPanel")?.classList.add("hidden");
+  storyState.chapterIdx = idx;
+  storyState.enemyIdx = 0;
+  storyState.enemyAttackMul = 1;
+  storyState.playerMaxHp = storyCalcPlayerMaxHp();
+  storyState.playerHp = storyState.playerMaxHp;
+  storyState.attackCount = 0;
+  storyState.gauge = 0;
+  storyState.enemyTurnCount = 0;
+  storyState.moveKind = "normal";
+  storyState.active = true;
+  document.body.classList.add("is-story");
+  const label = $("storyChapterLabel");
+  if (label) label.textContent = ch.title;
+  showBriefToast("Esc：この章を最初からやり直し");
+  beginStoryBattle();
+  startStoryEnemy();
+}
+
+function onGlobalEscape(ev) {
+  if (ev.key !== "Escape") return;
+  if (isOverlayModalOpen()) return;
+  if (cutsceneState.active) {
+    ev.preventDefault();
+    ev.stopPropagation();
+    retryStoryChapter();
+    return;
+  }
+  if (storyState.active && !$("storyStageWrap")?.classList.contains("hidden")) {
+    ev.preventDefault();
+    ev.stopPropagation();
+    retryStoryChapter();
+    return;
+  }
+  if (
+    !$("storyResultPanel")?.classList.contains("hidden") &&
+    storyState.chapterIdx >= 0 &&
+    STORY_CHAPTERS[storyState.chapterIdx]
+  ) {
+    ev.preventDefault();
+    ev.stopPropagation();
+    retryStoryChapter();
+    return;
+  }
+  if (state.playing) {
+    ev.preventDefault();
+    ev.stopPropagation();
+    retryPracticeGame();
+  }
 }
 
 function timeBonusSecAtKeyCount(c) {
@@ -2245,7 +2335,7 @@ function renderStoryPartyPanel() {
     <div class="momo-party-row__info">
       <span class="momo-party-row__name">${STORY_HERO.name}</span>
       <span class="momo-party-row__sub">${STORY_HERO.role}</span>
-      <div class="momo-hp-bar momo-hp-bar--ally" aria-hidden="true"><div class="momo-hp-fill momo-hp-fill--ally" id="storyPlayerHpBar" style="width:${pPct}%"></div></div>
+      <div class="momo-hp-bar momo-hp-bar--ally momo-hp-bar--large" aria-hidden="true"><div class="momo-hp-fill momo-hp-fill--ally" id="storyPlayerHpBar" style="width:${pPct}%"></div></div>
       <span class="momo-party-row__hpnum"><strong id="storyPlayerHp">${curP}</strong>/<span id="storyPlayerMaxHp">${maxP}</span></span>
     </div>
   </div>`;
@@ -2661,6 +2751,19 @@ function renderStoryChapterList() {
   });
 }
 
+function storyPlayBattleEngage() {
+  const arena = $("storyScene");
+  if (!arena) return;
+  arena.classList.remove("momo-arena--engage");
+  void arena.offsetWidth;
+  arena.classList.add("momo-arena--engage");
+  window.clearTimeout(storyPlayBattleEngage._t);
+  storyPlayBattleEngage._t = window.setTimeout(
+    () => arena.classList.remove("momo-arena--engage"),
+    STORY_BATTLE_PACE.engageMs,
+  );
+}
+
 function beginStoryBattle() {
   storyState.active = true;
   storyState.battlePhase = "typing";
@@ -2677,6 +2780,7 @@ function beginStoryBattle() {
   void resumeGomaAudio();
   startGomaStoryBattleBgm();
   setStoryBattleLive(true);
+  storyPlayBattleEngage();
   $("storyGhostInput")?.focus({ preventScroll: true });
 }
 
@@ -2741,6 +2845,7 @@ function startStoryEnemy() {
     void enemyEl.offsetWidth;
     enemyEl.classList.add("is-spawn");
   }
+  storyPlayBattleEngage();
   setStoryDialog(`${enemy.appearLine || enemy.name + " があらわれた！"} こうげきターンから始まる！`, enemy.name);
   storyStartAttackPhrase();
   cancelAnimationFrame(storyState.raf);
@@ -3485,6 +3590,7 @@ function init() {
   window.addEventListener("keydown", (ev) => {
     if (cutsceneState.active) onCutsceneAdvance(ev);
   });
+  window.addEventListener("keydown", onGlobalEscape, true);
   $("difficulty").addEventListener("change", () => {
     syncPracticeSettingsFromUi();
     if (!state.playing) {

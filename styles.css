@@ -3266,11 +3266,6 @@ body.is-story .momo-enemy-emoji--boss {
   font-size: clamp(4rem, 22vw, 7rem);
 }
 
-body.is-story .bunny--story-mini {
-  transform: scaleX(-1) scale(0.52);
-  margin: 0 0 -4px -8px;
-}
-
 .story-enemy__sprite--boss {
   box-shadow: 0 0 0 4px rgba(255, 235, 59, 0.55), 0 12px 28px rgba(229, 57, 53, 0.35);
   animation: momo-boss-glow 1.4s ease-in-out infinite;
@@ -5893,4 +5888,238 @@ body.is-story .momo-enemy-fig .momo-monster-wrap {
 .momo-battle--momo .momo-panel-timer-fill {
   background: linear-gradient(90deg, #66bb6a, #ffeb3b, #ef5350);
   border-radius: inherit;
+}
+
+/* 桃太郎本家風：大きなキャラ・HP・前進演出 */
+.momo-retry-hint,
+.retry-hint {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: rgba(255, 255, 255, 0.92);
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  white-space: nowrap;
+}
+
+.retry-hint {
+  position: absolute;
+  top: 0.45rem;
+  right: 0.55rem;
+  z-index: 12;
+  color: #fff;
+  background: rgba(13, 71, 161, 0.55);
+  pointer-events: none;
+}
+
+.momo-battle--momo .momo-arena {
+  grid-template-columns: minmax(148px, 34%) minmax(0, 1fr) minmax(140px, 36%);
+  min-height: min(54vw, 340px);
+  gap: 0.65rem;
+  padding: 0.75rem;
+}
+
+.momo-battle--momo .momo-party-column {
+  gap: 0.55rem;
+  align-self: end;
+}
+
+.momo-battle--momo .momo-party-row {
+  padding: 0.5rem 0.6rem;
+  border: 3px solid rgba(255, 255, 255, 0.9);
+  border-radius: 14px;
+  background: rgba(255, 252, 248, 0.96);
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.12);
+}
+
+.momo-battle--momo .momo-party-row--hero {
+  border-color: rgba(255, 152, 0, 0.75);
+  background: linear-gradient(180deg, rgba(255, 248, 225, 0.98), rgba(255, 224, 178, 0.94));
+}
+
+.momo-battle--momo .momo-party-row__name {
+  font-size: clamp(0.88rem, 2.8vw, 1.05rem);
+}
+
+.momo-battle--momo .momo-party-row__sub {
+  font-size: clamp(0.72rem, 2.2vw, 0.88rem);
+}
+
+.momo-battle--momo .momo-party-row__hpnum {
+  font-size: clamp(0.82rem, 2.5vw, 1rem);
+  font-variant-numeric: tabular-nums;
+}
+
+.momo-battle--momo .momo-hp-bar--ally {
+  height: 16px;
+  border: 2px solid #fff;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.momo-battle--momo .momo-ally-emoji--md {
+  font-size: clamp(2.8rem, 10vw, 3.8rem);
+}
+
+.momo-battle--momo .bunny--story-mini {
+  transform: scaleX(-1) scale(0.88);
+  margin: 0 0 -8px -2px;
+}
+
+.momo-battle--momo .momo-enemy-hpblock {
+  padding: 0.6rem 0.75rem;
+  border: 3px solid rgba(198, 40, 40, 0.5);
+  border-radius: 14px;
+  background: rgba(255, 252, 248, 0.96);
+  box-shadow: 0 5px 14px rgba(0, 0, 0, 0.1);
+}
+
+.momo-battle--momo .momo-enemy-head__badge {
+  font-size: clamp(0.78rem, 2.4vw, 0.92rem);
+  padding: 0.28rem 0.7rem;
+}
+
+.momo-battle--momo .momo-enemy-head__name {
+  font-size: clamp(1rem, 3.2vw, 1.25rem);
+}
+
+.momo-battle--momo .momo-enemy-head__hp {
+  font-size: clamp(0.92rem, 2.8vw, 1.12rem);
+  font-weight: 900;
+}
+
+.momo-battle--momo .momo-enemy-hpblock .momo-hp-bar {
+  height: 18px;
+  border: 2px solid #fff;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.08);
+}
+
+.momo-battle--momo .momo-enemy-atk {
+  font-size: clamp(0.78rem, 2.4vw, 0.92rem);
+  font-weight: 900;
+}
+
+.momo-battle--momo .momo-gauge-label {
+  font-size: 0.92rem;
+  font-weight: 900;
+}
+
+.momo-battle--momo .momo-gauge-text {
+  font-size: 1rem;
+  font-weight: 900;
+}
+
+.momo-battle--momo .momo-gauge-bar {
+  height: 16px;
+  border: 2px solid #fff;
+}
+
+.momo-battle--momo .momo-battle-msg {
+  font-size: clamp(0.88rem, 2.6vw, 1rem);
+  padding: 0.55rem 0.65rem;
+  min-height: 3.2em;
+  border: 2px solid rgba(255, 193, 7, 0.45);
+}
+
+.momo-battle--momo .cocoa-sprite--battle.cocoa-sprite--foe {
+  width: clamp(88px, 22vw, 112px);
+  height: clamp(88px, 22vw, 112px);
+}
+
+.momo-battle--momo .cocoa-sprite--battle.cocoa-sprite--foe.cocoa-sprite--boss {
+  width: clamp(100px, 26vw, 128px);
+  height: clamp(100px, 26vw, 128px);
+}
+
+.momo-battle--momo .momo-player-lv,
+.momo-battle--momo .momo-chapter-label {
+  font-size: clamp(0.88rem, 2.6vw, 1.05rem);
+  font-weight: 900;
+}
+
+.momo-arena--engage .momo-party-column {
+  animation: momo-party-march-in 0.95s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.momo-arena--engage .momo-enemy-zone {
+  animation: momo-enemy-march-in 0.95s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.momo-arena--engage .momo-party-row--companion:nth-child(2) {
+  animation: momo-companion-stagger-in 0.75s ease 0.12s both;
+}
+
+.momo-arena--engage .momo-party-row--companion:nth-child(3) {
+  animation: momo-companion-stagger-in 0.75s ease 0.24s both;
+}
+
+.momo-arena--engage .momo-party-row--companion:nth-child(4) {
+  animation: momo-companion-stagger-in 0.75s ease 0.36s both;
+}
+
+@keyframes momo-party-march-in {
+  0% { transform: translateX(-56px) scale(0.86); opacity: 0.25; }
+  65% { transform: translateX(10px) scale(1.04); opacity: 1; }
+  100% { transform: translateX(0) scale(1); opacity: 1; }
+}
+
+@keyframes momo-enemy-march-in {
+  0% { transform: translateX(56px) scale(0.86); opacity: 0.25; }
+  65% { transform: translateX(-10px) scale(1.04); opacity: 1; }
+  100% { transform: translateX(0) scale(1); opacity: 1; }
+}
+
+@keyframes momo-companion-stagger-in {
+  0% { transform: translateX(-24px); opacity: 0.4; }
+  100% { transform: translateX(0); opacity: 1; }
+}
+
+.momo-battle--momo .momo-party-row--companion.is-attacking .momo-party-row__fig {
+  animation: momo-companion-attack-lunge-momo 0.72s ease var(--companion-attack-delay, 0s);
+}
+
+@keyframes momo-companion-attack-lunge-momo {
+  0%, 100% { transform: translateX(0) scale(1); }
+  45% { transform: translateX(52px) scale(1.28); }
+}
+
+.momo-battle--momo .momo-party-row--hero.is-attacking {
+  animation: momo-hero-attack-momo 0.85s ease;
+}
+
+@keyframes momo-hero-attack-momo {
+  0%, 100% { transform: translateX(0); }
+  40% { transform: translateX(28px) scale(1.04); }
+}
+
+.momo-battle--momo .story-enemy.is-spawn {
+  animation: momo-enemy-spawn-momo 1.1s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes momo-enemy-spawn-momo {
+  0% { opacity: 0; transform: translateX(40px) translateY(20px) scale(0.7); }
+  55% { opacity: 1; transform: translateX(-8px) translateY(-8px) scale(1.08); }
+  100% { transform: translateX(0) translateY(0) scale(1); }
+}
+
+@media (max-width: 640px) {
+  .momo-battle--momo .momo-arena {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .momo-battle--momo .momo-party-column {
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+
+  .momo-battle--momo .momo-party-row {
+    flex: 1 1 calc(50% - 0.4rem);
+    min-width: 148px;
+  }
+
+  .momo-retry-hint {
+    display: none;
+  }
 }
