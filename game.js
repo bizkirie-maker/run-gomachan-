@@ -2206,9 +2206,18 @@ function openEquipsModal() {
 
 /* ── 話モード（桃太郎タイピング風） ── */
 
-function getUnlockedCompanions() {
+/** 仲間解放の進行度（クリア済み章数。戦闘中は「今の章」も反映＝第20章開始で犬が戦える） */
+function storyCompanionUnlockProgress() {
   const cleared = loadStoryProgress();
-  return STORY_COMPANIONS.filter((c) => cleared >= c.unlockClear);
+  if (storyState.active && storyState.chapterIdx >= 0) {
+    return Math.max(cleared, storyState.chapterIdx + 1);
+  }
+  return cleared;
+}
+
+function getUnlockedCompanions() {
+  const prog = storyCompanionUnlockProgress();
+  return STORY_COMPANIONS.filter((c) => prog >= c.unlockClear);
 }
 
 function renderStoryCompanionStrip() {
@@ -2228,7 +2237,6 @@ function renderStoryCompanionStrip() {
 function renderStoryPartyPanel() {
   const col = $("storyPartyColumn");
   if (!col) return;
-  const cleared = loadStoryProgress();
   const curP = Math.max(0, storyState.playerHp ?? storyCalcPlayerMaxHp());
   const maxP = storyState.playerMaxHp ?? storyCalcPlayerMaxHp();
   const pPct = maxP > 0 ? Math.max(0, (curP / maxP) * 100) : 0;
@@ -2241,13 +2249,12 @@ function renderStoryPartyPanel() {
       <span class="momo-party-row__hpnum"><strong id="storyPlayerHp">${curP}</strong>/<span id="storyPlayerMaxHp">${maxP}</span></span>
     </div>
   </div>`;
-  STORY_COMPANIONS.forEach((c) => {
-    const on = cleared >= c.unlockClear;
-    html += `<div class="momo-party-row momo-party-row--companion${on ? "" : " momo-party-row--locked"}" id="storyCompanion_${c.id}" data-companion-id="${c.id}" title="${on ? c.skillName : `第${c.unlockClear}章`}">
-      <div class="momo-party-row__fig">${storyAllyEmojiHtml(c.icon, on ? "md" : "sm")}</div>
+  getUnlockedCompanions().forEach((c) => {
+    html += `<div class="momo-party-row momo-party-row--companion" id="storyCompanion_${c.id}" data-companion-id="${c.id}" title="${c.skillName}">
+      <div class="momo-party-row__fig">${storyAllyEmojiHtml(c.icon, "md")}</div>
       <div class="momo-party-row__info">
         <span class="momo-party-row__name">${c.name}</span>
-        <span class="momo-party-row__sub">${on ? c.skillName : "？？？"}</span>
+        <span class="momo-party-row__sub">${c.skillName}</span>
       </div>
     </div>`;
   });
@@ -2946,6 +2953,7 @@ function storyOnAttackSuccess() {
   playStoryBattleFx("attack", {
     isSpecial,
     companion: companionStrike.messages.length > 0 || companion > 0,
+    skipCompanionFlash: companionStrike.messages.length > 0,
   });
   if (storyState.enemyHp <= 0) {
     storyState.battlePhase = "enemy-defeat";
@@ -2974,6 +2982,7 @@ function storyOnDefenseSuccess() {
   );
     showStoryDamagePopup(dmg, "player");
     flashStoryHpBar("player");
+  if (dmg > 0) flashStoryPartyHit();
   playStoryBattleFx("defense", { tier });
   if (getUnlockedCompanions().length > 0) flashStoryCompanionsBlock();
   storyState.enemyAttackMul = 1;
@@ -3010,7 +3019,7 @@ function playStoryBattleFx(kind, opts = {}) {
     if (opts.isSpecial) fx.classList.add("is-special");
     if (opts.companion) {
       fx.classList.add("is-companion");
-      flashStoryCompanions();
+      if (!opts.skipCompanionFlash) flashStoryCompanions();
     }
     flashStoryPlayerAttack(opts.isSpecial);
   } else if (kind === "defense") {
