@@ -2,7 +2,7 @@
  * ごまちゃんタイピング — 試作品（ローカル保存のモード別トップ10）
  */
 
-const APP_BUILD = "20260525-momo-native-v2";
+const APP_BUILD = "20260525-momo-chibi-v1";
 
 const DIFFICULTY = {
   beginner: { id: "beginner", label: "初級", phraseSec: 5, points: 1, sceneClass: "diff-beginner" },
@@ -420,8 +420,8 @@ const STORY_HERO = {
   id: "gomachan",
   name: "ごまちゃん",
   icon: "🐰",
-  role: "主人公（桃太郎役）",
-  skillName: "菜の花斬り",
+  role: "桃太郎タイピング風・主人公",
+  skillName: "きびだんご斬り",
 };
 
 const STORY_COMPANIONS = [
@@ -430,29 +430,25 @@ const STORY_COMPANIONS = [
   { id: "pheasant", name: "キジ", icon: "🐦", unlockClear: 85, attackBonus: 0, defenseSecBonus: 0, hpBonus: 6, skillName: "つつき", defenseReduceBonus: 0.1 },
 ];
 
-/** ごまちゃん（バトル用ミニうさぎCSS・練習モードと同系） */
-function storyGomachanFigureHtml() {
-  return `<div class="bunny bunny--side bunny--story-mini" aria-hidden="true"><div class="bunny-pose bunny-pose--sit">
-    <span class="bunny-tail"></span><span class="bunny-haunch"></span><span class="bunny-hind-thigh"></span><span class="bunny-hind-paw"></span>
-    <span class="bunny-body"></span><span class="bunny-belly-highlight"></span><span class="bunny-neck"></span>
-    <span class="bunny-fore-thigh"></span><span class="bunny-fore-paw"></span><span class="bunny-fore-toe"></span>
-    <span class="bunny-head"><span class="bunny-ear bunny-ear--rear"></span><span class="bunny-ear bunny-ear--front"></span>
-    <span class="bunny-eye"><span class="bunny-eye-highlight"></span></span><span class="bunny-whiskers"></span>
-    <span class="bunny-nose"></span><span class="bunny-nose-shine"></span><span class="bunny-cheeks"></span></span>
-  </div></div>`;
+/** 桃太郎タイピング風 chibi スプライト（CSS） */
+function storyAllySpriteHtml(kind, size = "lg") {
+  return `<div class="cocoa-sprite cocoa-sprite--ally cocoa-sprite--${size} cocoa-sprite--${kind}" aria-hidden="true"><span class="cocoa-sprite__shadow"></span></div>`;
+}
+
+function storyAllyFigureHtml(allyId, role = "hero") {
+  return storyAllySpriteHtml(allyId, role === "hero" ? "lg" : "md");
+}
+
+function storyPortraitHtml(id, size = "lg") {
+  const enemyType = STORY_ENEMY_TYPES.find((t) => t.id === id);
+  if (enemyType) {
+    return `<div class="momo-portrait-fig momo-portrait-fig--foe">${momoMonsterSpriteHtml(enemyType.sprite || id, false)}</div>`;
+  }
+  return `<div class="momo-portrait-fig momo-portrait-fig--ally">${storyAllySpriteHtml(id, size)}</div>`;
 }
 
 function storyAllyEmojiHtml(icon, size = "md") {
   return `<span class="momo-ally-emoji momo-ally-emoji--${size}" aria-hidden="true">${icon}</span>`;
-}
-
-function storyAllyFigureHtml(allyId, role = "hero") {
-  if (allyId === "gomachan") return storyGomachanFigureHtml();
-  return storyAllySpriteHtml(allyId, role === "hero" ? "lg" : "md");
-}
-
-function storyAllySpriteHtml(kind, size = "lg") {
-  return `<div class="cocoa-sprite cocoa-sprite--ally cocoa-sprite--${size} cocoa-sprite--${kind}" aria-hidden="true"><span class="cocoa-sprite__shadow"></span></div>`;
 }
 
 function storyEnemyEmojiHtml(icon, isBoss = false) {
@@ -485,10 +481,10 @@ const STORY_BATTLE_PACE = {
   defeatGapMs: 650,
 };
 
-/** ごまちゃんの技 */
+/** ごまちゃんの技（桃太郎タイピング本家準拠） */
 const STORY_PLAYER_SKILLS = {
   normal: { name: "通常攻撃", short: "こうげき" },
-  special: { name: "菜の花大技", short: "大技！" },
+  special: { name: "きびだんご大技", short: "大技！" },
 };
 
 /** ココア風：最初 HP10 前後 → 章クリア・Lv でじわじわ増える */
@@ -2308,16 +2304,16 @@ function renderStoryCompanionStrip() {
   const strip = $("storyCompanionStrip");
   const cleared = loadStoryProgress();
   const html = [
-    `<span class="momo-companion is-on" title="${STORY_HERO.name}（主人公）">${STORY_HERO.icon} ${STORY_HERO.name}</span>`,
+    `<span class="momo-companion is-on" title="${STORY_HERO.name}（主人公）"><span class="momo-companion__fig">${storyAllySpriteHtml("gomachan", "sm")}</span>${STORY_HERO.name}</span>`,
     ...STORY_COMPANIONS.map((c) => {
-    const on = cleared >= c.unlockClear;
-    return `<span class="momo-companion${on ? " is-on" : ""}" title="${on ? `${c.name}（仲間）` : `第${c.unlockClear}章クリアで仲間`}">${c.icon} ${c.name}</span>`;
+      const on = cleared >= c.unlockClear;
+      return `<span class="momo-companion${on ? " is-on" : ""}" title="${on ? `${c.name}（仲間）` : `第${c.unlockClear}章クリアで仲間`}"><span class="momo-companion__fig">${storyAllySpriteHtml(c.id, "sm")}</span>${c.name}</span>`;
     }),
   ].join("");
   if (strip) strip.innerHTML = html;
 }
 
-/** バトル左列：ごまちゃん＋犬・サル・キジ（桃太郎タイピング本家） */
+/** バトル左列：桃太郎タイピング風 chibi（ごまちゃん＋犬・サル・キジ） */
 function renderStoryPartyPanel() {
   const col = $("storyPartyColumn");
   if (!col) return;
@@ -2326,7 +2322,7 @@ function renderStoryPartyPanel() {
   const maxP = storyState.playerMaxHp ?? storyCalcPlayerMaxHp();
   const pPct = maxP > 0 ? Math.max(0, (curP / maxP) * 100) : 0;
   let html = `<div class="momo-party-row momo-party-row--hero" id="storyHeroSlot">
-    <div class="momo-party-row__fig">${storyGomachanFigureHtml()}</div>
+    <div class="momo-party-row__fig">${storyAllyFigureHtml("gomachan", "hero")}</div>
     <div class="momo-party-row__info">
       <span class="momo-party-row__name">${STORY_HERO.name}</span>
       <span class="momo-party-row__sub">${STORY_HERO.role}</span>
@@ -2336,8 +2332,8 @@ function renderStoryPartyPanel() {
   </div>`;
   STORY_COMPANIONS.forEach((c) => {
     const on = cleared >= c.unlockClear;
-    html += `<div class="momo-party-row${on ? "" : " momo-party-row--locked"}" title="${on ? c.skillName : `第${c.unlockClear}章`}">
-      <div class="momo-party-row__fig">${storyAllyEmojiHtml(c.icon, on ? "md" : "sm")}</div>
+    html += `<div class="momo-party-row momo-party-row--companion${on ? "" : " momo-party-row--locked"}" id="storyCompanion_${c.id}" title="${on ? c.skillName : `第${c.unlockClear}章`}">
+      <div class="momo-party-row__fig">${storyAllySpriteHtml(c.id, on ? "md" : "sm")}</div>
       <div class="momo-party-row__info">
         <span class="momo-party-row__name">${c.name}</span>
         <span class="momo-party-row__sub">${on ? c.skillName : "？？？"}</span>
@@ -2375,7 +2371,10 @@ function renderStoryEnemyVisual(enemy) {
   const nameHud = $("storyEnemyNameHud");
 
   if (catEl) catEl.textContent = enemy.category || type.category;
-  if (iconEl) iconEl.textContent = enemy.icon || type.icon;
+  if (iconEl) {
+    iconEl.textContent = enemy.icon || type.icon;
+    iconEl.classList.add("visually-hidden");
+  }
   if (nameEl) nameEl.textContent = enemy.name;
   if (tagEl) tagEl.textContent = enemy.tagline || type.tagline;
   if (nameHud) nameHud.textContent = enemy.name;
@@ -2389,7 +2388,8 @@ function renderStoryEnemyVisual(enemy) {
   if (banner) {
     banner.classList.remove("is-show");
     void banner.offsetWidth;
-    banner.innerHTML = `<span class="momo-enemy-spawn__badge">${escapeHtml(enemy.category || type.category)}</span><strong>${escapeHtml(enemy.icon || type.icon)} ${escapeHtml(enemy.name)}</strong><span class="momo-enemy-spawn__sub">${escapeHtml(enemy.tagline || type.tagline)}</span>`;
+    const fig = momoMonsterSpriteHtml(enemy.sprite || type.sprite || type.id, enemy.isBoss);
+    banner.innerHTML = `<span class="momo-enemy-spawn__badge">${escapeHtml(enemy.category || type.category)}</span><div class="momo-enemy-spawn__fig">${fig}</div><strong>${escapeHtml(enemy.name)}</strong><span class="momo-enemy-spawn__sub">${escapeHtml(enemy.tagline || type.tagline)}</span>`;
     banner.classList.add("is-show");
   }
 }
@@ -2456,11 +2456,10 @@ function showCutsceneScene(scene) {
     const companion = STORY_PORTRAITS[pid];
     const side = scene.side || companion?.side || (enemyType ? "right" : "left");
     const target = side === "right" ? right : left;
-    const icon = enemyType?.icon || companion?.icon || "🐰";
     const label = enemyType?.name || companion?.label || scene.speaker;
     if (target) {
       target.classList.remove("hidden");
-      target.innerHTML = `<span class="momo-cutscene__portrait-icon">${icon}</span><span class="momo-cutscene__portrait-name">${escapeHtml(label)}</span>`;
+      target.innerHTML = `${storyPortraitHtml(pid, "lg")}<span class="momo-cutscene__portrait-name">${escapeHtml(label)}</span>`;
       target.classList.toggle("momo-cutscene__portrait--enemy", !!enemyType);
     }
   }
@@ -2469,7 +2468,7 @@ function showCutsceneScene(scene) {
     reveal.classList.toggle("hidden", !scene.enemyReveal);
     if (scene.enemyReveal && scene.portrait) {
       const et = getStoryEnemyType(scene.portrait);
-      reveal.innerHTML = `<span class="momo-cutscene__reveal-badge">${escapeHtml(et.category)} 登場！</span><span class="momo-cutscene__reveal-icon">${et.icon}</span><strong>${escapeHtml(et.name)}</strong>`;
+      reveal.innerHTML = `<span class="momo-cutscene__reveal-badge">${escapeHtml(et.category)} 登場！</span><div class="momo-cutscene__reveal-fig">${momoMonsterSpriteHtml(et.sprite || et.id, false)}</div><strong>${escapeHtml(et.name)}</strong>`;
     }
   }
 

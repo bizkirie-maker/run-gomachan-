@@ -2950,6 +2950,26 @@ body.is-playing .bonus-key-hint {
   box-shadow: 0 3px 10px rgba(224, 138, 108, 0.18);
 }
 
+.momo-companion__fig {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 38px;
+  flex-shrink: 0;
+  overflow: visible;
+}
+
+.momo-companion__fig .cocoa-sprite--sm {
+  transform: scale(0.72);
+  transform-origin: center bottom;
+  margin-bottom: -4px;
+}
+
+.momo-companion:not(.is-on) .momo-companion__fig .cocoa-sprite {
+  filter: grayscale(1) opacity(0.45);
+}
+
 .momo-phrase-card--attack {
   border-color: rgba(255, 159, 104, 0.65);
   box-shadow: 0 8px 24px rgba(255, 140, 80, 0.18);
@@ -3530,6 +3550,44 @@ body.is-story .momo-enemy-emoji--boss {
 .momo-cutscene__portrait-icon {
   font-size: clamp(3rem, 12vw, 4.5rem);
   filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.25));
+}
+
+.momo-portrait-fig {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  min-height: clamp(88px, 24vw, 120px);
+  filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.28));
+}
+
+.momo-portrait-fig .cocoa-sprite--lg {
+  transform: scale(1.35);
+  transform-origin: center bottom;
+}
+
+.momo-portrait-fig--foe .cocoa-sprite--foe {
+  transform: scale(1.2) scaleX(-1);
+  transform-origin: center bottom;
+}
+
+.momo-cutscene__reveal-fig {
+  display: flex;
+  justify-content: center;
+  margin: 0.35rem 0;
+}
+
+.momo-cutscene__reveal-fig .cocoa-sprite--foe {
+  transform: scale(1.4) scaleX(-1);
+}
+
+.momo-enemy-spawn__fig {
+  display: flex;
+  justify-content: center;
+  margin: 0.35rem auto 0.25rem;
+}
+
+.momo-enemy-spawn__fig .cocoa-sprite--foe {
+  transform: scale(0.95) scaleX(-1);
 }
 
 .momo-cutscene__portrait-name {
@@ -4850,22 +4908,27 @@ body.is-story .foot {
 .cocoa-sprite--gomachan {
   position: relative;
   z-index: 1;
+  background:
+    linear-gradient(180deg, transparent 52%, #e53935 52%, #b71c1c 78%, transparent 78%),
+    linear-gradient(180deg, transparent 58%, #ffcdd2 58%, #ef9a9a 72%, transparent 72%);
 }
 
+/* 桃太郎タイピング風 chibi ごまちゃん（桃太郎＋うさぎ耳） */
 .cocoa-sprite--gomachan::before {
   content: "";
   position: absolute;
   left: 50%;
-  top: 30%;
+  top: 28%;
   transform: translateX(-50%);
-  width: 54%;
-  height: 48%;
-  background: #fff;
-  border-radius: 50% 50% 46% 46%;
+  width: 58%;
+  height: 52%;
+  background: #ffccbc;
+  border-radius: 48% 48% 44% 44%;
   box-shadow:
-    -6px 7px 0 -2px #3e2723,
-    6px 7px 0 -2px #3e2723,
-    0 12px 0 -3px #f48fb1;
+    -9px 6px 0 -5px #212121,
+    9px 6px 0 -5px #212121,
+    0 14px 0 -4px #ffab91,
+    0 -6px 0 -2px #e53935;
   z-index: 3;
 }
 
@@ -4873,26 +4936,24 @@ body.is-story .foot {
   content: "";
   position: absolute;
   left: 50%;
-  top: 2%;
+  top: 0;
   transform: translateX(-50%);
-  width: 72%;
-  height: 36%;
+  width: 78%;
+  height: 42%;
   background:
-    radial-gradient(circle at 18% 82%, #f8bbd9 0 34%, transparent 35%),
-    radial-gradient(circle at 82% 82%, #f8bbd9 0 34%, transparent 35%);
-  border-radius: 50% 50% 0 0;
+    radial-gradient(circle at 16% 78%, #f8bbd0 0 28%, #fff 29% 32%, transparent 33%),
+    radial-gradient(circle at 84% 78%, #f8bbd0 0 28%, #fff 29% 32%, transparent 33%),
+    linear-gradient(180deg, #fff 0%, #fce4ec 55%, transparent 56%);
+  border-radius: 50% 50% 12% 12%;
   z-index: 2;
 }
 
-/* うさぎの耳（ごまちゃん専用・ピンクの内側） */
 .cocoa-sprite--gomachan .cocoa-sprite__shadow {
   bottom: 2%;
 }
 
 .cocoa-sprite--ally.cocoa-sprite--gomachan {
-  background:
-    radial-gradient(circle at 22% 10%, #fce4ec 0 14%, transparent 15%),
-    radial-gradient(circle at 78% 10%, #fce4ec 0 14%, transparent 15%);
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
 }
 
 .cocoa-sprite--dog::before {
@@ -5985,9 +6046,30 @@ body.is-story .momo-enemy-fig .momo-monster-wrap {
   font-size: clamp(2.8rem, 10vw, 3.8rem);
 }
 
-.momo-battle--momo .bunny--story-mini {
-  transform: scaleX(-1) scale(0.88);
-  margin: 0 0 -8px -2px;
+.momo-battle--momo .momo-party-row__fig .cocoa-sprite--lg {
+  transform: scale(1.08);
+  transform-origin: center bottom;
+  margin-bottom: -2px;
+}
+
+.momo-battle--momo .momo-party-row__fig .cocoa-sprite--md {
+  transform: scale(0.95);
+  transform-origin: center bottom;
+}
+
+.momo-battle--momo .momo-party-row--locked .cocoa-sprite {
+  filter: grayscale(1) opacity(0.42);
+}
+
+.momo-battle--momo .momo-enemy-card__icon {
+  display: none;
+}
+
+.momo-battle--momo .momo-enemy-fig {
+  min-height: clamp(96px, 24vw, 128px);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
 }
 
 .momo-battle--momo .momo-enemy-hpblock {
@@ -6046,13 +6128,14 @@ body.is-story .momo-enemy-fig .momo-monster-wrap {
 }
 
 .momo-battle--momo .cocoa-sprite--battle.cocoa-sprite--foe {
-  width: clamp(88px, 22vw, 112px);
-  height: clamp(88px, 22vw, 112px);
+  width: clamp(96px, 24vw, 124px);
+  height: clamp(96px, 24vw, 124px);
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.22));
 }
 
 .momo-battle--momo .cocoa-sprite--battle.cocoa-sprite--foe.cocoa-sprite--boss {
-  width: clamp(100px, 26vw, 128px);
-  height: clamp(100px, 26vw, 128px);
+  width: clamp(112px, 28vw, 140px);
+  height: clamp(112px, 28vw, 140px);
 }
 
 .momo-battle--momo .momo-player-lv,
