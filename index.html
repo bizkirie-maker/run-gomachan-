@@ -79,7 +79,7 @@
       <p class="muted deploy-banner">
         <strong>更新確認</strong> — このページの読み込み ID：<code class="build-id">…</code>
         <br />
-        <strong>ルール版</strong> — ホームから「練習・装備・話」を選べます。装備は<strong>3つまで</strong>。称号は60秒ベスト50ptごと。
+        <strong>ルール版</strong> — ホームから「練習・便利屋・桃太郎タイピング」を選べます。便利屋は戦闘の銭で武器・お守りを買えます。
         <br />
         （ページを開き直すたびに ID の数字が変わります。<strong>同じ数字のまま</strong>なら古いページを見ています。別タブで開き直すか、スーパーリロード／スーパーリフレッシュでも試してください）
         <br />
@@ -321,6 +321,7 @@
           <div class="momo-topbar__left">
             <span class="momo-chapter-label" id="storyChapterLabel">第1章</span>
             <span class="momo-player-lv" id="storyPlayerLv">Lv.1</span>
+            <span class="momo-battle-money" id="storyBattleMoney">0銭</span>
           </div>
           <div class="momo-flow" aria-label="ターンの流れ">
             <span class="momo-flow__step" id="storyFlowAttack">① こうげき</span>
@@ -356,6 +357,7 @@
               <span class="momo-gauge-text" id="storyGaugeText">0/100</span>
             </div>
             <p class="momo-battle-msg" id="storyDialog"></p>
+            <div class="momo-battle-items hidden" id="storyBattleItems" aria-label="道具"></div>
             <span class="visually-hidden" id="storySpeakerName"></span>
           </div>
           <div class="momo-enemy-zone">

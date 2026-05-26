@@ -1258,6 +1258,8 @@ const storyState = {
   battlePhase: "typing",
   /** 章内の全敵（HP・撃破状態つき） */
   battleEnemies: [],
+  /** 桃：1章1回 */
+  peachUsedThisChapter: false,
 };
 
 const state = {
@@ -1369,7 +1371,7 @@ function storyDefenseDamageMultiplier(tier) {
 }
 
 function storyEquipBonus() {
-  return aggregateEquipBonus(loadCareerPoints());
+  return aggregateBenriyaStoryBonus();
 }
 
 function storyCalcDefenseDamage(baseAtk, tier) {
@@ -2781,6 +2783,60 @@ function renderStoryPartyPanel() {
   col.innerHTML = html;
 }
 
+function storyCalcCompanionStrikeDamage(c, isSpecial = false) {
+  let dmg = Math.max(1, c.attackBonus || 1);
+  if (isSpecial) dmg += 2;
+  return dmg;
+}
+
+function renderStoryBattleItems() {
+  const el = $("storyBattleItems");
+  if (!el || !storyState.active || storyState.battlePhase === "ended") {
+    el?.classList.add("hidden");
+    return;
+  }
+  const g = loadStoryGear();
+  const rows = BENRIYA_ITEMS.filter((d) => (g.items?.[d.id] || 0) > 0).map((d) => {
+    const n = g.items[d.id];
+    const disabled =
+      storyState.phraseBusy ||
+      storyState.battlePhase !== "typing" ||
+      (d.id === "peach" && storyState.peachUsedThisChapter);
+    return `<button type="button" class="momo-item-btn" data-story-use-item="${d.id}" ${disabled ? "disabled" : ""} title="${escapeHtml(d.desc)}">${escapeHtml(d.name)}×${n}</button>`;
+  });
+  if (!rows.length) {
+    el.innerHTML = "";
+    el.classList.add("hidden");
+    return;
+  }
+  el.classList.remove("hidden");
+  el.innerHTML = rows.join("");
+}
+
+function useStoryBattleItem(itemId) {
+  if (!storyState.active || storyState.battlePhase !== "typing") return;
+  if (storyState.phraseBusy || storyState.phraseInputLocked) return;
+  const def = BENRIYA_ITEMS.find((d) => d.id === itemId);
+  const g = loadStoryGear();
+  const count = g.items?.[itemId] || 0;
+  if (!def || count <= 0) return;
+  if (itemId === "peach") {
+    if (storyState.peachUsedThisChapter) {
+      setStoryDialog("この章ではもう桃は使えません。", "ごまちゃん");
+      return;
+    }
+    storyState.playerHp = storyState.playerMaxHp;
+    storyState.peachUsedThisChapter = true;
+  } else {
+    storyState.playerHp = Math.min(storyState.playerMaxHp, storyState.playerHp + def.heal);
+  }
+  g.items[itemId] = count - 1;
+  saveStoryGear(g);
+  setStoryDialog(`${def.name}を使った！ HP ${storyState.playerHp}/${storyState.playerMaxHp}`, "ごまちゃん");
+  updateStoryHud();
+  renderStoryBattleItems();
+}
+
 function storyCompanionAttackBonus() {
   return getUnlockedCompanions().reduce((s, c) => s + (c.attackBonus || 0), 0);
 }
@@ -3052,6 +3108,9 @@ function updateStoryHud() {
         ? "げんき MAX — 大技！"
         : `げんき ${storyState.gauge}/${STORY_GAUGE_MAX}`;
   }
+  const moneyEl = $("storyBattleMoney");
+  if (moneyEl) moneyEl.textContent = `${loadStoryMoney()}銭`;
+  renderStoryBattleItems();
 }
 
 function showStoryDamagePopup(amount, target = "player") {
@@ -3091,8 +3150,8 @@ function renderStoryChapterList() {
   if (meta) {
     const lv = storyPlayerLevel();
     const maxHp = storyCalcPlayerMaxHp();
-    const eqSum = formatAggregateEquipSummary(loadCareerPoints());
-    meta.textContent = `旅のしおり — 全 ${STORY_CHAPTER_COUNT} 章。クリア ${cleared} 章。所持銭 ${loadStoryMoney()} ／ ごまちゃん Lv.${lv}（HP ${maxHp}）`;
+    const bonus = aggregateBenriyaStoryBonus();
+    meta.textContent = `旅のしおり — 全 ${STORY_CHAPTER_COUNT} 章。クリア ${cleared} 章。所持銭 ${loadStoryMoney()} ／ ごまちゃん Lv.${lv}（HP ${maxHp}）攻+${bonus.storyAtkBonus}`;
   }
   if (!list) return;
   list.innerHTML = "";
@@ -3149,6 +3208,7 @@ function startStoryChapter(chapterIdx) {
   if (!ch) return;
   storyState.chapterIdx = chapterIdx;
   storyState.enemyIdx = 0;
+  storyState.peachUsedThisChapter = false;
   storyState.enemyAttackMul = 1;
   storyState.playerMaxHp = storyCalcPlayerMaxHp();
   storyState.playerHp = storyState.playerMaxHp;
@@ -3367,13 +3427,11 @@ function storyOnAttackSuccess() {
   const remain = Math.max(0, (storyState.phraseEndAt - performance.now()) / 1000);
   const total = Math.max(0.1, storyState.phraseSec);
   const speedRatio = remain / total;
-  const companion = storyCompanionAttackBonus();
   const equip = storyEquipBonus();
   const isSpecial = storyState.moveKind === "special";
   let dmg = 1 + Math.ceil(storyState.panelKeys.length * 0.55);
   if (speedRatio >= 0.35) dmg += 1;
   if (speedRatio >= 0.6 && storyState.typosThisPhrase === 0) dmg += 1;
-  dmg += companion;
   dmg += Math.round(equip.storyAtkBonus);
   if (isSpecial) dmg = Math.round(dmg * 2.2);
   if (storyState.typosThisPhrase > 0) dmg = Math.max(1, dmg - storyState.typosThisPhrase);
@@ -3389,15 +3447,16 @@ function storyOnAttackSuccess() {
   let msg = isSpecial
     ? `大技「${storyState.moveName}」${dmg} ダメージ！`
     : `${enemy?.name || "敵"}に ${dmg} ダメージ！`;
-  if (companion > 0) msg += " 仲間の援護！";
-  if (equip.storyAtkBonus > 0) msg += " 装備の力！";
+  if (equip.storyAtkBonus > 0) msg += " 武器の力！";
   if (speedRatio >= 0.5 && storyState.typosThisPhrase === 0) msg += " 速攻！";
+  const companions = getUnlockedCompanions();
+  if (companions.length > 0) msg += " → 仲間の番！";
   setStoryDialog(msg, "ごまちゃん");
   updateStoryHud();
   showStoryDamagePopup(dmg, "enemy");
   flashStoryEnemyHit();
   flashStoryHpBar("enemy");
-  playStoryBattleFx("attack", { isSpecial, companion: companion > 0 });
+  playStoryBattleFx("attack", { isSpecial, companion: companions.length > 0 });
   if (storyState.enemyHp <= 0) {
     storyState.battlePhase = "enemy-defeat";
     const enemyEl = $("storyEnemy");
@@ -3418,24 +3477,52 @@ function storyPlayCompanionStrikeSequence(onDone) {
     onDone();
     return;
   }
+  const isSpecial = storyState.moveKind === "special";
   let i = 0;
+  const finishDefeat = () => {
+    storyState.battlePhase = "enemy-defeat";
+    const enemyEl = $("storyEnemy");
+    if (enemyEl) {
+      enemyEl.classList.remove("story-enemy--hit", "story-enemy--attack");
+      void enemyEl.offsetWidth;
+      enemyEl.classList.add("story-enemy--defeated");
+    }
+    storyFinishTurn(() => storyOnEnemyDefeated());
+  };
   const step = () => {
+    if (storyState.enemyHp <= 0) {
+      finishDefeat();
+      return;
+    }
     if (i >= companions.length) {
       onDone();
       return;
     }
     const c = companions[i];
+    const dmg = storyCalcCompanionStrikeDamage(c, isSpecial);
+    storyState.enemyHp = Math.max(0, storyState.enemyHp - dmg);
     const slot = $(`storyCompanion_${c.id}`);
     if (slot) {
-      slot.classList.remove("is-assist");
+      slot.classList.remove("is-assist", "is-attacking");
       void slot.offsetWidth;
-      slot.classList.add("is-assist");
+      slot.classList.add("is-assist", "is-attacking");
     }
-    setStoryDialog(`${c.name}の${c.skillName}！`, c.name);
+    storyState.moveName = c.skillName;
+    updateStoryPhaseUi();
+    setStoryDialog(`${c.name}の「${c.skillName}」！ ${dmg} ダメージ！`, c.name);
+    showStoryDamagePopup(dmg, "enemy");
+    flashStoryEnemyHit();
+    flashStoryHpBar("enemy");
+    updateStoryHud();
+    playStoryBattleFx("attack", { companion: true });
     i += 1;
-    window.setTimeout(step, 360);
+    if (storyState.enemyHp <= 0) {
+      window.setTimeout(finishDefeat, 420);
+      return;
+    }
+    window.setTimeout(step, 400);
   };
-  window.setTimeout(step, 240);
+  window.setTimeout(step, 300);
 }
 
 function storyOnDefenseSuccess() {
@@ -3920,6 +4007,13 @@ function init() {
   $("storyContinueBtn")?.addEventListener("click", onStoryContinue);
   $("storyBackHomeBtn")?.addEventListener("click", showStoryMenu);
   $("storyGoBenriyaBtn")?.addEventListener("click", showBenriyaHub);
+  $("storyBattleItems")?.addEventListener("click", (ev) => {
+    const btn = ev.target.closest("[data-story-use-item]");
+    if (!btn || btn.disabled) return;
+    ev.preventDefault();
+    ev.stopPropagation();
+    useStoryBattleItem(btn.dataset.storyUseItem);
+  });
 
   $("startBtn").addEventListener("click", startGame);
   $("againBtn").addEventListener("click", startGame);

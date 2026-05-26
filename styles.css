@@ -7625,6 +7625,44 @@ body.is-story .momo-cutscene {
   margin: 0.5rem 0 0.75rem;
 }
 
+.momo-battle-money {
+  font-size: 0.82rem;
+  font-weight: 800;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(255, 248, 225, 0.95);
+  border: 2px solid rgba(255, 193, 7, 0.65);
+  color: #5d4037;
+}
+
+.momo-battle-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  justify-content: center;
+  margin-top: 0.35rem;
+}
+
+.momo-battle-items.hidden {
+  display: none !important;
+}
+
+.momo-item-btn {
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  border: 2px solid #81c784;
+  background: linear-gradient(180deg, #e8f5e9, #c8e6c9);
+  color: #1b5e20;
+  cursor: pointer;
+}
+
+.momo-item-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 .benriya-tabs {
   display: flex;
   flex-wrap: wrap;
