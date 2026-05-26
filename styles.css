@@ -2960,14 +2960,12 @@ body.is-playing .bonus-key-hint {
   overflow: visible;
 }
 
-.momo-companion__fig .momo-chibi--sm,
 .momo-companion__fig .cocoa-sprite--sm {
   transform: scale(0.68);
   transform-origin: center bottom;
   margin-bottom: -6px;
 }
 
-.momo-companion:not(.is-on) .momo-companion__fig .momo-chibi,
 .momo-companion:not(.is-on) .momo-companion__fig .cocoa-sprite {
   filter: grayscale(1) opacity(0.45);
 }
@@ -3562,7 +3560,6 @@ body.is-story .momo-enemy-emoji--boss {
   filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.28));
 }
 
-.momo-portrait-fig .momo-chibi--lg,
 .momo-portrait-fig .cocoa-sprite--lg {
   transform: scale(1.25);
   transform-origin: center bottom;
@@ -3927,6 +3924,10 @@ body.is-cutscene {
 
 .momo-flow__step--on.momo-flow__step--defense {
   color: #1565c0;
+}
+
+.momo-flow__step--on.momo-flow__step--enemy {
+  color: #6a1b9a;
 }
 
 .momo-flow__arrow {
@@ -4913,499 +4914,157 @@ body.is-story .foot {
   height: 96px;
 }
 
-/* ══ 桃太郎タイピング2風：全身 chibi 味方 ══ */
-.momo-chibi {
+/* ══ ココアの桃太郎タイピング風：chibi 味方 ══ */
+.cocoa-sprite--gomachan {
   position: relative;
-  display: block;
-  margin: 0 auto;
-  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.12));
+  z-index: 1;
+  background:
+    linear-gradient(180deg, transparent 52%, #e53935 52%, #b71c1c 78%, transparent 78%),
+    linear-gradient(180deg, transparent 58%, #ffcdd2 58%, #ef9a9a 72%, transparent 72%);
 }
 
-.momo-chibi--sm { width: 46px; height: 62px; }
-.momo-chibi--md { width: 62px; height: 84px; }
-.momo-chibi--lg { width: 80px; height: 108px; }
-
-.momo-chibi__inner {
+.cocoa-sprite--gomachan::before {
+  content: "";
   position: absolute;
-  left: 0;
-  right: 0;
+  left: 50%;
+  top: 28%;
+  transform: translateX(-50%);
+  width: 58%;
+  height: 52%;
+  background: #ffccbc;
+  border-radius: 48% 48% 44% 44%;
+  box-shadow:
+    -9px 6px 0 -5px #212121,
+    9px 6px 0 -5px #212121,
+    0 14px 0 -4px #ffab91,
+    0 -6px 0 -2px #e53935;
+  z-index: 3;
+}
+
+.cocoa-sprite--gomachan::after {
+  content: "";
+  position: absolute;
+  left: 50%;
   top: 0;
-  bottom: 10%;
+  transform: translateX(-50%);
+  width: 78%;
+  height: 42%;
+  background:
+    radial-gradient(circle at 16% 78%, #f8bbd0 0 28%, #fff 29% 32%, transparent 33%),
+    radial-gradient(circle at 84% 78%, #f8bbd0 0 28%, #fff 29% 32%, transparent 33%),
+    linear-gradient(180deg, #fff 0%, #fce4ec 55%, transparent 56%);
+  border-radius: 50% 50% 12% 12%;
+  z-index: 2;
+}
+
+.cocoa-sprite--gomachan .cocoa-sprite__shadow {
+  bottom: 2%;
+}
+
+.cocoa-sprite--ally.cocoa-sprite--gomachan {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+}
+
+.cocoa-sprite--dog::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 24%;
+  transform: translateX(-50%);
+  width: 56%;
+  height: 50%;
+  background: #8d6e63;
+  border-radius: 45% 55% 48% 52%;
+  box-shadow: -6px 6px 0 -2px #212121, 6px 6px 0 -2px #212121, 0 12px 0 -3px #3e2723;
+  z-index: 2;
+}
+
+.cocoa-sprite--dog::after {
+  content: "";
+  position: absolute;
+  top: 10%;
+  left: 22%;
+  width: 22%;
+  height: 22%;
+  background: #6d4c41;
+  border-radius: 50% 50% 10% 50%;
+  box-shadow: 34px 2px 0 #6d4c41;
   z-index: 1;
 }
 
-.momo-chibi__shadow {
+.cocoa-sprite--monkey::before {
+  content: "";
   position: absolute;
   left: 50%;
-  bottom: 0;
-  width: 68%;
-  height: 9%;
-  transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 50%;
-  z-index: 0;
-}
-
-.momo-chibi__head {
-  position: absolute;
-  left: 50%;
-  top: 6%;
+  top: 22%;
   transform: translateX(-50%);
   width: 54%;
-  height: 36%;
-  border-radius: 48% 48% 42% 42%;
-  z-index: 6;
-  box-shadow:
-    0 0 0 2.5px #3e2723,
-    inset 0 -6px 0 -2px rgba(0, 0, 0, 0.06);
-}
-
-.momo-chibi__face {
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-}
-
-.momo-chibi__face::before {
-  content: "";
-  position: absolute;
-  left: 24%;
-  top: 40%;
-  width: 11%;
-  height: 14%;
-  background: #212121;
-  border-radius: 50%;
-  box-shadow:
-    28px 0 0 #212121,
-    3px -3px 0 2px #fff,
-    31px -3px 0 2px #fff;
-}
-
-.momo-chibi__face::after {
-  content: "";
-  position: absolute;
-  left: 38%;
-  top: 58%;
-  width: 24%;
-  height: 10%;
-  border-bottom: 2.5px solid #3e2723;
-  border-radius: 0 0 50% 50%;
-}
-
-.momo-chibi__head::after {
-  content: "";
-  position: absolute;
-  left: 14%;
-  top: 52%;
-  width: 16%;
-  height: 9%;
-  background: #ff8a80;
-  border-radius: 50%;
-  opacity: 0.75;
-  box-shadow: 38px 0 0 #ff8a80;
-}
-
-.momo-chibi__torso {
-  position: absolute;
-  left: 50%;
-  top: 38%;
-  transform: translateX(-50%);
-  width: 46%;
-  height: 26%;
-  border-radius: 22% 22% 32% 32%;
-  z-index: 4;
-  box-shadow: 0 0 0 2.5px #3e2723;
-}
-
-.momo-chibi__arm {
-  position: absolute;
-  top: 42%;
-  width: 13%;
-  height: 15%;
-  border-radius: 45%;
-  z-index: 7;
-  box-shadow: 0 0 0 2px #3e2723;
-}
-
-.momo-chibi__arm--l {
-  left: 14%;
-  transform: rotate(28deg);
-}
-
-.momo-chibi__arm--r {
-  right: 14%;
-  transform: rotate(-28deg);
-}
-
-.momo-chibi__leg {
-  position: absolute;
-  top: 60%;
-  width: 17%;
-  height: 20%;
-  border-radius: 42% 42% 48% 48%;
-  z-index: 3;
-  box-shadow: 0 0 0 2px #3e2723;
-}
-
-.momo-chibi__leg--l { left: 30%; }
-.momo-chibi__leg--r { right: 30%; }
-
-.momo-chibi__foot {
-  position: absolute;
-  bottom: 8%;
-  width: 21%;
-  height: 9%;
-  border-radius: 50%;
-  z-index: 2;
-  box-shadow: 0 0 0 2px #3e2723;
-}
-
-.momo-chibi__foot--l { left: 27%; }
-.momo-chibi__foot--r { right: 27%; }
-
-.momo-chibi__ear {
-  position: absolute;
-  top: 0;
-  width: 17%;
-  height: 26%;
-  border-radius: 50% 50% 18% 18%;
-  z-index: 5;
-  box-shadow: 0 0 0 2px #3e2723;
-}
-
-.momo-chibi__ear--l {
-  left: 20%;
-  transform: rotate(-14deg);
-}
-
-.momo-chibi__ear--r {
-  right: 20%;
-  transform: rotate(14deg);
-}
-
-.momo-chibi__tail {
-  position: absolute;
-  z-index: 2;
-  display: none;
-}
-
-/* ── ごまちゃん（桃太郎＋うさぎ・全身） ── */
-.momo-chibi--gomachan .momo-chibi__head {
-  background: linear-gradient(180deg, #ffe0b2 0%, #ffccbc 55%, #ffab91 100%);
-}
-
-.momo-chibi--gomachan .momo-chibi__head::before {
-  content: "";
-  position: absolute;
-  left: 8%;
-  right: 8%;
-  top: -8%;
-  height: 22%;
-  background: #fff;
-  border-radius: 4px;
-  box-shadow: 0 0 0 2px #3e2723, 0 -4px 0 #e53935;
-  z-index: 8;
-}
-
-.momo-chibi--gomachan .momo-chibi__ear {
-  background: linear-gradient(180deg, #fff 35%, #f8bbd0 36%, #f48fb1 100%);
-}
-
-.momo-chibi--gomachan .momo-chibi__torso {
-  background: linear-gradient(180deg, #ef5350 0%, #e53935 55%, #c62828 100%);
-}
-
-.momo-chibi--gomachan .momo-chibi__torso::after {
-  content: "";
-  position: absolute;
-  left: 8%;
-  top: 52%;
-  width: 84%;
-  height: 52%;
-  background: linear-gradient(180deg, #fff 0%, #fafafa 100%);
-  border-radius: 28% 28% 40% 40%;
-  box-shadow: 0 0 0 1.5px #3e2723;
-}
-
-.momo-chibi--gomachan .momo-chibi__arm,
-.momo-chibi--gomachan .momo-chibi__leg {
-  background: #ffccbc;
-}
-
-.momo-chibi--gomachan .momo-chibi__foot {
-  background: #5d4037;
-}
-
-/* ── 犬（全身 chibi） ── */
-.momo-chibi--dog .momo-chibi__ear {
-  display: block;
-  top: 14%;
-  width: 22%;
-  height: 30%;
-  background: #6d4c41;
-  border-radius: 50% 50% 10% 60%;
-}
-
-.momo-chibi--dog .momo-chibi__ear--l {
-  left: 8%;
-  transform: rotate(-35deg);
-}
-
-.momo-chibi--dog .momo-chibi__ear--r {
-  right: 8%;
-  transform: rotate(35deg) scaleX(-1);
-}
-
-.momo-chibi--dog .momo-chibi__head {
-  background: linear-gradient(180deg, #a1887f 0%, #8d6e63 100%);
-  top: 10%;
-  height: 34%;
-}
-
-.momo-chibi--dog .momo-chibi__face::after {
-  left: 42%;
-  top: 52%;
-  width: 16%;
-  height: 14%;
-  background: #212121;
-  border: none;
-  border-radius: 50%;
-}
-
-.momo-chibi--dog .momo-chibi__torso {
-  background: linear-gradient(180deg, #8d6e63 0%, #6d4c41 100%);
-  top: 40%;
-  height: 28%;
-  width: 50%;
-}
-
-.momo-chibi--dog .momo-chibi__arm {
-  background: #8d6e63;
-  top: 44%;
-  height: 12%;
-}
-
-.momo-chibi--dog .momo-chibi__leg,
-.momo-chibi--dog .momo-chibi__foot {
-  background: #6d4c41;
-}
-
-.momo-chibi--dog .momo-chibi__leg {
-  top: 62%;
-  height: 18%;
-}
-
-.momo-chibi--dog .momo-chibi__tail {
-  display: block;
-  right: 12%;
-  top: 46%;
-  width: 18%;
-  height: 14%;
-  background: #6d4c41;
-  border-radius: 50% 50% 20% 20%;
-  box-shadow: 0 0 0 2px #3e2723;
-  transform: rotate(-30deg);
-}
-
-/* ── サル（全身 chibi） ── */
-.momo-chibi--monkey .momo-chibi__ear {
-  display: block;
-  top: 16%;
-  width: 18%;
-  height: 18%;
+  height: 50%;
   background: #bcaaa4;
-  border-radius: 50%;
+  border-radius: 48% 52% 50% 50%;
+  box-shadow: -6px 7px 0 -2px #212121, 6px 7px 0 -2px #212121;
+  z-index: 2;
 }
 
-.momo-chibi--monkey .momo-chibi__ear--l { left: 10%; }
-.momo-chibi--monkey .momo-chibi__ear--r { right: 10%; }
-
-.momo-chibi--monkey .momo-chibi__head {
-  background: linear-gradient(180deg, #bcaaa4 0%, #a1887f 100%);
-  top: 8%;
-}
-
-.momo-chibi--monkey .momo-chibi__head::before {
+.cocoa-sprite--monkey::after {
   content: "";
   position: absolute;
-  left: 22%;
-  top: 48%;
-  width: 56%;
-  height: 38%;
-  background: #d7ccc8;
-  border-radius: 45%;
-  box-shadow: 0 0 0 2px #3e2723;
-  z-index: -1;
-}
-
-.momo-chibi--monkey .momo-chibi__torso {
-  background: linear-gradient(180deg, #a1887f 0%, #8d6e63 100%);
-}
-
-.momo-chibi--monkey .momo-chibi__arm,
-.momo-chibi--monkey .momo-chibi__leg {
-  background: #a1887f;
-}
-
-.momo-chibi--monkey .momo-chibi__foot {
-  background: #5d4037;
-}
-
-.momo-chibi--monkey .momo-chibi__tail {
-  display: block;
-  left: 8%;
-  top: 48%;
-  width: 14%;
-  height: 22%;
-  border: 3px solid #6d4c41;
-  border-color: transparent #6d4c41 #6d4c41 transparent;
+  top: 8%;
+  left: 28%;
+  width: 18%;
+  height: 20%;
+  background: #8d6e63;
   border-radius: 50%;
-  transform: rotate(-20deg);
+  box-shadow: 26px 0 0 #8d6e63, 42px 55% 0 4px #6d4c41;
+  z-index: 1;
 }
 
-/* ── キジ（全身 chibi） ── */
-.momo-chibi--pheasant .momo-chibi__ear {
-  display: none;
-}
-
-.momo-chibi--pheasant .momo-chibi__head {
-  background: linear-gradient(180deg, #ef5350 0%, #e53935 100%);
-  top: 4%;
-  height: 32%;
-  width: 48%;
-}
-
-.momo-chibi--pheasant .momo-chibi__head::before {
+.cocoa-sprite--pheasant::before {
   content: "";
   position: absolute;
   left: 50%;
-  top: 62%;
+  top: 28%;
   transform: translateX(-50%);
-  width: 28%;
-  height: 22%;
-  background: #ffca28;
-  border-radius: 40% 40% 10% 10%;
-  box-shadow: 0 0 0 2px #3e2723;
-  z-index: 8;
+  width: 50%;
+  height: 44%;
+  background: #43a047;
+  border-radius: 40% 60% 45% 55%;
+  box-shadow: -5px 5px 0 -2px #212121, 5px 5px 0 -2px #212121;
+  z-index: 2;
 }
 
-.momo-chibi--pheasant .momo-chibi__face::before {
-  top: 36%;
-}
-
-.momo-chibi--pheasant .momo-chibi__face::after {
-  display: none;
-}
-
-.momo-chibi--pheasant .momo-chibi__torso {
-  background: linear-gradient(180deg, #66bb6a 0%, #43a047 100%);
-  top: 34%;
-  height: 30%;
-  width: 52%;
-  border-radius: 40% 40% 35% 35%;
-}
-
-.momo-chibi--pheasant .momo-chibi__torso::after {
+.cocoa-sprite--pheasant::after {
   content: "";
   position: absolute;
-  right: -18%;
-  top: 20%;
-  width: 40%;
-  height: 55%;
-  background: linear-gradient(135deg, #81c784, #2e7d32);
-  border-radius: 0 60% 60% 0;
-  box-shadow: 0 0 0 2px #3e2723;
-  transform: rotate(-8deg);
-}
-
-.momo-chibi--pheasant .momo-chibi__arm {
-  background: #43a047;
-  width: 10%;
-  height: 12%;
-}
-
-.momo-chibi--pheasant .momo-chibi__leg {
-  background: #ff8f00;
-  width: 12%;
-  height: 22%;
-  top: 62%;
-}
-
-.momo-chibi--pheasant .momo-chibi__foot {
-  background: #e65100;
-  width: 16%;
-  height: 8%;
-}
-
-.momo-chibi--pheasant .momo-chibi__tail {
-  display: block;
-  left: 6%;
-  top: 38%;
+  top: 18%;
+  left: 38%;
   width: 28%;
-  height: 20%;
-  background: linear-gradient(90deg, #2e7d32, #1b5e20);
-  border-radius: 0 50% 50% 0;
-  box-shadow: 0 0 0 2px #3e2723;
-  transform: rotate(-15deg);
+  height: 22%;
+  background: #e53935;
+  border-radius: 50% 50% 20% 20%;
+  box-shadow: -8px 18px 0 -2px #ffca28;
+  z-index: 1;
 }
 
-/* バトル中の可愛いアニメ */
-.momo-battle--momo .momo-party-row--hero.is-attacking .momo-chibi__inner,
-.momo-battle--momo .momo-party-row--hero.is-attacking .momo-chibi__inner {
-  animation: momo-chibi-attack 0.55s ease;
+.momo-arena--fighting .momo-party-row:not(.momo-party-row--locked) .cocoa-sprite--ally {
+  animation: cocoa-sprite-idle 2.6s ease-in-out infinite;
 }
 
-.momo-battle--momo .momo-party-row.is-assist .momo-chibi__inner {
-  animation: momo-chibi-assist 0.65s ease;
-}
-
-.momo-battle--momo .momo-party-row--hero.is-hit .momo-chibi__inner,
-.momo-battle--momo .momo-party-row--hero.is-blocking .momo-chibi__inner {
-  animation: momo-chibi-wobble 0.45s ease;
-}
-
-.momo-arena--fighting .momo-party-row:not(.momo-party-row--locked) .momo-chibi__inner {
-  animation: momo-chibi-idle 2.6s ease-in-out infinite;
-}
-
-.momo-arena--fighting .momo-party-row--companion:nth-child(3) .momo-chibi__inner {
+.momo-arena--fighting .momo-party-row--companion:nth-child(3) .cocoa-sprite--ally {
   animation-delay: -0.4s;
 }
 
-.momo-arena--fighting .momo-party-row--companion:nth-child(4) .momo-chibi__inner {
+.momo-arena--fighting .momo-party-row--companion:nth-child(4) .cocoa-sprite--ally {
   animation-delay: -0.9s;
 }
 
-.momo-arena--fighting .momo-party-row--companion:nth-child(5) .momo-chibi__inner {
+.momo-arena--fighting .momo-party-row--companion:nth-child(5) .cocoa-sprite--ally {
   animation-delay: -1.4s;
 }
 
-@keyframes momo-chibi-idle {
+@keyframes cocoa-sprite-idle {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-3px); }
-}
-
-@keyframes momo-chibi-attack {
-  0%, 100% { transform: translateX(0) scale(1); }
-  35% { transform: translateX(10px) scale(1.06); }
-  60% { transform: translateX(4px) scale(1.02); }
-}
-
-@keyframes momo-chibi-assist {
-  0%, 100% { transform: translateX(0); }
-  40% { transform: translateX(6px) scale(1.05); }
-}
-
-@keyframes momo-chibi-wobble {
-  0%, 100% { transform: rotate(0); }
-  25% { transform: rotate(-4deg); }
-  75% { transform: rotate(4deg); }
-}
-
-/* 旧 cocoa-sprite 味方（互換・未使用） */
-.cocoa-sprite--gomachan {
-  display: none;
 }
 
 .cocoa-sprite--slime::before {
@@ -6428,20 +6087,17 @@ body.is-story .momo-enemy-fig .momo-monster-wrap {
   justify-content: center;
 }
 
-.momo-battle--momo .momo-party-row__fig .momo-chibi--lg,
 .momo-battle--momo .momo-party-row__fig .cocoa-sprite--lg {
   transform: scale(1.05);
   transform-origin: center bottom;
   margin-bottom: -2px;
 }
 
-.momo-battle--momo .momo-party-row__fig .momo-chibi--md,
 .momo-battle--momo .momo-party-row__fig .cocoa-sprite--md {
   transform: scale(0.92);
   transform-origin: center bottom;
 }
 
-.momo-battle--momo .momo-party-row--locked .momo-chibi,
 .momo-battle--momo .momo-party-row--locked .cocoa-sprite {
   filter: grayscale(1) opacity(0.42);
 }
