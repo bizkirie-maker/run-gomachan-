@@ -46,7 +46,7 @@
       <p class="muted home-lead">ごまちゃんと一緒に、タイピングで遊ぼう。</p>
       <p class="muted deploy-banner home-build-banner">
         <strong>更新確認</strong> — 読み込み ID：<code class="build-id" id="cacheBustTag">…</code>
-        （末尾が <code>20260525-story-v2</code> なら最新版です）
+        （末尾が <code>20260525-momo-native-v2</code> なら最新版です）
       </p>
       <div class="mode-grid">
         <button type="button" class="mode-card mode-card--practice" id="goPracticeBtn">
@@ -147,42 +147,19 @@
       </p>
       <p class="equip-hub-active-effects muted" id="equipHubActiveEffects"></p>
       <div class="equip-hub-body career-modal__panel career-modal__panel--ff5" id="equipHubBody"></div>
-      <p class="muted equip-hub-note">ボタンで装着 ON／OFF（<strong>3つまで</strong>）。<strong>練習</strong>は得点・お題秒数が上がり、<strong>話</strong>は攻撃・HP・防御が上がります（制限時間はほとんど伸びません）。</p>
+      <p class="muted equip-hub-note">ボタンを押すと装着 ON／OFF。同時に付けられるのは<strong>3つまで</strong>です。装備は<strong>練習モード</strong>（得点・お題秒数）と<strong>話モード</strong>（攻撃・HP・防御・げんき）の両方に効きます。</p>
     </section>
 
-    <!-- 話モード：桃太郎タイピング（旅のしおり＝章選択） -->
-    <section class="cocoa-story-app hidden" id="storyMenuPanel" aria-labelledby="story-menu-heading">
-      <div class="cocoa-story-frame">
-        <header class="cocoa-story-titlebar">
-          <button type="button" class="cocoa-story-back ghost small" id="backHomeFromStoryBtn">← ホーム</button>
-          <div class="cocoa-story-brand">
-            <span class="cocoa-story-brand__peach" aria-hidden="true">🍑</span>
-            <div class="cocoa-story-brand__text">
-              <p class="cocoa-story-brand__kicker">タイピングRPG</p>
-              <h2 id="story-menu-heading">ごまちゃんの桃太郎たいぴんぐ</h2>
-              <p class="cocoa-story-brand__sub">旅のしおり — スポットをえらんで冒険しよう！</p>
-            </div>
-            <span class="cocoa-story-brand__hero" aria-hidden="true">🐰</span>
-          </div>
-        </header>
-        <div class="cocoa-story-map">
-          <div class="cocoa-story-map__sky" aria-hidden="true">
-            <span class="cocoa-cloud cocoa-cloud--1"></span>
-            <span class="cocoa-cloud cocoa-cloud--2"></span>
-            <span class="cocoa-cloud cocoa-cloud--3"></span>
-          </div>
-          <div class="cocoa-story-map__ground" aria-hidden="true"></div>
-          <div class="cocoa-story-map__inner">
-            <p class="cocoa-story-rules">① こうげき（日本語をローマ字で打つ）→ ② ぼうぎょ　／　<strong>Esc</strong>＝やり直し</p>
-            <div class="momo-companion-strip cocoa-story-companions" id="storyCompanionStrip" aria-label="仲間"></div>
-            <p class="cocoa-story-status" id="storyMenuMeta"></p>
-            <div class="cocoa-chapter-scroll">
-              <p class="cocoa-chapter-scroll__label">スポット一覧</p>
-              <ul class="cocoa-chapter-list" id="storyChapterList"></ul>
-            </div>
-          </div>
-        </div>
+    <!-- 話モード：桃太郎タイピング本家 — 旅のしおり（章選択） -->
+    <section class="panel story-menu-panel hidden" id="storyMenuPanel" aria-labelledby="story-menu-heading">
+      <div class="sub-head">
+        <button type="button" class="ghost small back-home-btn" id="backHomeFromStoryBtn">← ホーム</button>
+        <h2 id="story-menu-heading">ごまちゃんの桃太郎たいぴんぐ</h2>
       </div>
+      <p class="muted"><strong>桃太郎タイピング</strong>と同じルール。①こうげき（パネルを打つ）→②ぼうぎょ。敵を全部たおすと章クリア！</p>
+      <div class="momo-companion-strip" id="storyCompanionStrip" aria-label="仲間"></div>
+      <p class="story-menu-meta muted" id="storyMenuMeta"></p>
+      <ul class="story-chapter-list momo-chapter-scroll" id="storyChapterList"></ul>
     </section>
 
     <section class="stage-wrap hidden" id="stageWrap" aria-live="polite">
@@ -334,76 +311,70 @@
       </div>
     </section>
 
-    <!-- 話モード：ココアの桃太郎たいぴんぐ準拠レイアウト -->
+    <!-- 話モード：桃太郎タイピング本家レイアウト -->
     <section class="story-stage-wrap hidden" id="storyStageWrap" aria-live="polite">
-      <div class="momo-battle momo-battle--cocoa">
-        <header class="cocoa-battle-head">
-          <div class="cocoa-battle-head__left">
-            <span class="cocoa-chapter-label" id="storyChapterLabel">第1章</span>
-            <span class="cocoa-player-lv" id="storyPlayerLv">Lv.1</span>
+      <div class="momo-battle momo-battle--pure momo-battle--momo">
+        <header class="momo-topbar">
+          <div class="momo-topbar__left">
+            <span class="momo-chapter-label" id="storyChapterLabel">第1章</span>
+            <span class="momo-player-lv" id="storyPlayerLv">Lv.1</span>
           </div>
-          <span class="momo-retry-hint">Esc＝やり直し</span>
-          <button type="button" class="ghost small cocoa-quit-btn" id="quitStoryBtn">やめる</button>
+          <div class="momo-flow" aria-label="ターンの流れ">
+            <span class="momo-flow__step" id="storyFlowAttack">① こうげき</span>
+            <span class="momo-flow__arrow" aria-hidden="true">→</span>
+            <span class="momo-flow__step" id="storyFlowDefense">② ぼうぎょ</span>
+          </div>
+          <button type="button" class="ghost small momo-quit-btn" id="quitStoryBtn">やめる</button>
         </header>
 
-        <div class="cocoa-battle-scene momo-scene" id="storyScene">
-          <div class="cocoa-scene-bg" aria-hidden="true">
-            <span class="cocoa-cloud cocoa-cloud--1"></span>
-            <span class="cocoa-cloud cocoa-cloud--2"></span>
-            <span class="cocoa-cloud cocoa-cloud--3"></span>
-            <div class="cocoa-ground"></div>
-          </div>
+        <div class="momo-phase-ribbon momo-phase-ribbon--attack" id="storyPhaseRibbon">
+          <p class="momo-phase-ribbon__main" id="storyTurnBanner">こうげき！</p>
+          <p class="momo-phase-ribbon__sub" id="storyMoveName">通常攻撃</p>
+        </div>
 
-          <aside class="cocoa-party-column" id="storyPartyColumn" aria-label="味方パーティ"></aside>
+        <section class="momo-panel-stage momo-panel-top momo-phrase-card momo-phrase-card--attack" id="storyPhraseCard" aria-label="タイピングパネル">
+          <p class="momo-panel-word" id="storyPanelWord" lang="ja">こうげき</p>
+          <p class="momo-next-key" id="storyNextKeyHint">つぎのキーを打て！</p>
+          <div class="momo-panel-board" id="storyPanelBoard"></div>
+          <div class="momo-panel-timer-bar" aria-hidden="true"><div class="momo-panel-timer-fill" id="storyPanelTimerFill"></div></div>
+          <p class="momo-panel-timer-num">のこり <strong id="storyPhraseTimer">5.0</strong> 秒</p>
+          <div class="momo-vkbd" id="storyVirtualKeyboard" aria-hidden="true"></div>
+        </section>
 
-          <div class="cocoa-arena-center">
-            <div class="cocoa-gauge momo-gauge-wrap momo-gauge-wrap--arena">
+        <div class="momo-special-splash hidden" id="storySpecialSplash" aria-hidden="true">大技！</div>
+
+        <div class="momo-arena momo-scene momo-battle-field" id="storyScene">
+          <div class="field-bg momo-field-bg" aria-hidden="true"></div>
+          <aside class="momo-party-column" id="storyPartyColumn" aria-label="味方パーティ"></aside>
+          <div class="momo-arena-center">
+            <div class="momo-gauge-wrap momo-gauge-wrap--arena">
               <span class="momo-gauge-label">げんき</span>
               <div class="momo-gauge-bar" aria-hidden="true"><div class="momo-gauge-fill" id="storyGaugeBar"></div></div>
               <span class="momo-gauge-text" id="storyGaugeText">0/100</span>
             </div>
-            <div class="cocoa-msg-window">
-              <p class="cocoa-battle-msg" id="storyDialog"></p>
-              <span class="visually-hidden" id="storySpeakerName"></span>
-            </div>
+            <p class="momo-battle-msg" id="storyDialog"></p>
+            <span class="visually-hidden" id="storySpeakerName"></span>
           </div>
-
-          <div class="cocoa-enemy-zone">
-            <div class="cocoa-enemy-hud" aria-label="敵のHP">
-              <span class="cocoa-enemy-hud__badge" id="storyEnemyCategory">モンスター</span>
-              <strong class="cocoa-enemy-hud__name" id="storyEnemyNameHud">スライム</strong>
-              <div class="cocoa-hp-bar cocoa-hp-bar--enemy momo-hp-bar--large" aria-hidden="true">
-                <div class="cocoa-hp-fill cocoa-hp-fill--enemy" id="storyEnemyHpBar"></div>
+          <div class="momo-enemy-zone">
+            <div class="momo-enemy-hpblock" aria-label="敵のHP">
+              <span class="momo-enemy-head__badge" id="storyEnemyCategory">モンスター</span>
+              <strong class="momo-enemy-head__name" id="storyEnemyNameHud">スライム</strong>
+              <div class="momo-hp-bar momo-hp-bar--enemy-head" aria-hidden="true">
+                <div class="momo-hp-fill momo-hp-fill--enemy" id="storyEnemyHpBar"></div>
               </div>
-              <span class="cocoa-enemy-hud__hp"><strong id="storyEnemyHp">0</strong> / <span id="storyEnemyMaxHp">0</span></span>
-              <span class="cocoa-enemy-hud__atk" id="storyEnemyAtkHint"></span>
+              <span class="momo-enemy-head__hp"><strong id="storyEnemyHp">0</strong> / <span id="storyEnemyMaxHp">0</span></span>
+              <span class="momo-enemy-atk" id="storyEnemyAtkHint"></span>
             </div>
-            <div class="cocoa-enemy-spawn" id="storyEnemySpawnBanner" aria-live="assertive"></div>
-            <div class="story-enemy cocoa-monster-stage" id="storyEnemy">
-              <div class="cocoa-enemy-card" id="storyEnemyCard">
-                <div class="cocoa-monster-wrap" id="storyEnemySprite"></div>
-                <span class="cocoa-enemy-card__icon" id="storyEnemyIcon" aria-hidden="true">💧</span>
-                <strong class="cocoa-enemy-name" id="storyEnemyName">スライム</strong>
-                <span class="cocoa-enemy-tagline" id="storyEnemyTagline"></span>
+            <div class="momo-enemy-spawn" id="storyEnemySpawnBanner" aria-live="assertive"></div>
+            <div class="story-enemy momo-enemy" id="storyEnemy">
+              <div class="momo-enemy-card" id="storyEnemyCard">
+                <div class="momo-enemy-fig" id="storyEnemySprite"></div>
+                <span class="momo-enemy-card__icon" id="storyEnemyIcon" aria-hidden="true">💧</span>
+                <strong class="story-enemy__name" id="storyEnemyName">スライム</strong>
+                <span class="momo-enemy-card__tagline" id="storyEnemyTagline"></span>
               </div>
             </div>
           </div>
-
-          <section class="cocoa-panel-overlay momo-phrase-card momo-phrase-card--attack" id="storyPhraseCard" aria-label="タイピングパネル">
-            <p class="cocoa-turn-badge" id="storyTurnBanner">こうげき</p>
-            <p class="momo-panel-word" id="storyPanelWord" lang="ja"></p>
-            <p class="momo-next-key" id="storyNextKeyHint">つぎのキーを打て！</p>
-            <div class="momo-panel-board" id="storyPanelBoard"></div>
-            <div class="momo-panel-timer-bar" aria-hidden="true"><div class="momo-panel-timer-fill" id="storyPanelTimerFill"></div></div>
-            <p class="momo-panel-timer-num">のこり <strong id="storyPhraseTimer">5.0</strong> 秒</p>
-            <div class="momo-vkbd" id="storyVirtualKeyboard" aria-hidden="true"></div>
-            <p class="visually-hidden" id="storyMoveName"></p>
-            <span class="visually-hidden" id="storyPhaseRibbon"></span>
-            <span class="visually-hidden" id="storyFlowAttack"></span>
-            <span class="visually-hidden" id="storyFlowDefense"></span>
-          </section>
-
-          <div class="momo-companion-strikes" id="storyCompanionStrikes" aria-hidden="true"></div>
           <div class="momo-battle-fx" id="storyBattleFx" aria-hidden="true">
             <span class="momo-battle-fx__slash" id="storyFxSlash">⚔</span>
             <span class="momo-battle-fx__beam" id="storyFxBeam"></span>
@@ -414,22 +385,16 @@
           <div class="momo-damage-popup" id="storyDamagePopup" aria-live="assertive"></div>
         </div>
 
-        <div class="momo-special-splash hidden" id="storySpecialSplash" aria-hidden="true">大技！</div>
         <input id="storyGhostInput" class="ghost-input" type="text" lang="en" inputmode="latin" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="話モード用キー入力" />
       </div>
     </section>
 
-    <section class="cocoa-story-app cocoa-story-app--result hidden" id="storyResultPanel">
-      <div class="cocoa-story-frame cocoa-story-frame--result">
-        <div class="cocoa-story-result">
-          <span class="cocoa-story-result__icon" aria-hidden="true">🎉</span>
-          <h2 class="cocoa-story-result__title" id="storyResultHeading">章クリア！</h2>
-          <p class="cocoa-story-result__text" id="storyResultText"></p>
-          <div class="cocoa-story-result__actions">
-            <button type="button" class="cocoa-story-btn cocoa-story-btn--primary" id="storyContinueBtn">つぎへ</button>
-            <button type="button" class="cocoa-story-btn cocoa-story-btn--ghost" id="storyBackHomeBtn">旅のしおりにもどる</button>
-          </div>
-        </div>
+    <section class="panel story-result-panel hidden" id="storyResultPanel">
+      <h2 id="storyResultHeading">章クリア！</h2>
+      <p class="story-result-text" id="storyResultText"></p>
+      <div class="buttons">
+        <button type="button" class="primary" id="storyContinueBtn">つぎへ</button>
+        <button type="button" class="ghost" id="storyBackHomeBtn">旅のしおりにもどる</button>
       </div>
     </section>
 
