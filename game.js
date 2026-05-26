@@ -2,7 +2,7 @@
  * ごまちゃんタイピング — 試作品（ローカル保存のモード別トップ10）
  */
 
-const APP_BUILD = "20260525-momo-harder-v1";
+const APP_BUILD = "20260525-momo-chibi-body-v1";
 
 const DIFFICULTY = {
   beginner: { id: "beginner", label: "初級", phraseSec: 5, points: 1, sceneClass: "diff-beginner" },
@@ -430,9 +430,24 @@ const STORY_COMPANIONS = [
   { id: "pheasant", name: "キジ", icon: "🐦", unlockClear: 85, attackBonus: 0, defenseSecBonus: 0, hpBonus: 6, skillName: "つつき", defenseReduceBonus: 0.1 },
 ];
 
-/** 桃太郎タイピング風 chibi スプライト（CSS） */
+/** 桃太郎タイピング2風：全身 chibi（頭・胴・手足） */
 function storyAllySpriteHtml(kind, size = "lg") {
-  return `<div class="cocoa-sprite cocoa-sprite--ally cocoa-sprite--${size} cocoa-sprite--${kind}" aria-hidden="true"><span class="cocoa-sprite__shadow"></span></div>`;
+  return `<div class="momo-chibi momo-chibi--${kind} momo-chibi--${size}" aria-hidden="true">
+    <div class="momo-chibi__inner">
+      <span class="momo-chibi__ear momo-chibi__ear--l"></span>
+      <span class="momo-chibi__ear momo-chibi__ear--r"></span>
+      <span class="momo-chibi__head"><span class="momo-chibi__face"></span></span>
+      <span class="momo-chibi__arm momo-chibi__arm--l"></span>
+      <span class="momo-chibi__arm momo-chibi__arm--r"></span>
+      <span class="momo-chibi__torso"></span>
+      <span class="momo-chibi__tail"></span>
+      <span class="momo-chibi__leg momo-chibi__leg--l"></span>
+      <span class="momo-chibi__leg momo-chibi__leg--r"></span>
+      <span class="momo-chibi__foot momo-chibi__foot--l"></span>
+      <span class="momo-chibi__foot momo-chibi__foot--r"></span>
+    </div>
+    <span class="momo-chibi__shadow"></span>
+  </div>`;
 }
 
 function storyAllyFigureHtml(allyId, role = "hero") {
