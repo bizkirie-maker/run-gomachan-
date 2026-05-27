@@ -46,7 +46,7 @@
       <p class="muted home-lead">ごまちゃんと一緒に、タイピングで遊ぼう。</p>
       <p class="muted deploy-banner home-build-banner">
         <strong>更新確認</strong> — 読み込み ID：<code class="build-id" id="cacheBustTag">…</code>
-        （末尾が <code>20260525-momo-cocoa-v1</code> なら最新版です）
+        （末尾が <code>20260525-momo-benriya-v2</code> なら最新版です）
       </p>
       <div class="mode-grid">
         <button type="button" class="mode-card mode-card--practice" id="goPracticeBtn">
@@ -54,10 +54,10 @@
           <span class="mode-card__title">練習</span>
           <span class="mode-card__desc">モードを選んで、60秒タイムアタックで練習</span>
         </button>
-        <button type="button" class="mode-card mode-card--equip" id="goEquipBtn">
-          <span class="mode-card__icon" aria-hidden="true">🏪</span>
-          <span class="mode-card__title">便利屋</span>
-          <span class="mode-card__desc">戦闘で得た<strong>銭</strong>で武器・防具・道具・お守りを買う（桃太郎タイピング本家）</span>
+        <button type="button" class="mode-card mode-card--equip" id="goMenuBtn">
+          <span class="mode-card__icon" aria-hidden="true">📋</span>
+          <span class="mode-card__title">メニュー</span>
+          <span class="mode-card__desc">武器やさん・お守りやさん・装備（桃太郎タイピング本家のメニュー）</span>
         </button>
         <button type="button" class="mode-card mode-card--story" id="goStoryBtn">
           <span class="mode-card__icon" aria-hidden="true">🍑</span>
@@ -79,7 +79,7 @@
       <p class="muted deploy-banner">
         <strong>更新確認</strong> — このページの読み込み ID：<code class="build-id">…</code>
         <br />
-        <strong>ルール版</strong> — ホームから「練習・便利屋・桃太郎タイピング」を選べます。便利屋は戦闘の銭で武器・お守りを買えます。
+        <strong>ルール版</strong> — ホームから「練習・メニュー・桃太郎タイピング」を選べます。メニューから武器やさん・お守りやさん・装備を開けます。
         <br />
         （ページを開き直すたびに ID の数字が変わります。<strong>同じ数字のまま</strong>なら古いページを見ています。別タブで開き直すか、スーパーリロード／スーパーリフレッシュでも試してください）
         <br />
@@ -127,7 +127,7 @@
             </span><br />
             <span class="career-sub" id="careerNextTitle"></span><br />
             <span class="career-sub career-equip-effects" id="careerEquipEffects"></span><br />
-            <span class="career-line-equip career-equip--hint">桃太郎タイピングの装備はホームの「便利屋」から（戦闘の銭で購入）</span>
+            <span class="career-line-equip career-equip--hint">桃太郎タイピングの装備はホームの「メニュー」から（戦闘の銭で購入）</span>
           </p>
         </div>
       </div>
@@ -135,10 +135,29 @@
       <button type="button" class="ghost" id="openRankingBtn">このモードのトップ10を見る</button>
     </section>
 
-    <!-- 便利屋（桃太郎タイピング本家） -->
+    <!-- メニュー（桃太郎タイピング本家・画像2風） -->
+    <section class="panel momo-menu-panel hidden" id="momoMenuPanel" aria-labelledby="momo-menu-heading">
+      <div class="sub-head">
+        <button type="button" class="ghost small back-home-btn" id="backHomeFromMenuBtn">← ホーム</button>
+        <h2 id="momo-menu-heading">メニュー</h2>
+      </div>
+      <p class="momo-menu-money">所持銭：<strong id="menuHubMoney">0</strong> 銭</p>
+      <div class="momo-menu-layout">
+        <div class="momo-menu-party" id="menuPartyGrid" aria-label="パーティ"></div>
+        <div class="momo-menu-shops">
+          <button type="button" class="momo-shop-btn momo-shop-btn--sweet" data-momo-shop="item"><span class="momo-shop-btn__icon">🍡</span><span class="momo-shop-btn__label">甘味やさん</span><span class="momo-shop-btn__sub">回復道具</span></button>
+          <button type="button" class="momo-shop-btn momo-shop-btn--omamori" data-momo-shop="omamori"><span class="momo-shop-btn__icon">🎋</span><span class="momo-shop-btn__label">お守りやさん</span></button>
+          <button type="button" class="momo-shop-btn momo-shop-btn--weapon" data-momo-shop="weapon"><span class="momo-shop-btn__icon">⚔</span><span class="momo-shop-btn__label">武器やさん</span></button>
+          <button type="button" class="momo-shop-btn momo-shop-btn--armor" data-momo-shop="armor"><span class="momo-shop-btn__icon">🛡</span><span class="momo-shop-btn__label">防具やさん</span></button>
+          <button type="button" class="momo-shop-btn momo-shop-btn--equip" data-momo-shop="equip"><span class="momo-shop-btn__icon">👕</span><span class="momo-shop-btn__label">装備を身につける</span></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 便利屋（各「やさん」の中身） -->
     <section class="panel equip-hub-panel hidden" id="equipHubPanel" aria-labelledby="equip-hub-heading">
       <div class="sub-head">
-        <button type="button" class="ghost small back-home-btn" id="backHomeFromEquipBtn">← ホーム</button>
+        <button type="button" class="ghost small back-home-btn" id="backHomeFromEquipBtn">← メニュー</button>
         <h2 id="equip-hub-heading">便利屋</h2>
       </div>
       <p class="muted" id="equipHubHint"></p>
@@ -158,7 +177,7 @@
       </div>
       <p class="muted"><strong>桃太郎タイピング</strong>と同じルール。①こうげき → ②ぼうぎょ → 敵も順番に攻撃。戦闘で得た銭は便利屋で使えます。</p>
       <div class="story-menu-actions">
-        <button type="button" class="ghost small" id="storyGoBenriyaBtn">🏪 便利屋</button>
+        <button type="button" class="ghost small" id="storyGoMenuBtn">📋 メニュー</button>
       </div>
       <div class="momo-companion-strip" id="storyCompanionStrip" aria-label="仲間"></div>
       <p class="story-menu-meta muted" id="storyMenuMeta"></p>
@@ -316,8 +335,8 @@
 
     <!-- 話モード：桃太郎タイピング本家レイアウト -->
     <section class="story-stage-wrap hidden" id="storyStageWrap" aria-live="polite">
-      <div class="momo-battle momo-battle--pure momo-battle--momo">
-        <header class="momo-topbar">
+      <div class="momo-battle momo-battle--pure momo-battle--momo momo-battle--field" id="storyBattleRoot">
+        <header class="momo-topbar momo-topbar--turn">
           <div class="momo-topbar__left">
             <span class="momo-chapter-label" id="storyChapterLabel">第1章</span>
             <span class="momo-player-lv" id="storyPlayerLv">Lv.1</span>
@@ -337,6 +356,8 @@
           <p class="momo-phase-ribbon__main" id="storyTurnBanner">こうげき！</p>
           <p class="momo-phase-ribbon__sub" id="storyMoveName">通常攻撃</p>
         </div>
+
+        <div class="momo-turn-bg" aria-hidden="true"><span class="momo-turn-bg__atk">攻</span><span class="momo-turn-bg__def">守</span></div>
 
         <section class="momo-panel-stage momo-panel-top momo-phrase-card momo-phrase-card--attack" id="storyPhraseCard" aria-label="タイピングパネル">
           <p class="momo-panel-word" id="storyPanelWord" lang="ja">こうげき</p>
@@ -363,6 +384,7 @@
             <span class="visually-hidden" id="storySpeakerName"></span>
           </div>
           <div class="momo-enemy-zone">
+            <div class="momo-enemy-roster" id="storyEnemyRoster" aria-label="敵一覧"></div>
             <div class="momo-enemy-hpblock" aria-label="敵のHP">
               <span class="momo-enemy-head__badge" id="storyEnemyCategory">モンスター</span>
               <strong class="momo-enemy-head__name" id="storyEnemyNameHud">スライム</strong>
@@ -392,6 +414,11 @@
           <div class="momo-damage-popup" id="storyDamagePopup" aria-live="assertive"></div>
         </div>
 
+        <footer class="momo-battle-footer">
+          <button type="button" class="momo-battle-quit" id="quitStoryBtnFooter">🔍 中断</button>
+          <span class="momo-battle-footer__stage" id="storyStageLabel">第1章 ステージ1</span>
+        </footer>
+
         <input id="storyGhostInput" class="ghost-input" type="text" lang="en" inputmode="latin" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" aria-label="話モード用キー入力" />
       </div>
     </section>
@@ -401,6 +428,7 @@
       <p class="story-result-text" id="storyResultText"></p>
       <div class="buttons">
         <button type="button" class="primary" id="storyContinueBtn">つぎへ</button>
+        <button type="button" class="ghost" id="storyResultBenriyaBtn">📋 メニュー（キャラに装備）</button>
         <button type="button" class="ghost" id="storyBackHomeBtn">旅のしおりにもどる</button>
       </div>
     </section>

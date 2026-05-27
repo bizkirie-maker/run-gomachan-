@@ -2,7 +2,7 @@
  * ごまちゃんタイピング — 試作品（ローカル保存のモード別トップ10）
  */
 
-const APP_BUILD = "20260525-momo-cocoa-v1";
+const APP_BUILD = "20260525-momo-ui-v2";
 
 const DIFFICULTY = {
   beginner: { id: "beginner", label: "初級", phraseSec: 5, points: 1, sceneClass: "diff-beginner" },
@@ -472,7 +472,7 @@ const STORY_BATTLE_PACE = {
   defenseSecBase: 4.5,
   defenseSecMin: 3.2,
   specialPhraseBonus: 1.2,
-  specialIntroMs: 900,
+  specialIntroMs: 1200,
   actionPauseMs: 500,
   phaseGapMs: 300,
   turnFinishMs: 400,
@@ -840,29 +840,92 @@ const BENRIYA_BY_ID = {
 
 function defaultStoryGear() {
   return {
-    weapon: { id: "wood_sword", lv: 1 },
-    armor: { id: "cloth", lv: 1 },
+    activeMember: "gomachan",
+    members: {
+      gomachan: { weapon: { id: "wood_sword", lv: 1 }, armor: { id: "cloth", lv: 1 } },
+      dog: { weapon: null, armor: null },
+      monkey: { weapon: null, armor: null },
+      pheasant: { weapon: null, armor: null },
+    },
     items: { herb: 0, fine_herb: 0, peach: 0 },
     omamori: { health: 0, power: 0, guard: 0, fortune: 0 },
     ownedWeapons: { wood_sword: true },
     ownedArmors: { cloth: true },
+    weaponLevels: { wood_sword: 1 },
+    armorLevels: { cloth: 1 },
   };
+}
+
+function benriyaStoredGearLv(g, kind, id) {
+  const bag = kind === "weapon" ? g.weaponLevels : g.armorLevels;
+  const lv = bag?.[id];
+  return Number.isFinite(lv) && lv > 0 ? lv : 1;
+}
+
+function benriyaSaveGearLv(g, kind, id, lv) {
+  if (kind === "weapon") {
+    if (!g.weaponLevels) g.weaponLevels = {};
+    g.weaponLevels[id] = lv;
+  } else {
+    if (!g.armorLevels) g.armorLevels = {};
+    g.armorLevels[id] = lv;
+  }
+}
+
+const BENRIYA_MEMBER_IDS = ["gomachan", "dog", "monkey", "pheasant"];
+
+function benriyaMemberLabel(id) {
+  if (id === "gomachan") return STORY_HERO.name;
+  return STORY_COMPANIONS.find((c) => c.id === id)?.name || id;
+}
+
+function isBenriyaMemberUnlocked(id) {
+  if (id === "gomachan") return true;
+  const c = STORY_COMPANIONS.find((x) => x.id === id);
+  return c ? loadStoryProgress() >= c.unlockClear : false;
+}
+
+function normalizeStoryGear(raw) {
+  const d = defaultStoryGear();
+  if (!raw || typeof raw !== "object") return d;
+  const g = { ...d, ...raw };
+  g.members = { ...d.members, ...(raw.members || {}) };
+  for (const id of BENRIYA_MEMBER_IDS) {
+    g.members[id] = {
+      weapon: raw.members?.[id]?.weapon ?? d.members[id]?.weapon ?? null,
+      armor: raw.members?.[id]?.armor ?? d.members[id]?.armor ?? null,
+    };
+  }
+  if (!raw.members && (raw.weapon?.id || raw.armor?.id)) {
+    g.members.gomachan.weapon = raw.weapon?.id ? { id: raw.weapon.id, lv: raw.weapon.lv || 1 } : g.members.gomachan.weapon;
+    g.members.gomachan.armor = raw.armor?.id ? { id: raw.armor.id, lv: raw.armor.lv || 1 } : g.members.gomachan.armor;
+  }
+  g.items = { ...d.items, ...(raw.items || {}) };
+  g.omamori = { ...d.omamori, ...(raw.omamori || {}) };
+  g.ownedWeapons = { ...d.ownedWeapons, ...(raw.ownedWeapons || {}) };
+  g.ownedArmors = { ...d.ownedArmors, ...(raw.ownedArmors || {}) };
+  g.weaponLevels = { ...d.weaponLevels, ...(raw.weaponLevels || {}) };
+  g.armorLevels = { ...d.armorLevels, ...(raw.armorLevels || {}) };
+  for (const id of BENRIYA_MEMBER_IDS) {
+    const slot = g.members[id];
+    if (slot?.weapon?.id) {
+      g.ownedWeapons[slot.weapon.id] = true;
+      g.weaponLevels[slot.weapon.id] = Math.max(g.weaponLevels[slot.weapon.id] || 1, slot.weapon.lv || 1);
+    }
+    if (slot?.armor?.id) {
+      g.ownedArmors[slot.armor.id] = true;
+      g.armorLevels[slot.armor.id] = Math.max(g.armorLevels[slot.armor.id] || 1, slot.armor.lv || 1);
+    }
+  }
+  if (!g.activeMember || !BENRIYA_MEMBER_IDS.includes(g.activeMember)) g.activeMember = "gomachan";
+  return g;
 }
 
 function loadStoryGear() {
   try {
     const raw = localStorage.getItem(LS_STORY_GEAR);
     if (!raw) return defaultStoryGear();
-    const g = JSON.parse(raw);
-    const d = defaultStoryGear();
-    return {
-      weapon: g.weapon?.id ? g.weapon : d.weapon,
-      armor: g.armor?.id ? g.armor : d.armor,
-      items: { ...d.items, ...(g.items || {}) },
-      omamori: { ...d.omamori, ...(g.omamori || {}) },
-      ownedWeapons: { ...d.ownedWeapons, ...(g.ownedWeapons || {}) },
-      ownedArmors: { ...d.ownedArmors, ...(g.ownedArmors || {}) },
-    };
+    return normalizeStoryGear(JSON.parse(raw));
   } catch {
     return defaultStoryGear();
   }
@@ -873,7 +936,9 @@ function saveStoryGear(g) {
 }
 
 function loadStoryMoney() {
-  const n = Number.parseInt(localStorage.getItem(LS_STORY_MONEY) || "50", 10);
+  const raw = localStorage.getItem(LS_STORY_MONEY);
+  if (raw === null) return 100;
+  const n = Number.parseInt(raw, 10);
   return Number.isFinite(n) && n >= 0 ? n : 0;
 }
 
@@ -910,16 +975,24 @@ function storyArmorHp(def, lv) {
 
 function aggregateBenriyaStoryBonus() {
   const g = loadStoryGear();
-  const wDef = BENRIYA_BY_ID[g.weapon?.id];
-  const aDef = BENRIYA_BY_ID[g.armor?.id];
-  const wLv = g.weapon?.lv || 0;
-  const aLv = g.armor?.lv || 0;
   const om = g.omamori || {};
-  let storyAtkBonus = storyWeaponAtk(wDef, wLv);
-  let storyHpBonus = storyArmorHp(aDef, aLv);
+  let storyAtkBonus = 0;
+  let storyHpBonus = 0;
   let storyDefReduce = 0;
   let storyGaugeBonus = 0;
   let goldMult = 1;
+  let phraseSecAdd = 0;
+  for (const id of BENRIYA_MEMBER_IDS) {
+    if (!isBenriyaMemberUnlocked(id)) continue;
+    const slot = g.members?.[id] || {};
+    const wDef = BENRIYA_BY_ID[slot.weapon?.id];
+    const aDef = BENRIYA_BY_ID[slot.armor?.id];
+    const wLv = slot.weapon?.lv || 0;
+    const aLv = slot.armor?.lv || 0;
+    storyAtkBonus += storyWeaponAtk(wDef, wLv);
+    storyHpBonus += storyArmorHp(aDef, aLv);
+    phraseSecAdd += Math.min(2, Math.floor(wLv / 4) * 0.2);
+  }
   const hpOm = BENRIYA_OMAMORI.find((o) => o.id === "health");
   const atkOm = BENRIYA_OMAMORI.find((o) => o.id === "power");
   const defOm = BENRIYA_OMAMORI.find((o) => o.id === "guard");
@@ -929,7 +1002,7 @@ function aggregateBenriyaStoryBonus() {
   if (defOm && om.guard > 0) storyDefReduce += om.guard * defOm.defPerLv;
   if (goldOm && om.fortune > 0) goldMult += om.fortune * goldOm.goldPerLv;
   return {
-    phraseSecAdd: Math.min(2, Math.floor(wLv / 4) * 0.2),
+    phraseSecAdd: Math.min(2, phraseSecAdd),
     storyAtkBonus: Math.min(48, Math.round(storyAtkBonus)),
     storyHpBonus: Math.min(55, Math.round(storyHpBonus)),
     storyDefReduce: Math.min(0.45, storyDefReduce),
@@ -949,7 +1022,130 @@ function storyChapterClearGold(chapterIdx) {
   return 25 + Math.floor(chapterIdx * 3);
 }
 
+function setStoryBattleView(mode) {
+  storyState.battleView = mode;
+  const root = $("storyBattleRoot");
+  if (!root) return;
+  root.classList.toggle("momo-battle--field", mode === "field");
+  root.classList.toggle("momo-battle--turn", mode === "turn");
+  root.dataset.battlePhase = storyState.phase || "attack";
+  renderStoryEnemyRoster();
+}
+
+function renderStoryEnemyRoster() {
+  const roster = $("storyEnemyRoster");
+  if (!roster || !storyState.active) return;
+  const ch = STORY_CHAPTERS[storyState.chapterIdx];
+  if (!ch?.enemies?.length) {
+    roster.innerHTML = "";
+    return;
+  }
+  roster.innerHTML = ch.enemies
+    .map((enemy, i) => {
+      const type = getStoryEnemyType(enemy.typeId);
+      let curHp = enemy.hp;
+      let maxHp = enemy.hp;
+      let cls = "momo-enemy-cell";
+      if (i < storyState.enemyIdx) {
+        curHp = 0;
+        cls += " is-defeated";
+      } else if (i === storyState.enemyIdx) {
+        curHp = Math.max(0, storyState.enemyHp);
+        maxHp = storyState.enemyMaxHp || enemy.hp;
+        cls += " is-active";
+      } else {
+        cls += " is-waiting";
+      }
+      const pct = maxHp > 0 ? Math.max(0, (curHp / maxHp) * 100) : 0;
+      const fig = momoMonsterSpriteHtml(enemy.sprite || type.sprite || type.id, enemy.isBoss);
+      return `<div class="${cls}">
+        <div class="momo-enemy-cell__fig">${fig}</div>
+        <div class="momo-enemy-cell__box">
+          <strong class="momo-enemy-cell__name">${escapeHtml(enemy.name)}</strong>
+          <span class="momo-enemy-cell__lv">レベル ${enemy.lv || 1}</span>
+          <span class="momo-enemy-cell__hp-label">体力</span>
+          <div class="momo-hp-bar momo-hp-bar--enemy" aria-hidden="true"><div class="momo-hp-fill momo-hp-fill--enemy" style="width:${pct}%"></div></div>
+          <span class="momo-enemy-cell__hpnum">${curHp}/${maxHp}</span>
+        </div>
+      </div>`;
+    })
+    .join("");
+}
+
+function renderMenuPartyGrid() {
+  const grid = $("menuPartyGrid");
+  if (!grid) return;
+  const g = loadStoryGear();
+  const lv = storyPlayerLevel();
+  const slots = [
+    { id: "gomachan", name: STORY_HERO.name, unlock: 0 },
+    ...STORY_COMPANIONS.map((c) => ({ id: c.id, name: c.name, unlock: c.unlockClear })),
+  ];
+  grid.innerHTML = slots
+    .map((s) => {
+      const on = loadStoryProgress() >= s.unlock;
+      const slot = g.members?.[s.id] || {};
+      const w = slot.weapon?.id ? BENRIYA_BY_ID[slot.weapon.id]?.name : "—";
+      const a = slot.armor?.id ? BENRIYA_BY_ID[slot.armor.id]?.name : "—";
+      return `<div class="momo-menu-slot${on ? "" : " is-locked"}">
+        <div class="momo-menu-slot__fig">${storyAllySpriteHtml(s.id, "md")}</div>
+        <div class="momo-menu-slot__box">
+          <strong>${escapeHtml(s.name)}</strong>
+          <span>レベル ${on ? lv : "？"}</span>
+          <span class="momo-menu-slot__gear">${on ? `${escapeHtml(w)} / ${escapeHtml(a)}` : "未加入"}</span>
+        </div>
+      </div>`;
+    })
+    .join("");
+}
+
+function showMomoMenuHub() {
+  state.playing = false;
+  storyState.active = false;
+  stopGomaBgm();
+  detachPlayKeyCapture();
+  detachStoryKeyCapture();
+  document.body.classList.remove("is-playing", "is-story");
+  leaveStoryAppShell();
+  hideAllMainScreens();
+  $("momoMenuPanel")?.classList.remove("hidden");
+  const moneyEl = $("menuHubMoney");
+  if (moneyEl) moneyEl.textContent = String(loadStoryMoney());
+  renderMenuPartyGrid();
+}
+
+function openBenriyaShop(tab = "weapon") {
+  benriyaTab = tab;
+  hideAllMainScreens();
+  $("equipHubPanel")?.classList.remove("hidden");
+  const g = loadStoryGear();
+  benriyaMember = g.activeMember || "gomachan";
+  renderBenriyaShop();
+}
+
 let benriyaTab = "weapon";
+let benriyaMember = "gomachan";
+
+function benriyaToast(msg) {
+  const hint = $("equipHubHint");
+  if (hint) {
+    hint.textContent = msg;
+    hint.classList.add("benriya-toast");
+    window.clearTimeout(benriyaToast._t);
+    benriyaToast._t = window.setTimeout(() => {
+      hint.classList.remove("benriya-toast");
+      renderBenriyaShop();
+    }, 2200);
+  }
+}
+
+function renderBenriyaMemberBar() {
+  return `<div class="benriya-members" aria-label="装備するキャラ">${BENRIYA_MEMBER_IDS.map((id) => {
+    const unlocked = isBenriyaMemberUnlocked(id);
+    const on = benriyaMember === id;
+    return `<button type="button" class="benriya-member${on ? " is-on" : ""}${unlocked ? "" : " is-locked"}" data-benriya-member="${id}" ${unlocked ? "" : "disabled"} title="${unlocked ? `${benriyaMemberLabel(id)}に装備` : "まだ仲間ではない"}">${storyAllySpriteHtml(id, "sm")}<span>${benriyaMemberLabel(id)}</span></button>`;
+  }).join("")}</div><p class="benriya-member-hint muted">桃太郎タイピングと同じく、<strong>キャラを選んでから</strong>武器・防具を買う／装備します。</p>`;
+}
 
 function renderBenriyaShop() {
   const body = $("equipHubBody");
@@ -957,22 +1153,31 @@ function renderBenriyaShop() {
   const moneyEl = $("equipHubPoints");
   const metaEl = $("equipHubActiveEffects");
   if (!body) return;
+  if (!hint?.classList.contains("benriya-toast") && hint) {
+    hint.textContent = "桃太郎タイピングの便利屋。戦闘で得た銭で武器・防具・道具・お守りを買えます。";
+  }
   const money = loadStoryMoney();
   const g = loadStoryGear();
+  benriyaMember = g.activeMember || benriyaMember;
+  if (!isBenriyaMemberUnlocked(benriyaMember)) benriyaMember = "gomachan";
   const bonus = aggregateBenriyaStoryBonus();
   const cleared = loadStoryProgress();
+  const memberSlot = g.members?.[benriyaMember] || {};
   if (moneyEl) moneyEl.textContent = String(money);
-  if (hint) hint.textContent = "桃太郎タイピングの便利屋。戦闘で得た銭で武器・防具・道具・お守りを買えます。";
   if (metaEl) {
-    metaEl.textContent = `攻+${bonus.storyAtkBonus} HP+${bonus.storyHpBonus} 防御${Math.round(bonus.storyDefReduce * 100)}% ／ 装備 ${g.weapon?.id ? BENRIYA_BY_ID[g.weapon.id]?.name + " Lv." + g.weapon.lv : "なし"}`;
+    const wName = memberSlot.weapon?.id ? BENRIYA_BY_ID[memberSlot.weapon.id]?.name : "なし";
+    const aName = memberSlot.armor?.id ? BENRIYA_BY_ID[memberSlot.armor.id]?.name : "なし";
+    metaEl.textContent = `パーティ合計 攻+${bonus.storyAtkBonus} HP+${bonus.storyHpBonus} 防御${Math.round(bonus.storyDefReduce * 100)}% ／ ${benriyaMemberLabel(benriyaMember)}：${wName}・${aName}`;
   }
   const tabs = [
     ["weapon", "武器"],
     ["armor", "防具"],
     ["item", "道具"],
     ["omamori", "お守り"],
+    ["equip", "装備"],
   ];
-  let html = `<div class="benriya-tabs">${tabs
+  let html = renderBenriyaMemberBar();
+  html += `<div class="benriya-tabs">${tabs
     .map(
       ([id, label]) =>
         `<button type="button" class="benriya-tab${benriyaTab === id ? " is-on" : ""}" data-benriya-tab="${id}">${label}</button>`,
@@ -980,9 +1185,9 @@ function renderBenriyaShop() {
     .join("")}</div><div class="benriya-list">`;
   if (benriyaTab === "weapon") {
     BENRIYA_WEAPONS.forEach((def) => {
-      const owned = g.ownedWeapons?.[def.id];
-      const equipped = g.weapon?.id === def.id;
-      const lv = equipped ? g.weapon.lv : 0;
+      const owned = !!g.ownedWeapons?.[def.id];
+      const equipped = memberSlot.weapon?.id === def.id;
+      const lv = equipped ? memberSlot.weapon.lv : benriyaStoredGearLv(g, "weapon", def.id);
       const locked = (def.needClear || 0) > cleared;
       const atk = storyWeaponAtk(def, lv || 1);
       html += benriyaRowHtml(def, {
@@ -991,7 +1196,7 @@ function renderBenriyaShop() {
         equipped,
         lv,
         stat: `攻撃 +${atk}`,
-        buyLabel: def.price === 0 ? "最初から所持" : `${def.price}銭で購入`,
+        buyLabel: def.price === 0 ? "装備する" : `${def.price}銭で購入`,
         canBuy: !locked && !owned && money >= def.price,
         canUp: owned && equipped && lv < def.maxLv && money >= benriyaGearStrengthenCost("gear", lv),
         upCost: benriyaGearStrengthenCost("gear", lv),
@@ -999,9 +1204,9 @@ function renderBenriyaShop() {
     });
   } else if (benriyaTab === "armor") {
     BENRIYA_ARMORS.forEach((def) => {
-      const owned = g.ownedArmors?.[def.id];
-      const equipped = g.armor?.id === def.id;
-      const lv = equipped ? g.armor.lv : 0;
+      const owned = !!g.ownedArmors?.[def.id];
+      const equipped = memberSlot.armor?.id === def.id;
+      const lv = equipped ? memberSlot.armor.lv : benriyaStoredGearLv(g, "armor", def.id);
       const locked = (def.needClear || 0) > cleared;
       const hp = storyArmorHp(def, lv || 1);
       html += benriyaRowHtml(def, {
@@ -1010,16 +1215,51 @@ function renderBenriyaShop() {
         equipped,
         lv,
         stat: `HP +${hp}`,
-        buyLabel: def.price === 0 ? "最初から所持" : `${def.price}銭で購入`,
+        buyLabel: def.price === 0 ? "装備する" : `${def.price}銭で購入`,
         canBuy: !locked && !owned && money >= def.price,
         canUp: owned && equipped && lv < def.maxLv && money >= benriyaGearStrengthenCost("gear", lv),
+        upCost: benriyaGearStrengthenCost("gear", lv),
+      });
+    });
+  } else if (benriyaTab === "equip") {
+    html += `<p class="benriya-equip-hint muted">所持している武器・防具を、選んだキャラに付け替えます。</p>`;
+    BENRIYA_WEAPONS.forEach((def) => {
+      if (!g.ownedWeapons?.[def.id]) return;
+      const equipped = memberSlot.weapon?.id === def.id;
+      const lv = equipped ? memberSlot.weapon.lv : benriyaStoredGearLv(g, "weapon", def.id);
+      html += benriyaRowHtml(def, {
+        locked: false,
+        owned: true,
+        equipped,
+        lv,
+        stat: `攻撃 +${storyWeaponAtk(def, lv || 1)}`,
+        buyLabel: "",
+        canBuy: false,
+        canUp: equipped && lv < def.maxLv && money >= benriyaGearStrengthenCost("gear", lv),
+        upCost: benriyaGearStrengthenCost("gear", lv),
+      });
+    });
+    BENRIYA_ARMORS.forEach((def) => {
+      if (!g.ownedArmors?.[def.id]) return;
+      const equipped = memberSlot.armor?.id === def.id;
+      const lv = equipped ? memberSlot.armor.lv : benriyaStoredGearLv(g, "armor", def.id);
+      html += benriyaRowHtml(def, {
+        locked: false,
+        owned: true,
+        equipped,
+        lv,
+        stat: `HP +${storyArmorHp(def, lv || 1)}`,
+        buyLabel: "",
+        canBuy: false,
+        canUp: equipped && lv < def.maxLv && money >= benriyaGearStrengthenCost("gear", lv),
         upCost: benriyaGearStrengthenCost("gear", lv),
       });
     });
   } else if (benriyaTab === "item") {
     BENRIYA_ITEMS.forEach((def) => {
       const count = g.items?.[def.id] || 0;
-      html += `<div class="benriya-row"><div class="benriya-row__main"><strong>${escapeHtml(def.name)}</strong><span>${escapeHtml(def.desc)}</span><span class="benriya-row__stat">所持 ${count}</span></div><div class="benriya-row__acts"><button type="button" class="benriya-buy-btn" data-benriya-buy-item="${def.id}" ${money < def.price ? "disabled" : ""}>${def.price}銭</button></div></div>`;
+      const canBuy = money >= def.price;
+      html += `<div class="benriya-row"><div class="benriya-row__main"><strong>${escapeHtml(def.name)}</strong><span>${escapeHtml(def.desc)}</span><span class="benriya-row__stat">所持 ${count}</span></div><div class="benriya-row__acts"><button type="button" class="benriya-buy-btn" data-benriya-buy-item="${def.id}" ${canBuy ? "" : "disabled"}>${def.price}銭${canBuy ? "" : "（銭不足）"}</button></div></div>`;
     });
   } else {
     BENRIYA_OMAMORI.forEach((def) => {
@@ -1036,163 +1276,256 @@ function renderBenriyaShop() {
     });
   }
   html += "</div>";
+  if (money <= 0 && benriyaTab !== "omamori") {
+    html += `<p class="benriya-money-hint muted">銭がありません。桃太郎タイピングの戦闘で敵を倒すと銭がもらえます。</p>`;
+  }
   body.innerHTML = html;
-  body.querySelectorAll("[data-benriya-tab]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      benriyaTab = btn.dataset.benriyaTab;
-      renderBenriyaShop();
-    });
-  });
-  body.querySelectorAll("[data-benriya-buy-weapon]").forEach((btn) => {
-    btn.addEventListener("click", () => benriyaBuyWeapon(btn.dataset.benriyaBuyWeapon));
-  });
-  body.querySelectorAll("[data-benriya-equip-weapon]").forEach((btn) => {
-    btn.addEventListener("click", () => benriyaEquipWeapon(btn.dataset.benriyaEquipWeapon));
-  });
-  body.querySelectorAll("[data-benriya-up-weapon]").forEach((btn) => {
-    btn.addEventListener("click", () => benriyaStrengthenWeapon());
-  });
-  body.querySelectorAll("[data-benriya-buy-armor]").forEach((btn) => {
-    btn.addEventListener("click", () => benriyaBuyArmor(btn.dataset.benriyaBuyArmor));
-  });
-  body.querySelectorAll("[data-benriya-equip-armor]").forEach((btn) => {
-    btn.addEventListener("click", () => benriyaEquipArmor(btn.dataset.benriyaEquipArmor));
-  });
-  body.querySelectorAll("[data-benriya-up-armor]").forEach((btn) => {
-    btn.addEventListener("click", () => benriyaStrengthenArmor());
-  });
-  body.querySelectorAll("[data-benriya-buy-item]").forEach((btn) => {
-    btn.addEventListener("click", () => benriyaBuyItem(btn.dataset.benriyaBuyItem));
-  });
-  body.querySelectorAll("[data-benriya-buy-omamori]").forEach((btn) => {
-    btn.addEventListener("click", () => benriyaBuyOmamori(btn.dataset.benriyaBuyOmamori));
-  });
-  body.querySelectorAll("[data-benriya-up-omamori]").forEach((btn) => {
-    btn.addEventListener("click", () => benriyaStrengthenOmamori(btn.dataset.benriyaUpOmamori));
-  });
 }
 
 function benriyaRowHtml(def, opts) {
   if (opts.locked) {
     return `<div class="benriya-row is-locked"><div class="benriya-row__main"><strong>${escapeHtml(def.name)}</strong><span>第${def.needClear}章クリアで解禁</span></div></div>`;
   }
+  const kind = def.atkBase !== undefined ? "weapon" : "armor";
+  const memberName = benriyaMemberLabel(benriyaMember);
   let acts = "";
-  if (!opts.owned && def.price > 0) {
-    acts = `<button type="button" class="benriya-buy-btn" data-benriya-buy-${def.atkBase !== undefined ? "weapon" : "armor"}="${def.id}" ${opts.canBuy ? "" : "disabled"}>${opts.buyLabel}</button>`;
-  } else if (opts.owned && !opts.equipped) {
-    acts = `<button type="button" class="benriya-equip-btn" data-benriya-equip-${def.atkBase !== undefined ? "weapon" : "armor"}="${def.id}">装備する</button>`;
+  if (!opts.owned) {
+    const canGet = def.price === 0 || opts.canBuy;
+    acts = `<button type="button" class="benriya-buy-btn" data-benriya-buy-${kind}="${def.id}" ${canGet ? "" : "disabled"}>${def.price === 0 ? `${memberName}に装備` : opts.buyLabel}</button>`;
+  } else if (!opts.equipped) {
+    acts = `<button type="button" class="benriya-equip-btn" data-benriya-equip-${kind}="${def.id}">${memberName}に装備</button>`;
   } else if (opts.equipped) {
     acts =
       opts.lv < def.maxLv
-        ? `<button type="button" class="benriya-up-btn" data-benriya-up-${def.atkBase !== undefined ? "weapon" : "armor"}" ${opts.canUp ? "" : "disabled"}>${opts.upCost}銭で強化 Lv.${opts.lv}</button>`
-        : `<span class="benriya-max">装備中 Lv.MAX</span>`;
-  } else {
-    acts = `<span class="benriya-equipped">装備中 Lv.${opts.lv || 1}</span>`;
+        ? `<button type="button" class="benriya-up-btn" data-benriya-up-${kind}="${def.id}" ${opts.canUp ? "" : "disabled"}>${opts.upCost}銭で強化 Lv.${opts.lv}</button>`
+        : `<span class="benriya-max">${memberName}装備中 Lv.MAX</span>`;
   }
   return `<div class="benriya-row${opts.equipped ? " is-equipped" : ""}"><div class="benriya-row__main"><strong>${escapeHtml(def.name)}</strong><span class="benriya-row__stat">${opts.stat}${opts.lv ? ` Lv.${opts.lv}` : ""}</span></div><div class="benriya-row__acts">${acts}</div></div>`;
 }
 
+function benriyaPersistMember() {
+  const g = loadStoryGear();
+  g.activeMember = benriyaMember;
+  saveStoryGear(g);
+}
+
 function benriyaBuyWeapon(id) {
   const def = BENRIYA_BY_ID[id];
-  if (!def || !spendStoryMoney(def.price)) return;
+  if (!def || !isBenriyaMemberUnlocked(benriyaMember)) return;
+  if (def.price > 0 && loadStoryMoney() < def.price) {
+    benriyaToast("銭が足りません。戦闘で稼いでから来てね。");
+    return;
+  }
+  if (def.price > 0 && !spendStoryMoney(def.price)) return;
   const g = loadStoryGear();
   g.ownedWeapons[id] = true;
-  g.weapon = { id, lv: 1 };
+  if (!g.members[benriyaMember]) g.members[benriyaMember] = { weapon: null, armor: null };
+  const lv = benriyaStoredGearLv(g, "weapon", id);
+  g.members[benriyaMember].weapon = { id, lv };
+  benriyaSaveGearLv(g, "weapon", id, lv);
+  g.activeMember = benriyaMember;
   saveStoryGear(g);
+  benriyaToast(`${benriyaMemberLabel(benriyaMember)}に「${def.name}」を装備！`);
   renderBenriyaShop();
 }
 
 function benriyaEquipWeapon(id) {
   const g = loadStoryGear();
-  if (!g.ownedWeapons?.[id]) return;
-  g.weapon = { id, lv: g.weapon?.id === id ? g.weapon.lv : 1 };
+  if (!g.ownedWeapons?.[id] || !isBenriyaMemberUnlocked(benriyaMember)) return;
+  if (!g.members[benriyaMember]) g.members[benriyaMember] = { weapon: null, armor: null };
+  const lv = benriyaStoredGearLv(g, "weapon", id);
+  g.members[benriyaMember].weapon = { id, lv };
+  g.activeMember = benriyaMember;
   saveStoryGear(g);
+  benriyaToast(`${benriyaMemberLabel(benriyaMember)}に装備しました。`);
   renderBenriyaShop();
 }
 
-function benriyaStrengthenWeapon() {
+function benriyaStrengthenWeapon(id) {
   const g = loadStoryGear();
-  const def = BENRIYA_BY_ID[g.weapon?.id];
-  if (!def || g.weapon.lv >= def.maxLv) return;
-  const cost = benriyaGearStrengthenCost("gear", g.weapon.lv);
+  const slot = g.members?.[benriyaMember]?.weapon;
+  const def = BENRIYA_BY_ID[id || slot?.id];
+  if (!def || !slot || slot.id !== (id || slot.id) || slot.lv >= def.maxLv) return;
+  const cost = benriyaGearStrengthenCost("gear", slot.lv);
+  if (loadStoryMoney() < cost) {
+    benriyaToast("強化する銭が足りません。");
+    return;
+  }
   if (!spendStoryMoney(cost)) return;
-  g.weapon.lv += 1;
+  slot.lv += 1;
+  benriyaSaveGearLv(g, "weapon", slot.id, slot.lv);
   saveStoryGear(g);
+  benriyaToast(`${benriyaMemberLabel(benriyaMember)}の${def.name}が Lv.${slot.lv} に！`);
   renderBenriyaShop();
 }
 
 function benriyaBuyArmor(id) {
   const def = BENRIYA_BY_ID[id];
-  if (!def || !spendStoryMoney(def.price)) return;
+  if (!def || !isBenriyaMemberUnlocked(benriyaMember)) return;
+  if (def.price > 0 && loadStoryMoney() < def.price) {
+    benriyaToast("銭が足りません。戦闘で稼いでから来てね。");
+    return;
+  }
+  if (def.price > 0 && !spendStoryMoney(def.price)) return;
   const g = loadStoryGear();
   g.ownedArmors[id] = true;
-  g.armor = { id, lv: 1 };
+  if (!g.members[benriyaMember]) g.members[benriyaMember] = { weapon: null, armor: null };
+  const lv = benriyaStoredGearLv(g, "armor", id);
+  g.members[benriyaMember].armor = { id, lv };
+  benriyaSaveGearLv(g, "armor", id, lv);
+  g.activeMember = benriyaMember;
   saveStoryGear(g);
+  benriyaToast(`${benriyaMemberLabel(benriyaMember)}に「${def.name}」を装備！`);
   renderBenriyaShop();
 }
 
 function benriyaEquipArmor(id) {
   const g = loadStoryGear();
-  if (!g.ownedArmors?.[id]) return;
-  g.armor = { id, lv: g.armor?.id === id ? g.armor.lv : 1 };
+  if (!g.ownedArmors?.[id] || !isBenriyaMemberUnlocked(benriyaMember)) return;
+  if (!g.members[benriyaMember]) g.members[benriyaMember] = { weapon: null, armor: null };
+  const lv = benriyaStoredGearLv(g, "armor", id);
+  g.members[benriyaMember].armor = { id, lv };
+  g.activeMember = benriyaMember;
   saveStoryGear(g);
+  benriyaToast(`${benriyaMemberLabel(benriyaMember)}に装備しました。`);
   renderBenriyaShop();
 }
 
-function benriyaStrengthenArmor() {
+function benriyaStrengthenArmor(id) {
   const g = loadStoryGear();
-  const def = BENRIYA_BY_ID[g.armor?.id];
-  if (!def || g.armor.lv >= def.maxLv) return;
-  const cost = benriyaGearStrengthenCost("gear", g.armor.lv);
+  const slot = g.members?.[benriyaMember]?.armor;
+  const def = BENRIYA_BY_ID[id || slot?.id];
+  if (!def || !slot || slot.id !== (id || slot.id) || slot.lv >= def.maxLv) return;
+  const cost = benriyaGearStrengthenCost("gear", slot.lv);
+  if (loadStoryMoney() < cost) {
+    benriyaToast("強化する銭が足りません。");
+    return;
+  }
   if (!spendStoryMoney(cost)) return;
-  g.armor.lv += 1;
+  slot.lv += 1;
+  benriyaSaveGearLv(g, "armor", slot.id, slot.lv);
   saveStoryGear(g);
+  benriyaToast(`${benriyaMemberLabel(benriyaMember)}の${def.name}が Lv.${slot.lv} に！`);
   renderBenriyaShop();
 }
 
 function benriyaBuyItem(id) {
   const def = BENRIYA_ITEMS.find((d) => d.id === id);
-  if (!def || !spendStoryMoney(def.price)) return;
+  if (!def) return;
+  if (loadStoryMoney() < def.price) {
+    benriyaToast("銭が足りません。");
+    return;
+  }
+  if (!spendStoryMoney(def.price)) return;
   const g = loadStoryGear();
   g.items[id] = (g.items[id] || 0) + 1;
   saveStoryGear(g);
+  benriyaToast(`「${def.name}」を購入！（所持 ${g.items[id]}）`);
   renderBenriyaShop();
 }
 
 function benriyaBuyOmamori(id) {
   const def = BENRIYA_OMAMORI.find((d) => d.id === id);
-  if (!def || !spendStoryMoney(def.price)) return;
+  if (!def) return;
+  if (loadStoryMoney() < def.price) {
+    benriyaToast("銭が足りません。");
+    return;
+  }
+  if (!spendStoryMoney(def.price)) return;
   const g = loadStoryGear();
   g.omamori[id] = 1;
   saveStoryGear(g);
+  benriyaToast(`「${def.name}」を購入！`);
   renderBenriyaShop();
 }
 
 function benriyaStrengthenOmamori(id) {
   const def = BENRIYA_OMAMORI.find((d) => d.id === id);
   const g = loadStoryGear();
-  const lv = g.omamori[id] || 0;
+  const lv = g.omamori?.[id] || 0;
   if (!def || lv <= 0 || lv >= def.maxLv) return;
   const cost = benriyaGearStrengthenCost("omamori", lv);
+  if (loadStoryMoney() < cost) {
+    benriyaToast("強化する銭が足りません。");
+    return;
+  }
   if (!spendStoryMoney(cost)) return;
   g.omamori[id] = lv + 1;
   saveStoryGear(g);
+  benriyaToast(`「${def.name}」が Lv.${g.omamori[id]} に！`);
   renderBenriyaShop();
 }
 
-function showBenriyaHub() {
-  state.playing = false;
-  storyState.active = false;
-  stopGomaBgm();
-  detachPlayKeyCapture();
-  detachStoryKeyCapture();
-  document.body.classList.remove("is-playing", "is-story");
-  leaveStoryAppShell();
-  hideAllMainScreens();
-  $("equipHubPanel")?.classList.remove("hidden");
-  benriyaTab = "weapon";
-  renderBenriyaShop();
+function handleBenriyaShopClick(ev) {
+  const panel = $("equipHubPanel");
+  if (!panel || panel.classList.contains("hidden")) return;
+  if (!panel.contains(ev.target)) return;
+  const memberBtn = ev.target.closest("[data-benriya-member]");
+  if (memberBtn && !memberBtn.disabled) {
+    benriyaMember = memberBtn.dataset.benriyaMember;
+    benriyaPersistMember();
+    renderBenriyaShop();
+    return;
+  }
+  const tab = ev.target.closest("[data-benriya-tab]");
+  if (tab) {
+    benriyaTab = tab.dataset.benriyaTab;
+    renderBenriyaShop();
+    return;
+  }
+  const buyWeapon = ev.target.closest("[data-benriya-buy-weapon]");
+  if (buyWeapon && !buyWeapon.disabled) {
+    benriyaBuyWeapon(buyWeapon.dataset.benriyaBuyWeapon);
+    return;
+  }
+  const equipWeapon = ev.target.closest("[data-benriya-equip-weapon]");
+  if (equipWeapon) {
+    benriyaEquipWeapon(equipWeapon.dataset.benriyaEquipWeapon);
+    return;
+  }
+  const upWeapon = ev.target.closest("[data-benriya-up-weapon]");
+  if (upWeapon && !upWeapon.disabled) {
+    benriyaStrengthenWeapon(upWeapon.dataset.benriyaUpWeapon);
+    return;
+  }
+  const buyArmor = ev.target.closest("[data-benriya-buy-armor]");
+  if (buyArmor && !buyArmor.disabled) {
+    benriyaBuyArmor(buyArmor.dataset.benriyaBuyArmor);
+    return;
+  }
+  const equipArmor = ev.target.closest("[data-benriya-equip-armor]");
+  if (equipArmor) {
+    benriyaEquipArmor(equipArmor.dataset.benriyaEquipArmor);
+    return;
+  }
+  const upArmor = ev.target.closest("[data-benriya-up-armor]");
+  if (upArmor && !upArmor.disabled) {
+    benriyaStrengthenArmor(upArmor.dataset.benriyaUpArmor);
+    return;
+  }
+  const buyItem = ev.target.closest("[data-benriya-buy-item]");
+  if (buyItem && !buyItem.disabled) {
+    benriyaBuyItem(buyItem.dataset.benriyaBuyItem);
+    return;
+  }
+  const buyOm = ev.target.closest("[data-benriya-buy-omamori]");
+  if (buyOm && !buyOm.disabled) {
+    benriyaBuyOmamori(buyOm.dataset.benriyaBuyOmamori);
+    return;
+  }
+  const upOm = ev.target.closest("[data-benriya-up-omamori]");
+  if (upOm && !upOm.disabled) {
+    benriyaStrengthenOmamori(upOm.dataset.benriyaUpOmamori);
+  }
 }
+
+function showBenriyaHub(fromVictory = false) {
+  openBenriyaShop("weapon");
+  if (fromVictory === true) {
+    benriyaToast("勝利おめでとう！キャラを選んで装備を付け替えよう。");
+  }
+}
+
 
 const cutsceneState = {
   active: false,
@@ -1246,6 +1579,10 @@ const storyState = {
   battlePhase: "typing",
   /** 章内の全敵（HP・撃破状態つき） */
   battleEnemies: [],
+  /** field=画像4風俯瞰 / turn=画像3風タイピング */
+  battleView: "field",
+  /** 大技イントロ中はパネル更新を止める */
+  introLock: false,
   /** 桃：1章1回 */
   peachUsedThisChapter: false,
 };
@@ -1281,6 +1618,7 @@ const state = {
 const MAIN_SCREENS = [
   "homePanel",
   "practicePanel",
+  "momoMenuPanel",
   "equipHubPanel",
   "storyMenuPanel",
   "stageWrap",
@@ -2741,7 +3079,17 @@ function renderStoryCompanionStrip() {
   if (strip) strip.innerHTML = html;
 }
 
-/** バトル左列：桃太郎タイピング風 chibi（ごまちゃん＋犬・サル・キジ） */
+function storyMemberGearLabel(memberId) {
+  const g = loadStoryGear();
+  const slot = g.members?.[memberId];
+  if (!slot) return "";
+  const parts = [];
+  if (slot.weapon?.id) parts.push(BENRIYA_BY_ID[slot.weapon.id]?.name || "武器");
+  if (slot.armor?.id) parts.push(BENRIYA_BY_ID[slot.armor.id]?.name || "防具");
+  return parts.length ? parts.join("・") : "";
+}
+
+/** バトル左列：桃太郎タイピング風パーティ（画像4・ステータス箱） */
 function renderStoryPartyPanel() {
   const col = $("storyPartyColumn");
   if (!col) return;
@@ -2749,25 +3097,29 @@ function renderStoryPartyPanel() {
   const curP = Math.max(0, storyState.playerHp ?? storyCalcPlayerMaxHp());
   const maxP = storyState.playerMaxHp ?? storyCalcPlayerMaxHp();
   const pPct = maxP > 0 ? Math.max(0, (curP / maxP) * 100) : 0;
-  let html = `<div class="momo-party-row momo-party-row--hero" id="storyHeroSlot">
-    <div class="momo-party-row__fig">${storyAllyFigureHtml("gomachan", "hero")}</div>
-    <div class="momo-party-row__info">
-      <span class="momo-party-row__name">${STORY_HERO.name}</span>
-      <span class="momo-party-row__sub">${STORY_HERO.role}</span>
-      <div class="momo-hp-bar momo-hp-bar--ally" aria-hidden="true"><div class="momo-hp-fill momo-hp-fill--ally" id="storyPlayerHpBar" style="width:${pPct}%"></div></div>
-      <span class="momo-party-row__hpnum"><strong id="storyPlayerHp">${curP}</strong>/<span id="storyPlayerMaxHp">${maxP}</span></span>
-    </div>
-  </div>`;
-  STORY_COMPANIONS.forEach((c) => {
-    const on = cleared >= c.unlockClear;
-    html += `<div class="momo-party-row momo-party-row--companion${on ? "" : " momo-party-row--locked"}" id="storyCompanion_${c.id}" title="${on ? c.skillName : `第${c.unlockClear}章`}">
-      <div class="momo-party-row__fig">${storyAllySpriteHtml(c.id, on ? "md" : "sm")}</div>
-      <div class="momo-party-row__info">
-        <span class="momo-party-row__name">${c.name}</span>
-        <span class="momo-party-row__sub">${on ? c.skillName : "？？？"}</span>
+  const lv = storyPlayerLevel();
+  const slots = [
+    { id: "gomachan", name: STORY_HERO.name, unlock: 0, hero: true },
+    ...STORY_COMPANIONS.map((c) => ({ id: c.id, name: c.name, unlock: c.unlockClear, hero: false })),
+  ];
+  let html = `<div class="momo-party-grid">`;
+  slots.forEach((s, i) => {
+    const on = cleared >= s.unlock;
+    const rowId = s.hero ? "storyHeroSlot" : `storyCompanion_${s.id}`;
+    const rowCls = s.hero ? "momo-party-cell--hero" : "momo-party-cell--companion";
+    const gear = on ? storyMemberGearLabel(s.id) : "";
+    html += `<div class="momo-party-cell ${rowCls}${on ? "" : " is-locked"}" id="${rowId}">
+      <div class="momo-party-cell__fig">${storyAllySpriteHtml(s.id, on ? "md" : "sm")}</div>
+      <div class="momo-party-cell__box">
+        <strong class="momo-party-cell__name">${s.name}</strong>
+        <span class="momo-party-cell__lv">レベル ${on ? lv : "？"}</span>
+        ${s.hero ? `<span class="momo-party-cell__hp-label">体力</span>
+        <div class="momo-hp-bar momo-hp-bar--ally" aria-hidden="true"><div class="momo-hp-fill momo-hp-fill--ally" id="storyPlayerHpBar" style="width:${pPct}%"></div></div>
+        <span class="momo-party-cell__hpnum"><strong id="storyPlayerHp">${curP}</strong>/${maxP}</span>` : `<span class="momo-party-cell__sub">${on ? gear || "仲間" : "？？？"}</span>`}
       </div>
     </div>`;
   });
+  html += `</div>`;
   col.innerHTML = html;
 }
 
@@ -3127,7 +3479,9 @@ function updateStoryHud() {
   }
   const moneyEl = $("storyBattleMoney");
   if (moneyEl) moneyEl.textContent = `${loadStoryMoney()}銭`;
+  updateStoryStageLabel();
   renderStoryBattleItems();
+  renderStoryEnemyRoster();
 }
 
 function showStoryDamagePopup(amount, target = "player") {
@@ -3201,11 +3555,20 @@ function beginStoryBattle() {
   $("storyResultPanel")?.classList.add("hidden");
   renderStoryCompanionStrip();
   renderStoryPartyPanel();
+  setStoryBattleView("field");
+  updateStoryStageLabel();
   attachStoryKeyCapture();
   void resumeGomaAudio();
   startGomaStoryBattleBgm();
   setStoryBattleLive(true);
   $("storyGhostInput")?.focus({ preventScroll: true });
+}
+
+function updateStoryStageLabel() {
+  const el = $("storyStageLabel");
+  const ch = STORY_CHAPTERS[storyState.chapterIdx];
+  if (!el || !ch) return;
+  el.textContent = `${ch.title} ステージ${storyState.enemyIdx + 1}`;
 }
 
 function storyStopBattleTimers() {
@@ -3282,17 +3645,20 @@ function startStoryEnemy() {
 }
 
 function storySetupPanels(task) {
+  if (storyState.introLock) return;
   storyState.currentPhrase = { text: task.text, yomi: task.yomi };
   storyState.panelKeys = task.panelKeys.map((k) => k.toLowerCase());
   storyState.typosThisPhrase = 0;
   storyState.phraseBusy = false;
   storyState.phraseInputLocked = false;
+  storyState.introLock = false;
   storyState._phraseCompleteAt = 0;
   storyState._pendingTurnFn = null;
   storyResetPanelTyping();
   const now = performance.now();
   storyState.phraseStartedAt = now;
   storyState.phraseEndAt = now + storyState.phraseSec * 1000;
+  setStoryBattleView("turn");
   const wordEl = $("storyPanelWord");
   if (wordEl) wordEl.textContent = task.text;
   renderStoryPanels();
@@ -3337,6 +3703,7 @@ function renderStoryVirtualKeyboard() {
 }
 
 function renderStoryPanels() {
+  if (storyState.introLock) return;
   const board = $("storyPanelBoard");
   if (!board) return;
   const keys = storyState.panelKeys;
@@ -3804,7 +4171,7 @@ function finishStoryChapter() {
   $("storyResultPanel")?.classList.remove("hidden");
   $("storyResultHeading").textContent = `${ch.title} クリア！`;
   const newMax = storyCalcPlayerMaxHp();
-  $("storyResultText").textContent = `${ch.outro}（Lv.${storyPlayerLevel()} / HP ${newMax}）クリアボーナス +${clearGold}銭！`;
+  $("storyResultText").textContent = `${ch.outro}（Lv.${storyPlayerLevel()} / HP ${newMax}）クリアボーナス +${clearGold}銭！「便利屋」でキャラを選んで装備できます。`;
   const cont = $("storyContinueBtn");
   if (cont) {
     const next = storyState.chapterIdx + 1;
@@ -3842,6 +4209,7 @@ function storyHoldPhraseTransition(ms = 1200) {
 
 function storyFinishTurn(nextFn) {
   window.clearTimeout(storyState._nextTimer);
+  setStoryBattleView("field");
   const delay = STORY_BATTLE_PACE.turnFinishMs;
   storyState.phraseEndAt = performance.now() + delay + 400;
   storyState._pendingTurnFn = nextFn;
@@ -3860,6 +4228,7 @@ function storyFinishTurn(nextFn) {
 
 function storyRecoverStuckTurn(now) {
   if (storyState.battlePhase !== "typing") return;
+  if (storyState.introLock) return;
   if (!storyState.phraseBusy || !storyIsPhraseComplete() || storyState._nextTimer) return;
   if (storyState.enemyHp <= 0) {
     storyOnEnemyDefeated();
@@ -3884,25 +4253,36 @@ function storyScheduleNext(fn, delayMs) {
 }
 
 function storyShowSpecialIntro(isEnemy, onReady) {
+  window.clearTimeout(storyState._nextTimer);
+  storyState._nextTimer = 0;
+  storyState._pendingTurnFn = null;
   storyState.phraseBusy = true;
   storyState.phraseInputLocked = true;
+  storyState.introLock = true;
+  storyState.panelKeys = [];
+  storyState.panelIndex = 0;
+  storyState.typedRomaji = "";
+  storyState.romajiCandidates = [];
+  storyState._phraseCompleteAt = 0;
+  setStoryBattleView("turn");
   const splash = $("storySpecialSplash");
-  const wordEl = $("storyPanelWord");
   const board = $("storyPanelBoard");
   const card = $("storyPhraseCard");
+  const wordEl = $("storyPanelWord");
   const label = isEnemy ? "敵の大技！" : "大技！";
   if (splash) {
     splash.textContent = label;
     splash.classList.remove("hidden");
   }
-  if (wordEl) wordEl.textContent = label;
   if (board) board.innerHTML = "";
+  if (wordEl) wordEl.textContent = label;
   if (card) card.classList.add("momo-phrase-card--special-intro");
   updateStoryNextKeyHint();
   window.clearTimeout(storyShowSpecialIntro._t);
   storyShowSpecialIntro._t = window.setTimeout(() => {
     if (splash) splash.classList.add("hidden");
     if (card) card.classList.remove("momo-phrase-card--special-intro");
+    storyState.introLock = false;
     storyState.phraseInputLocked = false;
     storyState.phraseBusy = false;
     if (onReady) onReady();
@@ -3998,7 +4378,7 @@ function storyLoop(now) {
   const remain = (storyState.phraseEndAt - now) / 1000;
   const pt = $("storyPhraseTimer");
   if (pt) pt.textContent = Math.max(0, remain).toFixed(1);
-  if (!storyState.phraseBusy || !storyIsPhraseComplete()) renderStoryPanels();
+  if (!storyState.introLock && (!storyState.phraseBusy || !storyIsPhraseComplete())) renderStoryPanels();
   storyRecoverStuckTurn(now);
   if (!storyState.phraseBusy && !storyState.phraseInputLocked && remain <= 0) storyOnTimeout();
   storyState.raf = requestAnimationFrame(storyLoop);
@@ -4027,15 +4407,24 @@ function init() {
   });
 
   $("goPracticeBtn")?.addEventListener("click", showPracticePanel);
-  $("goEquipBtn")?.addEventListener("click", showBenriyaHub);
+  $("goMenuBtn")?.addEventListener("click", showMomoMenuHub);
   $("goStoryBtn")?.addEventListener("click", showStoryMenu);
   $("backHomeFromPracticeBtn")?.addEventListener("click", showHome);
-  $("backHomeFromEquipBtn")?.addEventListener("click", showHome);
+  $("backHomeFromMenuBtn")?.addEventListener("click", showHome);
+  $("backHomeFromEquipBtn")?.addEventListener("click", showMomoMenuHub);
   $("backHomeFromStoryBtn")?.addEventListener("click", showHome);
   $("quitStoryBtn")?.addEventListener("click", quitStory);
+  $("quitStoryBtnFooter")?.addEventListener("click", quitStory);
   $("storyContinueBtn")?.addEventListener("click", onStoryContinue);
   $("storyBackHomeBtn")?.addEventListener("click", showStoryMenu);
-  $("storyGoBenriyaBtn")?.addEventListener("click", showBenriyaHub);
+  $("storyResultBenriyaBtn")?.addEventListener("click", showMomoMenuHub);
+  $("storyGoMenuBtn")?.addEventListener("click", showMomoMenuHub);
+  $("momoMenuPanel")?.addEventListener("click", (ev) => {
+    const shop = ev.target.closest("[data-momo-shop]");
+    if (!shop) return;
+    openBenriyaShop(shop.dataset.momoShop);
+  });
+  $("equipHubPanel")?.addEventListener("click", handleBenriyaShopClick);
   $("storyBattleItems")?.addEventListener("click", (ev) => {
     const btn = ev.target.closest("[data-story-use-item]");
     if (!btn || btn.disabled) return;
