@@ -77,6 +77,7 @@ const state = {
   target: "",
   index: 0,
   raf: 0,
+  bunnyX: 4,
 };
 
 function randomInt(min, max) {
@@ -177,6 +178,7 @@ function newPhrase() {
   state.index = 0;
   state.phraseEndAt = performance.now() + state.diff.phraseSec * 1000;
   $("baitText").textContent = state.target;
+  $("bait").style.setProperty("--bait-x", `${randomInt(44, 86)}%`);
   $("bait").hidden = false;
   $("bait").style.animation = "none";
   void $("bait").offsetHeight;
@@ -204,12 +206,26 @@ function updateHud(gameRemain, phraseRemain) {
   $("stockCount").textContent = String(state.baitStock);
 }
 
+function updateBunnyMotion() {
+  const scene = $("scene");
+  const bunny = $("bunny");
+  const bait = $("bait");
+  if (!scene || !bunny || !bait || bait.hidden) return;
+
+  const sceneRect = scene.getBoundingClientRect();
+  const baitRect = bait.getBoundingClientRect();
+  const baitPercent = ((baitRect.left + baitRect.width / 2 - sceneRect.left) / sceneRect.width) * 100;
+  const target = Math.max(3, Math.min(72, baitPercent - 16));
+  state.bunnyX += (target - state.bunnyX) * 0.06;
+  bunny.style.left = `${state.bunnyX.toFixed(2)}%`;
+}
+
 function bumpBunny() {
   const b = $("bunny");
-  b.style.transform = `translateX(${randomInt(-4, 8)}px) translateY(${randomInt(-2, 2)}px)`;
+  b.style.transform = `translate(${randomInt(-5, 8)}px, ${randomInt(-4, 2)}px) scaleX(-1)`;
   setTimeout(() => {
-    b.style.transform = "";
-  }, 200);
+    b.style.transform = "scaleX(-1)";
+  }, 180);
 }
 
 function onSuccessPhrase() {
@@ -227,6 +243,7 @@ function onMistakeOrTimeout() {
 
 function endGame() {
   state.playing = false;
+  document.body.classList.remove("is-playing");
   cancelAnimationFrame(state.raf);
   $("ghostInput").blur();
   $("bait").hidden = true;
@@ -251,6 +268,7 @@ function gameLoop(now) {
   const gameRemain = Math.max(0, (state.gameEndAt - now) / 1000);
   const phraseRemain = (state.phraseEndAt - now) / 1000;
   updateHud(gameRemain, phraseRemain);
+  updateBunnyMotion();
 
   if (gameRemain <= 0) {
     endGame();
@@ -269,6 +287,8 @@ function startGame() {
   state.score = 0;
   state.baitStock = 0;
   state.playing = true;
+  state.bunnyX = 4;
+  document.body.classList.add("is-playing");
   const now = performance.now();
   state.gameEndAt = now + 60_000;
   $("resultPanel").classList.add("hidden");
@@ -282,6 +302,7 @@ function startGame() {
 
 function resetToSetup() {
   state.playing = false;
+  document.body.classList.remove("is-playing");
   cancelAnimationFrame(state.raf);
   $("setupPanel").classList.remove("setup-hidden");
   $("stageWrap").classList.add("setup-hidden");
