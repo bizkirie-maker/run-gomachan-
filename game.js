@@ -418,10 +418,10 @@ const STORY_CHAPTER_COUNT = 200;
 /** 桃太郎の仲間（章クリア数で解放）— ココア版桃太郎タイピングのキャスト＝ごまちゃん版 */
 const STORY_HERO = {
   id: "gomachan",
-  name: "ごまちゃん",
-  icon: "🐰",
-  role: "主人公（ココアの桃太郎タイピング風）",
-  skillName: "きびだんご斬り",
+  name: "ここあ",
+  icon: "🍑",
+  role: "主人公（桃太郎ここあ）",
+  skillName: "ももの大技",
 };
 
 const STORY_COMPANIONS = [
@@ -484,25 +484,25 @@ const STORY_BATTLE_PACE = {
   companionStrikeMs: 400,
 };
 
-/** 敵の強さ（章・連戦ごとに伸びる。数値を上げると全体が手強くなる） */
+/** 敵（妖菓子）の強さ。本家風に「序盤やさしく・終盤じわっと手強く」。数値を上げると全体が手強くなる */
 const STORY_ENEMY_POWER = {
-  hpBase: 6,
-  hpPerChapter: 0.55,
+  hpBase: 5,
+  hpPerChapter: 0.7,
   hpPerEncounter: 3,
-  hpBossBonus: 12,
-  atkBase: 3,
-  atkPerChapter: 0.22,
+  hpBossBonus: 16,
+  atkBase: 2,
+  atkPerChapter: 0.28,
   atkPerEncounter: 2,
-  atkBossBonus: 4,
-  atkGlobalMul: 1.25,
-  phraseSecDropEvery: 45,
-  defenseSecDropEvery: 55,
+  atkBossBonus: 5,
+  atkGlobalMul: 1.1,
+  phraseSecDropEvery: 40,
+  defenseSecDropEvery: 50,
 };
 
-/** ごまちゃんの技（桃太郎タイピング本家準拠） */
+/** ここあの技（桃太郎ここあ風：げんきが満タンで「とくい技」） */
 const STORY_PLAYER_SKILLS = {
-  normal: { name: "通常攻撃", short: "こうげき" },
-  special: { name: "きびだんご大技", short: "大技！" },
+  normal: { name: "つうじょう攻撃", short: "こうげき" },
+  special: { name: "とくい技・ももの大技", short: "とくい技！" },
 };
 
 /** ココア風：最初 HP10 前後 → 章クリア・Lv でじわじわ増える */
@@ -510,132 +510,132 @@ const STORY_HP_BASE = 10;
 const STORY_HP_PER_CLEAR = 2;
 const STORY_HP_PER_LEVEL = 4;
 
-/** 桃太郎タイピング風：モンスター（敵）カタログ — ココア版のモンスター退治 */
+/** 桃太郎ここあ風：妖菓子（あやかし）カタログ — 捨てられたお菓子が妖菓子になった */
 const STORY_ENEMY_TYPES = [
   {
-    id: "slime",
-    name: "スライム",
-    category: "モンスター",
-    icon: "💧",
-    sprite: "slime",
-    tagline: "ぷるぷる跳ねる定番モンスター",
-    appearLine: "プルプル… スライムが あらわれた！",
-    defeatLine: "スライムは 水たまりに 溶けていった…",
-    normalMove: "体当たり",
-    specialMove: "大ジャンプ",
+    id: "dango",
+    name: "だんご妖菓子",
+    category: "妖菓子",
+    icon: "🍡",
+    sprite: "dango",
+    tagline: "三兄弟でぴょこぴょこ跳ねる定番の妖菓子",
+    appearLine: "ぴょこぴょこ！ だんご妖菓子が あらわれた！",
+    defeatLine: "だんご妖菓子は ただの おだんごに 戻った。",
+    normalMove: "くしづき",
+    specialMove: "三兄弟れんだ",
   },
   {
-    id: "bat",
-    name: "こうもり",
-    category: "モンスター",
-    icon: "🦇",
-    sprite: "bat",
-    tagline: "暗がりから襲う空の魔物",
-    appearLine: "キーキー！ こうもりが 飛んできた！",
-    defeatLine: "こうもりは 森の奥へ 逃げた。",
-    normalMove: "かみつき",
-    specialMove: "超音波",
+    id: "daifuku",
+    name: "大福おばけ",
+    category: "妖菓子",
+    icon: "🤍",
+    sprite: "daifuku",
+    tagline: "ぷにぷに飛びはねる白い妖菓子",
+    appearLine: "ぷにん！ 大福おばけが ふくらんだ！",
+    defeatLine: "大福おばけは しぼんで おとなしくなった。",
+    normalMove: "もちのしかかり",
+    specialMove: "のびのびタックル",
   },
   {
-    id: "goblin",
-    name: "ゴブリン",
-    category: "モンスター",
-    icon: "👺",
-    sprite: "goblin",
-    tagline: "小柄だけど素早い緑の魔物",
-    appearLine: "ギャッ！ ゴブリンが 棒を振り回す！",
-    defeatLine: "ゴブリンは 逃げ出していった。",
-    normalMove: "棒殴り",
-    specialMove: "乱れ打ち",
+    id: "kashiwa",
+    name: "かしわもち",
+    category: "妖菓子",
+    icon: "🍃",
+    sprite: "kashiwa",
+    tagline: "かしわの葉をまとった気の強い妖菓子",
+    appearLine: "バサッ！ かしわもちが 葉を ひろげた！",
+    defeatLine: "かしわもちは 葉に つつまれて 眠った。",
+    normalMove: "はっぱビンタ",
+    specialMove: "かしわあらし",
   },
   {
-    id: "mushroom",
-    name: "キノコ魔",
-    category: "モンスター",
-    icon: "🍄",
-    sprite: "mushroom",
-    tagline: "胞子をまく森の魔物",
-    appearLine: "モクモク… キノコ魔が 現れた！",
-    defeatLine: "キノコ魔は 地面に 倒れた。",
-    normalMove: "胞子散らし",
-    specialMove: "毒の胞子",
+    id: "dorayaki",
+    name: "どら焼き丸",
+    category: "妖菓子",
+    icon: "🥮",
+    sprite: "dorayaki",
+    tagline: "あんこをのぞかせて笑う まんまる妖菓子",
+    appearLine: "むぎゅ！ どら焼き丸が 口を ひらいた！",
+    defeatLine: "どら焼き丸は ぺたんと とじた。",
+    normalMove: "あんこかみつき",
+    specialMove: "どらどら連打",
   },
   {
-    id: "skeleton",
-    name: "がいこつ",
-    category: "モンスター",
-    icon: "💀",
-    sprite: "skeleton",
-    tagline: "カチカチ音を立てる亡者",
-    appearLine: "ガタガタ… がいこつが 立ちはだかる！",
-    defeatLine: "骨は バラバラに 崩れた。",
-    normalMove: "骨投げ",
-    specialMove: "骨乱舞",
+    id: "yokan",
+    name: "ようかん侍",
+    category: "妖菓子",
+    icon: "🗡️",
+    sprite: "yokan",
+    tagline: "刀を構える羊羹の武者妖菓子",
+    appearLine: "シャキン！ ようかん侍が 刀を 抜いた！",
+    defeatLine: "ようかん侍は 一礼して 退いた。",
+    normalMove: "ようかん斬り",
+    specialMove: "羊羹一閃",
   },
   {
-    id: "orc",
-    name: "オーク",
-    category: "モンスター",
-    icon: "🐗",
-    sprite: "orc",
-    tagline: "力持ちの猪型モンスター",
-    appearLine: "ウォオ！ オークが 突進してくる！",
-    defeatLine: "オークは 地面に 倒れた。",
-    normalMove: "突進",
-    specialMove: "大振り",
+    id: "manju",
+    name: "まんじゅう鬼",
+    category: "妖菓子",
+    icon: "👹",
+    sprite: "manju",
+    tagline: "小さな角を生やした まんじゅうの暴れん坊",
+    appearLine: "むほー！ まんじゅう鬼が ふんばった！",
+    defeatLine: "まんじゅう鬼は ほかほかに ふやけた。",
+    normalMove: "頭突き",
+    specialMove: "まんじゅう乱舞",
   },
   {
-    id: "ghost",
-    name: "ゆうれい",
-    category: "モンスター",
-    icon: "👻",
-    sprite: "ghost",
-    tagline: "すり抜ける不気味な魔物",
-    appearLine: "ウウウ… ゆうれいが 漂ってきた！",
-    defeatLine: "ゆうれいは 消え去った…",
-    normalMove: "呪いの手",
-    specialMove: "幽霊大技",
+    id: "senbei",
+    name: "せんべい武者",
+    category: "妖菓子",
+    icon: "🍘",
+    sprite: "senbei",
+    tagline: "のりの鉢巻きをしめた堅焼きの戦士",
+    appearLine: "パリッ！ せんべい武者が 身構えた！",
+    defeatLine: "せんべい武者は パリンと 砕けた。",
+    normalMove: "かちわり突き",
+    specialMove: "せんべい百裂",
   },
   {
-    id: "dragon",
-    name: "ドラゴン",
-    category: "モンスター",
-    icon: "🐉",
-    sprite: "dragon",
-    tagline: "火を吐く空の強敵",
-    appearLine: "ゴオオ！ ドラゴンが 空から 降りてきた！",
-    defeatLine: "ドラゴンは 山の向こうへ 飛び去った。",
-    normalMove: "爪攻撃",
-    specialMove: "火炎",
+    id: "warabi",
+    name: "わらびもち",
+    category: "妖菓子",
+    icon: "🟤",
+    sprite: "warabi",
+    tagline: "きな粉をまとってぷるぷる揺れる妖菓子",
+    appearLine: "ぷるるん… わらびもちが すべってきた！",
+    defeatLine: "わらびもちは とろけて しずまった。",
+    normalMove: "ぷるぷる体当たり",
+    specialMove: "きな粉ブリザード",
   },
   {
-    id: "demon",
-    name: "魔人",
-    category: "ボスモンスター",
-    icon: "😈",
-    sprite: "demon",
-    tagline: "鬼ヶ島手前の強敵",
-    appearLine: "ハッハッハ！ 魔人が 立ちはだかる！",
-    defeatLine: "魔人は 消え去った…",
-    normalMove: "魔の一撃",
-    specialMove: "魔人大技",
+    id: "dainagon",
+    name: "大納言",
+    category: "ボス妖菓子",
+    icon: "👑",
+    sprite: "dainagon",
+    tagline: "あずきの王・鬼ヶ島手前を守る大妖菓子",
+    appearLine: "ふぉっふぉ！ あずきの王・大納言が 立ちはだかる！",
+    defeatLine: "大納言は 甘い眠りに ついた…",
+    normalMove: "あずき砲",
+    specialMove: "大納言・あずき大崩し",
   },
   {
     id: "oni",
-    name: "鬼",
-    category: "ボスモンスター",
-    icon: "👹",
+    name: "オニ大将",
+    category: "ボス妖菓子",
+    icon: "🔴",
     sprite: "oni",
-    tagline: "最後の壁・鬼ヶ島の大将",
-    appearLine: "ウオオオ！ 鬼が 金棒を 振り上げた！",
-    defeatLine: "鬼は 海の向こうへ 逃げ去った…",
+    tagline: "妖菓子をあやつる鬼ヶ島の大将",
+    appearLine: "ウオオオ！ オニ大将が 金棒を 振り上げた！",
+    defeatLine: "オニ大将は 海の向こうへ 逃げ去った…",
     normalMove: "金棒殴り",
-    specialMove: "鬼の大技・鉄棒乱舞",
+    specialMove: "オニの大技・あめ玉乱舞",
   },
 ];
 
 const STORY_PORTRAITS = {
-  gomachan: { icon: "🐰", label: "ごまちゃん", side: "left" },
+  gomachan: { icon: "🍑", label: "ここあ", side: "left" },
   dog: { icon: "🐕", label: "犬", side: "left" },
   monkey: { icon: "🐒", label: "サル", side: "left" },
   pheasant: { icon: "🐦", label: "キジ", side: "left" },
@@ -662,16 +662,16 @@ function storyArcLabel(chapterIdx) {
 }
 
 function buildStoryIntro(n, loc, enemyName) {
-  if (n === 1) return "花畑の村に、大きな菜の花からごまちゃんが生まれました。モンスターを退治する旅に出ます。";
+  if (n === 1) return "桃から生まれた ここあが、悪さをする妖菓子（あやかし）を退治する旅に出ます。";
   if (n === 20) return "旅の途中、犬がきびだんごをねだってきました。「つれていって」——犬が仲間になりました！";
   if (n === 50) return "猿が木の上から。「きびだんごくれ」——サルが仲間になりました！";
   if (n === 85) return "キジが空から舞い降りて。「ぼくも行く」——キジが仲間になりました！";
   if (n >= 190) return `いよいよ鬼ヶ島。${enemyName}が 最後の壁を 守っています。`;
-  return `ごまちゃん一行は「${loc}」へ。${enemyName}が 道を ふさいでいます。`;
+  return `ここあ一行は「${loc}」へ。${enemyName}が 道を ふさいでいます。`;
 }
 
 function buildStoryOutro(n, loc) {
-  if (n === 200) return "鬼を退治し、花畑の村に平和が戻りました。ごまちゃんは英雄です！";
+  if (n === 200) return "鬼を退治し、村に平和とおいしいお菓子が戻りました。ここあは英雄です！";
   if (n === 20 || n === 50 || n === 85) return "仲間が増え、旅は続きます。つぎの章へ進みましょう。";
   return `第${n}章クリア！ ${loc}を越え、鬼ヶ島へ一歩近づきました。`;
 }
@@ -701,13 +701,13 @@ function buildChapterCutscene(ch, chapterIdx) {
     scenes.push({
       bg: "peach",
       speaker: "ナレーション",
-      text: "むかしむかし、菜の花畑の村に 大きな菜の花が咲きました。",
+      text: "むかしむかし、ある村に どんぶらこと 大きな桃が ながれてきました。",
       portrait: null,
     });
     scenes.push({
       bg: "peach",
       speaker: "ナレーション",
-      text: "その中から 白いうさぎ「ごまちゃん」が 生まれたのです。",
+      text: "その中から 桃太郎「ここあ」が 生まれたのです。",
       portrait: "gomachan",
     });
   }
@@ -744,11 +744,16 @@ function buildStoryChapters(count) {
   for (let i = 0; i < count; i += 1) {
     const n = i + 1;
     const loc = STORY_LOCATIONS[i % STORY_LOCATIONS.length];
-    const enemyCount = Math.min(6, Math.max(2, 2 + Math.floor(i / 12) + (i % 3)));
+    // 本家ココアの桃太郎たいぴんぐ風：1〜3体（序盤は1〜2体、章が進むと最大3体）。ボス章は1体。
+    const firstType = STORY_ENEMY_TYPES[i % STORY_ENEMY_TYPES.length];
+    const firstIsBoss = firstType.id === "oni" || firstType.id === "dainagon";
+    const enemyCount = firstIsBoss
+      ? 1
+      : Math.min(3, Math.max(1, 1 + Math.floor(i / 30) + (i % 3 === 2 ? 1 : 0)));
     const enemies = [];
     for (let e = 0; e < enemyCount; e += 1) {
       const type = STORY_ENEMY_TYPES[(i + e) % STORY_ENEMY_TYPES.length];
-      const isBoss = type.id === "oni" || type.id === "demon";
+      const isBoss = type.id === "oni" || type.id === "dainagon";
       enemies.push({
         typeId: type.id,
         name: enemyCount > 1 && e > 0 ? `${type.name}${e + 1}` : type.name,
@@ -2846,7 +2851,7 @@ function useStoryBattleItem(itemId) {
   if (!def || count <= 0) return;
   if (itemId === "peach") {
     if (storyState.peachUsedThisChapter) {
-      setStoryDialog("この章ではもう桃は使えません。", "ごまちゃん");
+      setStoryDialog("この章ではもう桃は使えません。", "ここあ");
       return;
     }
     storyState.playerHp = storyState.playerMaxHp;
@@ -2856,7 +2861,7 @@ function useStoryBattleItem(itemId) {
   }
   g.items[itemId] = count - 1;
   saveStoryGear(g);
-  setStoryDialog(`${def.name}を使った！ HP ${storyState.playerHp}/${storyState.playerMaxHp}`, "ごまちゃん");
+  setStoryDialog(`${def.name}を使った！ HP ${storyState.playerHp}/${storyState.playerMaxHp}`, "ここあ");
   updateStoryHud();
   renderStoryBattleItems();
 }
@@ -2869,7 +2874,7 @@ function storyCompanionDefenseSecBonus() {
   return getUnlockedCompanions().reduce((s, c) => s + (c.defenseSecBonus || 0), 0);
 }
 
-function setStoryDialog(text, speaker = "ごまちゃん") {
+function setStoryDialog(text, speaker = "ここあ") {
   const el = $("storyDialog");
   const sp = $("storySpeakerName");
   if (el) el.textContent = `【${speaker}】${text}`;
@@ -3168,7 +3173,7 @@ function renderStoryChapterList() {
     const lv = storyPlayerLevel();
     const maxHp = storyCalcPlayerMaxHp();
     const bonus = aggregateBenriyaStoryBonus();
-    meta.textContent = `旅のしおり — 全 ${STORY_CHAPTER_COUNT} 章。クリア ${cleared} 章。所持銭 ${loadStoryMoney()} ／ ごまちゃん Lv.${lv}（HP ${maxHp}）攻+${bonus.storyAtkBonus}`;
+    meta.textContent = `旅のしおり — 全 ${STORY_CHAPTER_COUNT} 章。クリア ${cleared} 章。所持銭 ${loadStoryMoney()} ／ ここあ Lv.${lv}（HP ${maxHp}）攻+${bonus.storyAtkBonus}`;
   }
   if (!list) return;
   list.innerHTML = "";
@@ -3395,11 +3400,11 @@ function storyStartAttackPhrase() {
     storyShowSpecialIntro(false, () => {
       const task = buildStoryPanelTask(false, storyState.chapterIdx, true);
       storySetupPanels(task);
-      setStoryDialog(`「${task.text}」を打て！`, "ごまちゃん");
+      setStoryDialog(`「${task.text}」を打て！`, "ここあ");
     });
     return;
   }
-  setStoryDialog("こうげき！ パネルを順番に打て！", "ごまちゃん");
+  setStoryDialog("こうげき！ パネルを順番に打て！", "ここあ");
   storySetupPanels(buildStoryPanelTask(false, storyState.chapterIdx, false));
 }
 
@@ -3468,7 +3473,7 @@ function storyOnAttackSuccess() {
   if (speedRatio >= 0.5 && storyState.typosThisPhrase === 0) msg += " 速攻！";
   const companions = getUnlockedCompanions();
   if (companions.length > 0) msg += " → 仲間の番！";
-  setStoryDialog(msg, "ごまちゃん");
+  setStoryDialog(msg, "ここあ");
   updateStoryHud();
   showStoryDamagePopup(dmg, "enemy");
   flashStoryEnemyHit();
@@ -3554,7 +3559,7 @@ function storyOnDefenseSuccess() {
     storyState.playerHp = Math.max(0, storyState.playerHp - dmg);
     setStoryDialog(
       `${label}！ ${storyState.enemyMoveName || "攻撃"} ${baseAtk}→${dmg}（${reduced} 軽減）`,
-      "ごまちゃん",
+      "ここあ",
     );
     if (dmg > 0) {
       showStoryDamagePopup(dmg, "player");
@@ -3688,7 +3693,7 @@ function storyOnEnemyDefeated() {
 
 function storyPlayerHit(dmg, msg, speaker = "ナレーション") {
   storyState.playerHp = Math.max(0, storyState.playerHp - dmg);
-  setStoryDialog(`${msg} ごまちゃんは ${dmg} ダメージ。`, speaker);
+  setStoryDialog(`${msg} ここあは ${dmg} ダメージ。`, speaker);
   updateStoryHud();
   showStoryDamagePopup(dmg, "player");
   flashStoryHpBar("player");
@@ -3716,7 +3721,7 @@ function storyApplyEnemyAttack(reason, onAfter) {
   storyState.enemyAttackMul = 1;
   storyEnemyStrikeThen(() => {
     storyState.playerHp = Math.max(0, storyState.playerHp - dmg);
-    setStoryDialog(`${msg} ごまちゃんは ${dmg} ダメージ。`, storyState.currentEnemy?.name || "敵");
+    setStoryDialog(`${msg} ここあは ${dmg} ダメージ。`, storyState.currentEnemy?.name || "敵");
     updateStoryHud();
     showStoryDamagePopup(dmg, "player");
     flashStoryHpBar("player");
@@ -3763,7 +3768,7 @@ function storyOnTimeout() {
     });
     return;
   }
-  setStoryDialog("時間切れ！ こうげきはずれ — 敵のターン！", "ごまちゃん");
+  setStoryDialog("時間切れ！ こうげきはずれ — 敵のターン！", "ここあ");
   storyFinishTurn(() => storyStartDefensePhrase(1.2));
 }
 
@@ -3779,7 +3784,7 @@ function storyOnDefeat() {
   $("storyResultPanel")?.classList.remove("hidden");
   $("storyResultHeading").textContent = "冒険失敗…";
   $("storyResultText").textContent =
-    "ごまちゃんは力尽きました。練習モードでタイピングを鍛えて、もう一度挑戦しましょう。";
+    "ここあは力尽きました。練習モードでタイピングを鍛えて、もう一度挑戦しましょう。";
   const cont = $("storyContinueBtn");
   if (cont) cont.textContent = "章を選び直す";
 }

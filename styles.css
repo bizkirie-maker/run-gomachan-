@@ -7422,3 +7422,74 @@ body.is-story .momo-cutscene {
   font-weight: 800;
   color: #2e7d32;
 }
+
+/* ══════════════════════════════════════════════════════════
+   桃太郎ここあ風：主人公＆妖菓子（あやかし）の画像スプライト
+   （CSSで描いた形ではなく、生成したイラストPNGで表示する）
+   ══════════════════════════════════════════════════════════ */
+
+/* 画像スプライト共通：中の形（::before/::after）を消して画像を敷く */
+.cocoa-sprite--gomachan,
+.cocoa-sprite--dango,
+.cocoa-sprite--daifuku,
+.cocoa-sprite--kashiwa,
+.cocoa-sprite--dorayaki,
+.cocoa-sprite--yokan,
+.cocoa-sprite--manju,
+.cocoa-sprite--senbei,
+.cocoa-sprite--warabi,
+.cocoa-sprite--dainagon,
+.cocoa-sprite--oni {
+  background: none !important;
+  background-repeat: no-repeat !important;
+  background-position: center bottom !important;
+  background-size: contain !important;
+}
+
+.cocoa-sprite--gomachan::before,
+.cocoa-sprite--gomachan::after,
+.cocoa-sprite--oni::before,
+.cocoa-sprite--oni::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* 敵（妖菓子）は画像を少し大きめに見せて存在感を出す */
+.cocoa-sprite--foe.cocoa-sprite--dango,
+.cocoa-sprite--foe.cocoa-sprite--daifuku,
+.cocoa-sprite--foe.cocoa-sprite--kashiwa,
+.cocoa-sprite--foe.cocoa-sprite--dorayaki,
+.cocoa-sprite--foe.cocoa-sprite--yokan,
+.cocoa-sprite--foe.cocoa-sprite--manju,
+.cocoa-sprite--foe.cocoa-sprite--senbei,
+.cocoa-sprite--foe.cocoa-sprite--warabi {
+  width: 104px;
+  height: 104px;
+}
+
+.cocoa-sprite--foe.cocoa-sprite--boss.cocoa-sprite--dainagon,
+.cocoa-sprite--foe.cocoa-sprite--boss.cocoa-sprite--oni {
+  width: 150px;
+  height: 150px;
+}
+
+/* 主人公ここあ（味方）は画像で大きめに */
+.cocoa-sprite--ally.cocoa-sprite--gomachan {
+  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.18));
+}
+.cocoa-sprite--lg.cocoa-sprite--gomachan { width: 92px; height: 100px; }
+.cocoa-sprite--md.cocoa-sprite--gomachan { width: 66px; height: 74px; }
+.cocoa-sprite--sm.cocoa-sprite--gomachan { width: 46px; height: 52px; }
+
+/* それぞれの絵を割り当て */
+.cocoa-sprite--gomachan { background-image: url("./assets/cocoa-hero.png") !important; }
+.cocoa-sprite--dango    { background-image: url("./assets/enemy-dango.png") !important; }
+.cocoa-sprite--daifuku  { background-image: url("./assets/enemy-daifuku.png") !important; }
+.cocoa-sprite--kashiwa  { background-image: url("./assets/enemy-kashiwa.png") !important; }
+.cocoa-sprite--dorayaki { background-image: url("./assets/enemy-dorayaki.png") !important; }
+.cocoa-sprite--yokan    { background-image: url("./assets/enemy-yokan.png") !important; }
+.cocoa-sprite--manju    { background-image: url("./assets/enemy-manju.png") !important; }
+.cocoa-sprite--senbei   { background-image: url("./assets/enemy-senbei.png") !important; }
+.cocoa-sprite--warabi   { background-image: url("./assets/enemy-warabi.png") !important; }
+.cocoa-sprite--dainagon { background-image: url("./assets/enemy-dainagon.png") !important; }
+.cocoa-sprite--oni      { background-image: url("./assets/enemy-oni.png") !important; }
